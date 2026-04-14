@@ -5,7 +5,7 @@ import { useTranslation } from "react-i18next";
 import { useAuthStore } from "@/stores/auth-store";
 
 export function LoginPage() {
-  const { t, i18n } = useTranslation(["common", "auth"]);
+  const { t, i18n } = useTranslation(["common", "auth", "dashboard"]);
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -50,10 +50,13 @@ export function LoginPage() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-gray-950">
       <div className="w-full max-w-sm rounded-xl border border-gray-800 bg-gray-900 p-8 shadow-2xl">
-        <h1 className="mb-6 flex items-center justify-center gap-2 text-xl font-semibold text-gray-100">
-          <img src="/android-chrome-192x192.png" alt="ArcReel" className="h-7 w-7" />
-          <span>ArcReel</span>
-        </h1>
+        <div className="mb-6 text-center">
+          <h1 className="flex items-center justify-center gap-2 text-xl font-semibold text-gray-100">
+            <img src="/android-chrome-192x192.png" alt={t("dashboard:app_title")} className="h-7 w-7" />
+            <span>{t("dashboard:app_title")}</span>
+          </h1>
+          <p className="mt-2 text-sm text-gray-500">{t("dashboard:app_subtitle")}</p>
+        </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>

@@ -27,6 +27,7 @@ from server.routers import (
     agent_chat,
     api_keys,
     assistant,
+    autonovel_workbench,
     characters,
     clues,
     cost_estimation,
@@ -44,6 +45,7 @@ from server.routers import (
 )
 from server.routers import auth as auth_router
 from server.services.project_events import ProjectEventService
+from server.services.autonovel_workbench import get_novel_workbench_service
 
 # 初始化日志
 setup_logging()
@@ -104,9 +106,20 @@ async def lifespan(app: FastAPI):
     await project_event_service.start()
     logger.info("ProjectEventService 已启动")
 
+    logger.info("启动 NovelWorkbenchService...")
+    novel_workbench_service = get_novel_workbench_service()
+    app.state.novel_workbench_service = novel_workbench_service
+    await novel_workbench_service.startup()
+    logger.info("NovelWorkbenchService 已启动")
+
     yield
 
     # Shutdown
+    novel_workbench_service = getattr(app.state, "novel_workbench_service", None)
+    if novel_workbench_service:
+        logger.info("正在停止 NovelWorkbenchService...")
+        await novel_workbench_service.shutdown()
+        logger.info("NovelWorkbenchService 已停止")
     project_event_service = getattr(app.state, "project_event_service", None)
     if project_event_service:
         logger.info("正在停止 ProjectEventService...")
@@ -122,8 +135,8 @@ async def lifespan(app: FastAPI):
 
 # 创建 FastAPI 应用
 app = FastAPI(
-    title="视频项目管理 WebUI",
-    description="AI 视频生成工作空间的 Web 管理界面",
+    title="Storyforge",
+    description="AI novel&video studio",
     version="1.0.0",
     lifespan=lifespan,
 )
@@ -186,6 +199,7 @@ app.include_router(agent_chat.router, prefix="/api/v1", tags=["Agent 对话"])
 app.include_router(custom_providers.router, prefix="/api/v1", tags=["自定义供应商"])
 app.include_router(cost_estimation.router, prefix="/api/v1", tags=["费用估算"])
 app.include_router(grids.router, prefix="/api/v1", tags=["宫格图"])
+app.include_router(autonovel_workbench.router, prefix="/api/v1", tags=["Novel Workbench"])
 
 
 def create_generation_worker() -> GenerationWorker:

@@ -36,6 +36,10 @@ import type {
   CustomProviderModelInput,
   DiscoveredModel,
   CostEstimateResponse,
+  NovelWorkbenchArtifactContentResponse,
+  NovelWorkbenchArtifactListResponse,
+  NovelWorkbenchJob,
+  NovelWorkbenchStatus,
 } from "@/types";
 import type { GridGeneration } from "@/types/grid";
 import { getToken, clearToken } from "@/utils/auth";
@@ -313,6 +317,60 @@ class API {
     return this.request(`/projects/${encodeURIComponent(name)}`, {
       method: "DELETE",
     });
+  }
+
+  static async getNovelWorkbenchStatus(): Promise<NovelWorkbenchStatus> {
+    return this.request("/novel-workbench/status");
+  }
+
+  static async listNovelWorkbenchJobs(): Promise<{ jobs: NovelWorkbenchJob[] }> {
+    return this.request("/novel-workbench/jobs");
+  }
+
+  static async getNovelWorkbenchJob(jobId: string): Promise<{ job: NovelWorkbenchJob }> {
+    return this.request(`/novel-workbench/jobs/${encodeURIComponent(jobId)}`);
+  }
+
+  static async createNovelWorkbenchJob(payload: {
+    title: string;
+    seed_text: string;
+    project_name?: string;
+    style: string;
+    aspect_ratio: "9:16" | "16:9";
+    default_duration: 4 | 6 | 8;
+  }): Promise<{ success: boolean; job: NovelWorkbenchJob }> {
+    return this.request("/novel-workbench/jobs", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    });
+  }
+
+  static async cancelNovelWorkbenchJob(jobId: string): Promise<{ success: boolean; job: NovelWorkbenchJob }> {
+    return this.request(`/novel-workbench/jobs/${encodeURIComponent(jobId)}/cancel`, {
+      method: "POST",
+    });
+  }
+
+  static async listNovelWorkbenchArtifacts(jobId: string): Promise<NovelWorkbenchArtifactListResponse> {
+    return this.request(`/novel-workbench/jobs/${encodeURIComponent(jobId)}/artifacts`);
+  }
+
+  static async getNovelWorkbenchArtifactContent(
+    jobId: string,
+    path: string,
+  ): Promise<NovelWorkbenchArtifactContentResponse> {
+    return this.request(
+      `/novel-workbench/jobs/${encodeURIComponent(jobId)}/artifacts/content?path=${encodeURIComponent(path)}`,
+    );
+  }
+
+  static async downloadNovelWorkbenchArtifact(jobId: string, path: string): Promise<Blob> {
+    const response = await fetch(
+      `${API_BASE}/novel-workbench/jobs/${encodeURIComponent(jobId)}/artifacts/download?path=${encodeURIComponent(path)}`,
+      withAuth(),
+    );
+    await throwIfNotOk(response, "Failed to download novel artifact");
+    return response.blob();
   }
 
   static async requestExportToken(

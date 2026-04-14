@@ -14,8 +14,9 @@ services:
       timeout: 5s
       retries: 5
 
-  arcreel:
-    image: ghcr.io/arcreel/arcreel:latest
+  storyforge:
+    build: ../..
+    image: storyforge-local:latest
     ports:
       - "1241:1241"
     env_file: .env

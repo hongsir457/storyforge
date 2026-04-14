@@ -1,7 +1,7 @@
 [project]
-name = "arcreel"
+name = "storyforge"
 version = "0.8.1"
-description = "AI video generation workspace"
+description = "AI novel and video studio"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [

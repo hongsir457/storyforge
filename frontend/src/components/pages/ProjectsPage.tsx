@@ -1,7 +1,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useLocation } from "wouter";
-import { Loader2, Plus, FolderOpen, Upload, AlertTriangle, Settings, EllipsisVertical, Trash2 } from "lucide-react";
+import { Loader2, Plus, FolderOpen, Upload, AlertTriangle, Settings, EllipsisVertical, Trash2, BookOpen } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { API } from "@/api";
 import { useProjectsStore } from "@/stores/projects-store";
@@ -258,13 +258,16 @@ export function ProjectsPage() {
       {/* Header */}
       <header className="border-b border-gray-800 bg-gray-900/50 px-6 py-4 backdrop-blur-sm">
         <div className="mx-auto flex max-w-6xl items-center justify-between">
-          <h1 className="flex items-center text-xl font-bold">
-            <img src="/android-chrome-192x192.png" alt="ArcReel" className="mr-2 h-6 w-6" />
-            <span className="text-indigo-400">
-              ArcReel
-            </span>
-            <span className="ml-1 text-gray-400 font-normal text-base">{t("dashboard:projects")}</span>
-          </h1>
+          <div className="flex items-center gap-3">
+            <img src="/android-chrome-192x192.png" alt={t("dashboard:app_title")} className="h-6 w-6" />
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="text-xl font-bold text-indigo-400">{t("dashboard:app_title")}</span>
+                <span className="text-base font-normal text-gray-400">{t("dashboard:projects")}</span>
+              </div>
+              <p className="text-xs text-gray-500">{t("dashboard:app_subtitle")}</p>
+            </div>
+          </div>
           <div className="flex items-center gap-3">
             <button
               type="button"
@@ -278,6 +281,14 @@ export function ProjectsPage() {
                 <Upload className="h-4 w-4" />
               )}
               {importingProject ? t("dashboard:importing") : t("dashboard:import_zip")}
+            </button>
+            <button
+              type="button"
+              onClick={() => navigate("/app/novel-workbench")}
+              className="inline-flex items-center gap-1.5 rounded-lg border border-indigo-500/40 bg-indigo-500/10 px-4 py-2 text-sm font-medium text-indigo-200 transition-colors hover:bg-indigo-500/20"
+            >
+              <BookOpen className="h-4 w-4" />
+              Story Lab
             </button>
             <button
               type="button"

@@ -25,6 +25,7 @@ FROM python:3.12-slim AS production
 RUN apt-get update && apt-get install -y --no-install-recommends \
     ffmpeg \
     curl \
+    git \
     && rm -rf /var/lib/apt/lists/*
 
 # 安装 uv
@@ -45,6 +46,8 @@ COPY server/ server/
 COPY alembic/ alembic/
 COPY alembic.ini ./
 COPY scripts/ scripts/
+COPY autonovel/ autonovel/
+COPY tools/ tools/
 COPY agent_runtime_profile/ agent_runtime_profile/
 COPY public/ public/
 

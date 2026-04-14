@@ -157,7 +157,7 @@ describe("SystemConfigPage", () => {
       expect(screen.getByText("当前配置存在以下问题，可能会影响部分功能：")).toBeInTheDocument();
     });
     expect(
-      screen.getByText(/ArcReel 智能体 API Key/),
+      screen.getByText(/Storyforge.*API Key/),
     ).toBeInTheDocument();
   });
 

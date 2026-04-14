@@ -1,7 +1,8 @@
 import type enDashboard from '../en/dashboard';
 
 export default {
-  'app_title': 'ArcReel',
+  'app_title': '叙事工厂',
+  'app_subtitle': '小说与视频自动生成工作台',
   'projects': '项目',
   'create_project': '创建项目',
   'new_project': '新建项目',
@@ -76,7 +77,7 @@ export default {
   'system_config_title': '系统配置与 API 访问管理',
   'config_issues': '配置问题',
   'config_issues_hint': '当前配置存在以下问题，可能会影响部分功能：',
-  'arcreel_agent': 'ArcReel 智能体',
+  'arcreel_agent': 'Storyforge 智能体',
   'agent_sdk_desc': '基于 Claude Agent SDK，驱动对话式 AI 助手与自动化工作流',
   'claude_code_compat_hint': '配置项兼容 Claude Code 环境变量命名，可使用兼容 Claude Code 的 Coding Plan API。',
   'api_access': 'API 访问',
@@ -108,10 +109,10 @@ export default {
   'cleanup_delay_desc': '会话闲置多少秒后自动清理（默认 300）',
   'max_concurrent_sessions': '最大并发会话',
   'max_sessions_desc': '系统允许同时运行的最大智能体数量',
-  'agent_config_saved': 'ArcReel 智能体配置已保存',
+  'agent_config_saved': 'Storyforge 智能体配置已保存',
   'field_cleared': '已清除',
   'api_key_mgmt': 'API 密钥管理',
-  'api_key_usage_desc': '用于从外部工具（如 OpenClaw 🦞）访问 ArcReel 项目。',
+  'api_key_usage_desc': '用于从外部工具（如 OpenClaw 🦞）访问 Storyforge 项目。',
   'create_api_key': '创建 API 密钥',
   'name': '名称',
   'key_prefix': '密钥前缀',
@@ -443,7 +444,7 @@ export default {
   'blocking_issues': '阻塞性问题',
   'auto_fixed_issues': '已自动修复的问题',
   // config-status-store
-  'agent_api_key_not_configured': 'ArcReel 智能体 API Key（Anthropic）未配置',
+  'agent_api_key_not_configured': 'Storyforge 智能体 API Key（Anthropic）未配置',
   'video_provider_not_configured': '未配置支持视频生成的供应商',
   'image_provider_not_configured': '未配置支持图片生成的供应商',
   'text_provider_not_configured': '未配置支持文本生成的供应商',

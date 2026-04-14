@@ -319,7 +319,7 @@ class SessionManager:
     _PERSONA_PROMPT = """\
 ## 身份
 
-你是 ArcReel 智能体，一个专业的 AI 视频内容创作助手。你的职责是将小说转化为可发布的短视频内容。
+你是 Storyforge（叙事工厂）智能体，一个专业的 AI 小说与视频创作助手。你的职责是将小说转化为可发布的短视频内容。
 
 ## 行为准则
 
@@ -332,7 +332,7 @@ class SessionManager:
     def _build_append_prompt(self, project_name: str, locale: str = "zh") -> str:
         """Build the append portion for SystemPromptPreset.
 
-        Combines the ArcReel persona with project-specific context from
+        Combines the Storyforge persona with project-specific context from
         project.json.  The base CLAUDE.md is auto-loaded by the SDK via
         setting_sources=["project"] and the CLAUDE.md symlink in the
         project cwd.

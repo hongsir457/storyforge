@@ -5,6 +5,7 @@ import { Route, Switch, Redirect, useParams } from "wouter";
 import { StudioLayout } from "@/components/layout";
 import { StudioCanvasRouter } from "@/components/canvas/StudioCanvasRouter";
 import { ProjectsPage } from "@/components/pages/ProjectsPage";
+import { NovelWorkbenchPage } from "@/components/pages/NovelWorkbenchPage";
 import { SystemConfigPage } from "@/components/pages/SystemConfigPage";
 import { ProjectSettingsPage } from "@/components/pages/ProjectSettingsPage";
 import { LoginPage } from "@/pages/LoginPage";
@@ -114,6 +115,12 @@ export function AppRoutes() {
         <Route path="/app/projects">
           <AuthGuard>
             <ProjectsPage />
+          </AuthGuard>
+        </Route>
+
+        <Route path="/app/novel-workbench">
+          <AuthGuard>
+            <NovelWorkbenchPage />
           </AuthGuard>
         </Route>
 

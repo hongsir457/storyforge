@@ -3,14 +3,14 @@
   <picture>
     <source media="(prefers-color-scheme: light)" srcset="frontend/public/android-chrome-maskable-512x512.png">
     <source media="(prefers-color-scheme: dark)" srcset="frontend/public/android-chrome-512x512.png">
-    <img src="frontend/public/android-chrome-maskable-512x512.png" alt="ArcReel Logo" width="128" style="border-radius: 16px;">
+    <img src="frontend/public/android-chrome-maskable-512x512.png" alt="Storyforge Logo" width="128" style="border-radius: 16px;">
   </picture>
   <br>
-  ArcReel
+  Storyforge
   <br>
 </h1>
 
-<h4 align="center">Open-source AI Video Generation Workspace — Novel to Short Video, Powered by AI Agents</h4>
+<h4 align="center">AI novel&video studio</h4>
 
 <p align="center">
   <a href="README.md"><img src="https://img.shields.io/badge/lang-中文-red?style=flat-square" alt="中文"></a>
@@ -19,10 +19,10 @@
 
 <p align="center">
   <a href="#quick-start"><img src="https://img.shields.io/badge/Quick_Start-blue?style=for-the-badge" alt="Quick Start"></a>
-  <a href="https://github.com/ArcReel/ArcReel/blob/main/LICENSE"><img src="https://img.shields.io/badge/License-AGPL--3.0-green?style=for-the-badge" alt="License"></a>
-  <a href="https://github.com/ArcReel/ArcReel"><img src="https://img.shields.io/github/stars/ArcReel/ArcReel?style=for-the-badge" alt="Stars"></a>
-  <a href="https://github.com/ArcReel/ArcReel/pkgs/container/arcreel"><img src="https://img.shields.io/badge/Docker-ghcr.io-blue?style=for-the-badge&logo=docker" alt="Docker"></a>
-  <a href="https://github.com/ArcReel/ArcReel/actions/workflows/test.yml"><img src="https://img.shields.io/github/actions/workflow/status/ArcReel/ArcReel/test.yml?style=for-the-badge&label=Tests" alt="Tests"></a>
+  <a href="https://github.com/hongsir457/storyforge/blob/main/LICENSE"><img src="https://img.shields.io/badge/License-AGPL--3.0-green?style=for-the-badge" alt="License"></a>
+  <a href="https://github.com/hongsir457/storyforge"><img src="https://img.shields.io/github/stars/hongsir457/storyforge?style=for-the-badge" alt="Stars"></a>
+  <a href="https://github.com/hongsir457/storyforge/pkgs/container/storyforge"><img src="https://img.shields.io/badge/Docker-ghcr.io-blue?style=for-the-badge&logo=docker" alt="Docker"></a>
+  <a href="https://github.com/hongsir457/storyforge/actions/workflows/docker.yml"><img src="https://img.shields.io/github/actions/workflow/status/hongsir457/storyforge/docker.yml?style=for-the-badge&label=Docker" alt="Docker"></a>
 </p>
 
 <p align="center">
@@ -37,7 +37,7 @@
 </p>
 
 <p align="center">
-  <img src="docs/assets/hero-screenshot.png" alt="ArcReel Workspace" width="800">
+  <img src="docs/assets/hero-screenshot.png" alt="Storyforge Workspace" width="800">
 </p>
 
 ---
@@ -92,8 +92,8 @@ graph TD
 ### Default Deployment (SQLite)
 
 ```bash
-git clone https://github.com/ArcReel/ArcReel.git
-cd ArcReel/deploy
+git clone https://github.com/hongsir457/storyforge.git
+cd storyforge/deploy
 cp .env.example .env
 docker compose up -d
 # Visit http://localhost:1241
@@ -102,14 +102,14 @@ docker compose up -d
 ### Production Deployment (PostgreSQL)
 
 ```bash
-cd ArcReel/deploy/production
+cd storyforge/deploy/production
 cp .env.example .env    # Set POSTGRES_PASSWORD
 docker compose up -d
 ```
 
 After first launch, log in with the default account (username `admin`, password set via `AUTH_PASSWORD` in `.env`; if not set, it will be auto-generated and written back to `.env` on first startup). Then go to **Settings** (`/settings`) to complete configuration:
 
-1. **ArcReel Agent** — Configure Anthropic API Key (powers the AI assistant), with support for custom Base URL and model
+1. **Storyforge Agent** — Configure Anthropic API Key (powers the AI assistant), with support for custom Base URL and model
 2. **AI Image/Video Generation** — Configure at least one provider's API Key (Gemini / Volcengine Ark / Grok / OpenAI), or add a custom provider
 
 > 📖 For detailed steps, see the [Getting Started Guide](docs/getting-started.md)

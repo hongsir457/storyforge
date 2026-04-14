@@ -136,7 +136,7 @@ After first launch, log in with the default account (username `admin`, password 
 
 ## Provider Support
 
-ArcReel supports multiple built-in and custom providers through unified `ImageBackend` / `VideoBackend` / `TextBackend` protocols, switchable at global or project level:
+Storyforge supports multiple built-in and custom providers through unified `ImageBackend` / `VideoBackend` / `TextBackend` protocols, switchable at global or project level:
 
 ### Image Providers
 
@@ -177,7 +177,7 @@ Provider selection priority: Project-level settings > Global defaults. When swit
 
 ## AI Assistant Architecture
 
-ArcReel's AI assistant is built on the Claude Agent SDK, using an **Orchestration Skill + Focused Subagent** multi-agent architecture:
+Storyforge's AI assistant is built on the Claude Agent SDK, using an **Orchestration Skill + Focused Subagent** multi-agent architecture:
 
 ```mermaid
 flowchart TD
@@ -203,10 +203,10 @@ flowchart TD
 
 ## OpenClaw Integration
 
-ArcReel supports invocation through external AI Agent platforms like [OpenClaw](https://openclaw.ai), enabling natural language-driven video creation:
+Storyforge supports invocation through external AI Agent platforms like [OpenClaw](https://openclaw.ai), enabling natural language-driven video creation:
 
-1. Generate an API Key in ArcReel's Settings page (`arc-` prefix)
-2. Load ArcReel's Skill definition in OpenClaw (access `http://your-domain/skill.md` to auto-fetch)
+1. Generate an API Key in Storyforge's Settings page (`arc-` prefix kept for compatibility)
+2. Load Storyforge's Skill definition in OpenClaw (access `http://your-domain/skill.md` to auto-fetch)
 3. Create projects, generate scripts, and produce videos through OpenClaw conversations
 
 Technical implementation: API Key authentication (Bearer Token) + synchronous Agent chat endpoint (`POST /api/v1/agent/chat`), internally connects to SSE streaming assistant and collects complete responses.

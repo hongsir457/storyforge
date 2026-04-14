@@ -1,8 +1,8 @@
 """
-视频项目管理 WebUI - FastAPI 主应用
+Storyforge - FastAPI 主应用
 
 启动方式:
-    cd ArcReel
+    cd storyforge
     uv run uvicorn server.app:app --reload --port 1241
 """
 
@@ -209,7 +209,7 @@ def create_generation_worker() -> GenerationWorker:
 @app.get("/health")
 async def health_check():
     """健康检查"""
-    return {"status": "ok", "message": "视频项目管理 WebUI 运行正常"}
+    return {"status": "ok", "message": "Storyforge 运行正常"}
 
 
 @app.get("/skill.md", include_in_schema=False)

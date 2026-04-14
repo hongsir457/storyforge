@@ -43,9 +43,11 @@ from server.routers import (
     usage,
     versions,
 )
-from server.routers import auth as auth_router
-from server.services.project_events import ProjectEventService
+from server.routers import (
+    auth as auth_router,
+)
 from server.services.autonovel_workbench import get_novel_workbench_service
+from server.services.project_events import ProjectEventService
 
 # 初始化日志
 setup_logging()

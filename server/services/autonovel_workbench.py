@@ -7,7 +7,7 @@ import shutil
 import sys
 import textwrap
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -349,7 +349,7 @@ class NovelWorkbenchService:
             "kind": kind,
             "previewable": kind in {"markdown", "text", "json"},
             "size_bytes": stat.st_size,
-            "modified_at": datetime.fromtimestamp(stat.st_mtime, timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+            "modified_at": datetime.fromtimestamp(stat.st_mtime, UTC).strftime("%Y-%m-%dT%H:%M:%SZ"),
         }
 
     def _artifact_label(self, relative_path: str) -> str:
@@ -481,7 +481,7 @@ class NovelWorkbenchService:
                 process.terminate()
                 try:
                     await asyncio.wait_for(process.wait(), timeout=10)
-                except asyncio.TimeoutError:
+                except TimeoutError:
                     process.kill()
                     await process.wait()
             await self._mark_job(
@@ -593,7 +593,7 @@ class NovelWorkbenchService:
                 path.unlink(missing_ok=True)
 
     def _now(self) -> str:
-        return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+        return datetime.now(UTC).strftime("%Y-%m-%dT%H:%M:%SZ")
 
 
 novel_workbench_service = NovelWorkbenchService(PROJECT_ROOT)

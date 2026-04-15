@@ -9,6 +9,7 @@ if str(AUTONOVEL_DIR) not in sys.path:
 
 from anthropic_compat import build_headers
 from build_arc_summary import discover_chapter_files
+from build_outline import discover_chapter_files as discover_outline_chapter_files
 from server.services.autonovel_workbench import NovelWorkbenchService
 
 
@@ -142,5 +143,18 @@ def test_discover_chapter_files_uses_actual_chapter_count(tmp_path, monkeypatch)
     monkeypatch.setattr("build_arc_summary.CHAPTERS_DIR", chapters_dir)
 
     chapter_files = discover_chapter_files()
+
+    assert [path.name for path in chapter_files] == ["ch_01.md", "ch_02.md", "ch_24.md"]
+
+
+def test_build_outline_discovers_actual_chapter_count(tmp_path, monkeypatch):
+    chapters_dir = tmp_path / "chapters"
+    chapters_dir.mkdir()
+    for chapter in (1, 2, 24):
+        (chapters_dir / f"ch_{chapter:02d}.md").write_text(f"# Ch {chapter}\ntext\n", encoding="utf-8")
+
+    monkeypatch.setattr("build_outline.CHAPTERS_DIR", chapters_dir)
+
+    chapter_files = discover_outline_chapter_files()
 
     assert [path.name for path in chapter_files] == ["ch_01.md", "ch_02.md", "ch_24.md"]

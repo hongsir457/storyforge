@@ -21,10 +21,14 @@ API_BASE = os.environ.get("AUTONOVEL_API_BASE_URL", "https://api.anthropic.com")
 CHAPTERS_DIR = BASE_DIR / "chapters"
 
 
+def discover_chapter_files() -> list[Path]:
+    return sorted(CHAPTERS_DIR.glob("ch_*.md"))
+
+
 def call_model(prompt, max_tokens=1500):
     import httpx
 
-    headers = build_headers()
+    headers = build_headers(base_url=API_BASE)
     payload = {
         "model": JUDGE_MODEL,
         "max_tokens": max_tokens,
@@ -50,8 +54,12 @@ def call_model(prompt, max_tokens=1500):
 def main():
     entries = []
 
-    for ch in range(1, 20):
-        path = CHAPTERS_DIR / f"ch_{ch:02d}.md"
+    chapter_files = discover_chapter_files()
+    if not chapter_files:
+        raise SystemExit("ERROR: No chapter files found.")
+
+    for path in chapter_files:
+        ch = int(path.stem.removeprefix("ch_"))
         text = path.read_text()
         wc = len(text.split())
 
@@ -88,7 +96,7 @@ JSON only, no other text."""
     lines.append("# THE SECOND SON OF THE HOUSE OF BELLS")
     lines.append("## Chapter Outline (reflects actual novel as-written)")
     lines.append("")
-    lines.append(f"**23 chapters, {sum(e['words'] for e in entries):,} words**")
+    lines.append(f"**{len(entries)} chapters, {sum(e['words'] for e in entries):,} words**")
     lines.append("")
     lines.append("---")
     lines.append("")

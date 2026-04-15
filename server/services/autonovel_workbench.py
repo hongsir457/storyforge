@@ -23,6 +23,20 @@ class NovelWorkbenchService:
     ACTIVE_STATUSES = {"queued", "running"}
     TERMINAL_STATUSES = {"succeeded", "failed", "cancelled"}
     PREVIEW_LIMIT_BYTES = 120_000
+    REQUIRED_RUNTIME_ENV = (
+        "ANTHROPIC_API_KEY",
+        "AUTONOVEL_WRITER_MODEL",
+        "AUTONOVEL_JUDGE_MODEL",
+        "AUTONOVEL_REVIEW_MODEL",
+        "AUTONOVEL_API_BASE_URL",
+    )
+    OPTIONAL_RUNTIME_ENV = ("FAL_KEY", "ELEVENLABS_API_KEY")
+    RUNTIME_ENV_DEFAULTS = {
+        "AUTONOVEL_WRITER_MODEL": "claude-sonnet-4-6",
+        "AUTONOVEL_JUDGE_MODEL": "claude-sonnet-4-6",
+        "AUTONOVEL_REVIEW_MODEL": "claude-opus-4-6",
+        "AUTONOVEL_API_BASE_URL": "https://api.anthropic.com",
+    }
     GENERATED_OUTPUT_NAMES = (
         "chapters",
         "typeset",
@@ -76,6 +90,7 @@ class NovelWorkbenchService:
         shared_env = self.workspace_root / ".env.shared"
         default_env_source = shared_env if shared_env.exists() else self.autonovel_source_dir / ".env"
         self.autonovel_env_source = Path(os.environ.get("AUTONOVEL_ENV_SOURCE", str(default_env_source))).resolve()
+        self.autonovel_env_example = self.autonovel_source_dir / ".env.example"
 
         self.state_dir = self.projects_root / ".novel_workbench"
         self.logs_dir = self.state_dir / "logs"
@@ -117,11 +132,12 @@ class NovelWorkbenchService:
 
     def status_snapshot(self) -> dict[str, Any]:
         git_required = (self.autonovel_source_dir / ".git").exists()
+        env_status = self._runtime_env_status()
         requirements = {
             "workspace_root_exists": self.workspace_root.exists(),
             "autonovel_repo_exists": self.autonovel_source_dir.exists(),
             "importer_exists": self.importer_script.exists(),
-            "autonovel_env_exists": self.autonovel_env_source.exists(),
+            "autonovel_env_exists": self._autonovel_env_ready(),
             "git_available": (shutil.which("git") is not None) if git_required else True,
             "uv_available": shutil.which("uv") is not None,
         }
@@ -131,6 +147,8 @@ class NovelWorkbenchService:
             "autonovel_source_dir": str(self.autonovel_source_dir),
             "importer_script": str(self.importer_script),
             "autonovel_env_source": str(self.autonovel_env_source),
+            "autonovel_env_mode": self._autonovel_env_mode(),
+            "env_status": env_status,
             "requirements": requirements,
         }
 
@@ -522,7 +540,7 @@ class NovelWorkbenchService:
                 ignore=shutil.ignore_patterns(".git", ".venv", "__pycache__", ".pytest_cache", ".env"),
             )
         self._reset_workspace_outputs(workspace_dir)
-        shutil.copyfile(self.autonovel_env_source, workspace_dir / ".env")
+        self._materialize_autonovel_env(workspace_dir)
         (workspace_dir / "seed.txt").write_text(str(job["seed_text"]).strip() + "\n", encoding="utf-8")
 
     async def _run_command(
@@ -570,6 +588,93 @@ class NovelWorkbenchService:
         missing = [key for key, value in status["requirements"].items() if key != "all_ready" and not value]
         if missing:
             raise NovelWorkbenchError("Novel workbench is not ready: " + ", ".join(missing))
+
+    def _autonovel_env_ready(self) -> bool:
+        return self.autonovel_env_source.exists() or not self._runtime_env_status()["missing_required"]
+
+    def _autonovel_env_mode(self) -> str:
+        if self.autonovel_env_source.exists():
+            return "file"
+        if self._autonovel_env_ready():
+            return "generated"
+        return "missing"
+
+    def _runtime_env_status(self) -> dict[str, Any]:
+        values = self._collect_runtime_env_values()
+        required = {key: bool(values.get(key, "").strip()) for key in self.REQUIRED_RUNTIME_ENV}
+        optional = {key: bool(values.get(key, "").strip()) for key in self.OPTIONAL_RUNTIME_ENV}
+        return {
+            "required": required,
+            "optional": optional,
+            "missing_required": [key for key, ok in required.items() if not ok],
+            "missing_optional": [key for key, ok in optional.items() if not ok],
+        }
+
+    def _collect_runtime_env_values(self) -> dict[str, str]:
+        return {
+            "ANTHROPIC_API_KEY": os.environ.get("ANTHROPIC_API_KEY", "").strip(),
+            "AUTONOVEL_WRITER_MODEL": (
+                os.environ.get("AUTONOVEL_WRITER_MODEL")
+                or os.environ.get("ANTHROPIC_DEFAULT_SONNET_MODEL")
+                or os.environ.get("ANTHROPIC_MODEL")
+                or self.RUNTIME_ENV_DEFAULTS["AUTONOVEL_WRITER_MODEL"]
+            ).strip(),
+            "AUTONOVEL_JUDGE_MODEL": (
+                os.environ.get("AUTONOVEL_JUDGE_MODEL")
+                or os.environ.get("ANTHROPIC_DEFAULT_SONNET_MODEL")
+                or os.environ.get("ANTHROPIC_MODEL")
+                or self.RUNTIME_ENV_DEFAULTS["AUTONOVEL_JUDGE_MODEL"]
+            ).strip(),
+            "AUTONOVEL_REVIEW_MODEL": (
+                os.environ.get("AUTONOVEL_REVIEW_MODEL")
+                or os.environ.get("ANTHROPIC_DEFAULT_OPUS_MODEL")
+                or self.RUNTIME_ENV_DEFAULTS["AUTONOVEL_REVIEW_MODEL"]
+            ).strip(),
+            "AUTONOVEL_API_BASE_URL": (
+                os.environ.get("AUTONOVEL_API_BASE_URL")
+                or os.environ.get("ANTHROPIC_BASE_URL")
+                or self.RUNTIME_ENV_DEFAULTS["AUTONOVEL_API_BASE_URL"]
+            ).strip(),
+            "FAL_KEY": os.environ.get("FAL_KEY", "").strip(),
+            "ELEVENLABS_API_KEY": os.environ.get("ELEVENLABS_API_KEY", "").strip(),
+        }
+
+    def _materialize_autonovel_env(self, workspace_dir: Path) -> None:
+        destination = workspace_dir / ".env"
+        if self.autonovel_env_source.exists():
+            shutil.copyfile(self.autonovel_env_source, destination)
+            return
+        destination.write_text(self._render_runtime_env(), encoding="utf-8")
+
+    def _render_runtime_env(self) -> str:
+        values = self._collect_runtime_env_values()
+        missing_required = [key for key in self.REQUIRED_RUNTIME_ENV if not values.get(key, "").strip()]
+        if missing_required:
+            raise NovelWorkbenchError(
+                "Novel workbench is missing required runtime env: " + ", ".join(missing_required)
+            )
+
+        ordered_keys = list(self.REQUIRED_RUNTIME_ENV) + list(self.OPTIONAL_RUNTIME_ENV)
+        if self.autonovel_env_example.exists():
+            lines: list[str] = []
+            seen: set[str] = set()
+            for raw_line in self.autonovel_env_example.read_text(encoding="utf-8").splitlines():
+                if not raw_line or raw_line.lstrip().startswith("#") or "=" not in raw_line:
+                    lines.append(raw_line)
+                    continue
+                key, _sep, _value = raw_line.partition("=")
+                key = key.strip()
+                if key in values:
+                    lines.append(f"{key}={values[key]}")
+                    seen.add(key)
+                else:
+                    lines.append(raw_line)
+            for key in ordered_keys:
+                if key not in seen:
+                    lines.append(f"{key}={values.get(key, '')}")
+            return "\n".join(lines).rstrip() + "\n"
+
+        return "\n".join(f"{key}={values.get(key, '')}" for key in ordered_keys) + "\n"
 
     async def _get_raw_job(self, job_id: str) -> dict[str, Any] | None:
         async with self._lock:

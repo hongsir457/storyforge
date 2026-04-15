@@ -90,6 +90,18 @@ describe("ProjectsPage", () => {
     });
   });
 
+  it("navigates to the novel workbench from the projects page", async () => {
+    vi.spyOn(API, "listProjects").mockResolvedValue({ projects: [] });
+
+    const { location } = renderPage();
+    const novelWorkbenchButton = await screen.findByRole("button", { name: "小说工坊" });
+    fireEvent.click(novelWorkbenchButton);
+
+    await waitFor(() => {
+      expect(location.history?.at(-1)).toBe("/app/novel-workbench");
+    });
+  });
+
   it("imports a zip project, refreshes the list, and navigates to the workspace", async () => {
     vi.spyOn(API, "listProjects")
       .mockResolvedValueOnce({ projects: [] })

@@ -86,17 +86,38 @@ class TestUserModel:
             columns = await conn.run_sync(
                 lambda sync_conn: {c["name"] for c in inspect(sync_conn).get_columns("users")}
             )
-        assert columns == {"id", "username", "role", "is_active", "created_at", "updated_at"}
+        assert columns == {
+            "id",
+            "username",
+            "email",
+            "display_name",
+            "password_hash",
+            "role",
+            "is_active",
+            "is_email_verified",
+            "last_login_at",
+            "created_at",
+            "updated_at",
+        }
 
     async def test_user_round_trip(self, session):
-        user = User(id="u1", username="alice")
+        user = User(
+            id="u1",
+            username="alice",
+            email="alice@example.com",
+            display_name="Alice",
+            password_hash="hashed-password",
+        )
         session.add(user)
         await session.commit()
 
         result = await session.execute(select(User).where(User.id == "u1"))
         loaded = result.scalar_one()
         assert loaded.username == "alice"
+        assert loaded.email == "alice@example.com"
+        assert loaded.display_name == "Alice"
         assert loaded.role == "user"  # server_default
+        assert loaded.is_email_verified is False
         assert loaded.created_at is not None
         assert loaded.updated_at is not None
 

@@ -8,11 +8,20 @@ export interface NovelWorkbenchRequirements {
   all_ready: boolean;
 }
 
+export interface NovelWorkbenchEnvStatus {
+  required: Record<string, boolean>;
+  optional: Record<string, boolean>;
+  missing_required: string[];
+  missing_optional: string[];
+}
+
 export interface NovelWorkbenchStatus {
   workspace_root: string;
   autonovel_source_dir: string;
   importer_script: string;
   autonovel_env_source: string;
+  autonovel_env_mode?: "file" | "generated" | "missing";
+  env_status?: NovelWorkbenchEnvStatus;
   requirements: NovelWorkbenchRequirements;
 }
 

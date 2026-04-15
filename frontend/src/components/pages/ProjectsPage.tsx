@@ -293,7 +293,7 @@ export function ProjectsPage() {
               className="inline-flex items-center gap-1.5 rounded-lg border border-indigo-500/40 bg-indigo-500/10 px-4 py-2 text-sm font-medium text-indigo-200 transition-colors hover:bg-indigo-500/20"
             >
               <BookOpen className="h-4 w-4" />
-              Story Lab
+              小说工坊
             </button>
             <button
               type="button"
@@ -368,6 +368,14 @@ export function ProjectsPage() {
             <FolderOpen className="h-16 w-16 mb-4" />
             <p className="text-lg">{t("dashboard:no_projects")}</p>
             <p className="text-sm mt-1">{t("dashboard:start_creating_hint")}</p>
+            <button
+              type="button"
+              onClick={() => navigate("/app/novel-workbench")}
+              className="mt-6 inline-flex items-center gap-2 rounded-lg border border-indigo-500/40 bg-indigo-500/10 px-4 py-2 text-sm font-medium text-indigo-200 transition-colors hover:bg-indigo-500/20"
+            >
+              <BookOpen className="h-4 w-4" />
+              进入小说工坊
+            </button>
           </div>
         ) : (
           <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">

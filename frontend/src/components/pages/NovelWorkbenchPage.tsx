@@ -16,6 +16,12 @@ import { useAppStore } from "@/stores/app-store";
 import type { NovelWorkbenchJob, NovelWorkbenchStatus } from "@/types";
 
 const STYLE_OPTIONS = ["Photographic", "Anime", "3D Animation"] as const;
+const WORKFLOW_STEPS = [
+  "1. 输入 seed 概念或故事设定",
+  "2. autonovel 生成世界观、角色、提纲",
+  "3. 连续写作章节并自动评估",
+  "4. 自动修订并导入 Storyforge 项目",
+];
 
 function RequirementChip({ label, ok }: { label: string; ok: boolean }) {
   return (
@@ -109,6 +115,13 @@ export function NovelWorkbenchPage() {
     () => jobs.find((job) => job.job_id === selectedJobId) ?? null,
     [jobs, selectedJobId],
   );
+  const missingRequiredEnv = status?.env_status?.missing_required ?? [];
+  const missingOptionalEnv = status?.env_status?.missing_optional ?? [];
+  const runtimeEnvLabel = status?.autonovel_env_mode === "file"
+    ? "运行时环境文件"
+    : status?.autonovel_env_mode === "generated"
+      ? "运行时环境已生成"
+      : "运行时环境缺失";
 
   const canSubmit = Boolean(
     status?.requirements.all_ready && title.trim() && seedText.trim() && !submitting,
@@ -170,15 +183,15 @@ export function NovelWorkbenchPage() {
               className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-sm text-gray-400 transition-colors hover:bg-gray-800 hover:text-gray-200"
             >
               <ChevronLeft className="h-4 w-4" />
-              Projects
+              项目列表
             </button>
             <div className="h-4 w-px bg-gray-700" />
             <div className="flex items-center gap-2">
               <BookOpen className="h-5 w-5 text-indigo-400" />
               <div>
-                <h1 className="text-lg font-semibold">Novel Workbench</h1>
+                <h1 className="text-lg font-semibold">小说工坊</h1>
                 <p className="text-xs text-gray-500">
-                  Run autonovel inside Storyforge and auto-import the finished manuscript as a video project.
+                  用 autonovel 从 seed 生成长篇小说，再把结果自动导入 Storyforge 继续做分镜和视频。
                 </p>
               </div>
             </div>
@@ -189,7 +202,7 @@ export function NovelWorkbenchPage() {
             className="inline-flex items-center gap-1.5 rounded-lg border border-gray-700 bg-gray-900 px-3 py-2 text-sm text-gray-200 transition-colors hover:border-gray-500 hover:bg-gray-800"
           >
             {refreshing ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
-            Refresh
+            刷新状态
           </button>
         </div>
       </header>
@@ -198,7 +211,7 @@ export function NovelWorkbenchPage() {
         {loading ? (
           <div className="flex items-center justify-center py-16 text-gray-400">
             <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-            Loading novel workbench...
+            正在加载小说工坊...
           </div>
         ) : (
           <div className="space-y-6">
@@ -206,10 +219,10 @@ export function NovelWorkbenchPage() {
               <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
                 <div className="space-y-3">
                   <div className="flex flex-wrap gap-2">
-                    <RequirementChip label="Workspace root" ok={Boolean(status?.requirements.workspace_root_exists)} />
-                    <RequirementChip label="autonovel repo" ok={Boolean(status?.requirements.autonovel_repo_exists)} />
-                    <RequirementChip label="importer" ok={Boolean(status?.requirements.importer_exists)} />
-                    <RequirementChip label="autonovel env" ok={Boolean(status?.requirements.autonovel_env_exists)} />
+                    <RequirementChip label="工作区目录" ok={Boolean(status?.requirements.workspace_root_exists)} />
+                    <RequirementChip label="autonovel 仓库" ok={Boolean(status?.requirements.autonovel_repo_exists)} />
+                    <RequirementChip label="导入脚本" ok={Boolean(status?.requirements.importer_exists)} />
+                    <RequirementChip label={runtimeEnvLabel} ok={Boolean(status?.requirements.autonovel_env_exists)} />
                     <RequirementChip label="git" ok={Boolean(status?.requirements.git_available)} />
                     <RequirementChip label="uv" ok={Boolean(status?.requirements.uv_available)} />
                   </div>
@@ -227,32 +240,64 @@ export function NovelWorkbenchPage() {
                       <div className="mt-1 break-all font-mono text-xs text-gray-300">{status?.importer_script}</div>
                     </div>
                     <div>
-                      <div className="text-xs uppercase tracking-wide text-gray-500">Env Source</div>
+                      <div className="text-xs uppercase tracking-wide text-gray-500">Runtime Env</div>
                       <div className="mt-1 break-all font-mono text-xs text-gray-300">{status?.autonovel_env_source}</div>
+                    </div>
+                  </div>
+                  <div className="grid gap-3 lg:grid-cols-2">
+                    <div className="rounded-xl border border-white/8 bg-black/20 p-4">
+                      <div className="text-xs uppercase tracking-wide text-gray-500">主流程依赖</div>
+                      <div className="mt-3 flex flex-wrap gap-2">
+                        {Object.entries(status?.env_status?.required ?? {}).map(([key, ok]) => (
+                          <RequirementChip key={key} label={key} ok={ok} />
+                        ))}
+                      </div>
+                    </div>
+                    <div className="rounded-xl border border-white/8 bg-black/20 p-4">
+                      <div className="text-xs uppercase tracking-wide text-gray-500">可选扩展</div>
+                      <div className="mt-3 flex flex-wrap gap-2">
+                        {Object.entries(status?.env_status?.optional ?? {}).map(([key, ok]) => (
+                          <RequirementChip key={key} label={key} ok={ok} />
+                        ))}
+                      </div>
                     </div>
                   </div>
                 </div>
                 {!status?.requirements.all_ready && (
                   <div className="max-w-sm rounded-xl border border-rose-500/30 bg-rose-500/10 p-3 text-sm text-rose-200">
-                    The workbench is not ready yet. Make sure the shared workspace, `autonovel`, `.env`, `git`, and `uv`
-                    are all available to the Storyforge runtime.
+                    当前还不能启动小说流水线。
+                    {missingRequiredEnv.length > 0
+                      ? ` 缺少必要配置：${missingRequiredEnv.join(", ")}。`
+                      : " 请确认工作区、autonovel、导入脚本、git 和 uv 都可用。"}
+                  </div>
+                )}
+                {status?.requirements.all_ready && missingOptionalEnv.length > 0 && (
+                  <div className="max-w-sm rounded-xl border border-amber-500/30 bg-amber-500/10 p-3 text-sm text-amber-100">
+                    主流程已经可用。若要继续生成封面或有声书，还需要补齐：{missingOptionalEnv.join(", ")}。
                   </div>
                 )}
               </div>
             </section>
 
+            <section className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+              {WORKFLOW_STEPS.map((step) => (
+                <div key={step} className="rounded-2xl border border-gray-800 bg-gray-900/50 p-4 text-sm text-slate-300">
+                  {step}
+                </div>
+              ))}
+            </section>
+
             <div className="grid gap-6 xl:grid-cols-[420px,1fr]">
               <section className="rounded-2xl border border-gray-800 bg-gray-900/60 p-5">
-                <h2 className="text-base font-semibold">Start A Novel Pipeline</h2>
+                <h2 className="text-base font-semibold">启动小说流水线</h2>
                 <p className="mt-1 text-sm text-gray-500">
-                  This writes `seed.txt`, clones a fresh autonovel workspace, runs the full pipeline, then auto-imports the
-                  finished novel into Storyforge.
+                  这里会自动写入 `seed.txt`，复制一份干净的 autonovel 工作目录，跑完整小说流程，再把结果导回 Storyforge。
                 </p>
 
                 <form onSubmit={(event) => void handleCreateJob(event)} className="mt-5 space-y-4">
                   <div>
                     <label htmlFor="novel-title" className="mb-1 block text-sm text-gray-400">
-                      Novel Title
+                      小说标题
                     </label>
                     <input
                       id="novel-title"
@@ -266,37 +311,37 @@ export function NovelWorkbenchPage() {
 
                   <div>
                     <label htmlFor="project-name" className="mb-1 block text-sm text-gray-400">
-                      Target Storyforge Project ID
+                      Storyforge 项目标识
                     </label>
                     <input
                       id="project-name"
                       type="text"
                       value={projectName}
                       onChange={(event) => setProjectName(event.target.value)}
-                      placeholder="Optional. Auto-generated when empty."
+                      placeholder="可选，留空时会自动生成。"
                       className="w-full rounded-lg border border-gray-700 bg-gray-800 px-3 py-2 text-sm text-gray-100 outline-none focus:border-indigo-500"
                     />
                   </div>
 
                   <div>
                     <label htmlFor="seed-text" className="mb-1 block text-sm text-gray-400">
-                      Seed Text
+                      Seed 文案
                     </label>
                     <textarea
                       id="seed-text"
                       value={seedText}
                       onChange={(event) => setSeedText(event.target.value)}
                       rows={12}
-                      placeholder="Paste the seed concept you want autonovel to expand into a full novel."
+                      placeholder="输入你希望扩展成长篇小说的核心概念、设定或故事起点。"
                       className="w-full rounded-lg border border-gray-700 bg-gray-800 px-3 py-2 text-sm text-gray-100 outline-none focus:border-indigo-500"
                     />
                     <p className="mt-1 text-xs text-gray-500">
-                      `autonovel` needs a real `seed.txt`. This page removes the manual file-edit step.
+                      `autonovel` 需要真实的 `seed.txt`。这个页面已经把手工建文件这一步省掉了。
                     </p>
                   </div>
 
                   <fieldset>
-                    <legend className="mb-1 block text-sm text-gray-400">Visual Style</legend>
+                    <legend className="mb-1 block text-sm text-gray-400">视觉风格</legend>
                     <div className="flex gap-2">
                       {STYLE_OPTIONS.map((option) => (
                         <button
@@ -317,7 +362,7 @@ export function NovelWorkbenchPage() {
 
                   <div className="grid gap-4 md:grid-cols-2">
                     <fieldset>
-                      <legend className="mb-1 block text-sm text-gray-400">Aspect Ratio</legend>
+                      <legend className="mb-1 block text-sm text-gray-400">画幅比例</legend>
                       <div className="flex gap-2">
                         {(["9:16", "16:9"] as const).map((value) => (
                           <button
@@ -337,7 +382,7 @@ export function NovelWorkbenchPage() {
                     </fieldset>
 
                     <fieldset>
-                      <legend className="mb-1 block text-sm text-gray-400">Default Segment Duration</legend>
+                      <legend className="mb-1 block text-sm text-gray-400">默认片段时长</legend>
                       <div className="flex gap-2">
                         {([4, 6, 8] as const).map((value) => (
                           <button
@@ -363,7 +408,7 @@ export function NovelWorkbenchPage() {
                     className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-indigo-600 px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-indigo-500 disabled:cursor-not-allowed disabled:opacity-60"
                   >
                     {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <BookOpen className="h-4 w-4" />}
-                    {submitting ? "Starting..." : "Start Novel Pipeline"}
+                    {submitting ? "启动中..." : "启动小说流水线"}
                   </button>
                 </form>
               </section>
@@ -371,13 +416,13 @@ export function NovelWorkbenchPage() {
               <section className="grid gap-6 lg:grid-cols-[320px,1fr]">
                 <div className="rounded-2xl border border-gray-800 bg-gray-900/60 p-5">
                   <div className="mb-4 flex items-center justify-between">
-                    <h2 className="text-base font-semibold">Jobs</h2>
+                    <h2 className="text-base font-semibold">运行记录</h2>
                     <span className="text-xs text-gray-500">{jobs.length}</span>
                   </div>
                   <div className="space-y-3">
                     {jobs.length === 0 ? (
                       <div className="rounded-xl border border-dashed border-gray-800 px-4 py-10 text-center text-sm text-gray-500">
-                        No novel jobs yet.
+                        还没有小说任务。
                       </div>
                     ) : (
                       jobs.map((job) => (

@@ -26,6 +26,8 @@ kubectl apply -f deploy/sealos/storyforge.yaml
 kubectl rollout status deployment/storyforge -n storyforge
 ```
 
+This manifest now includes a Sealos `App` resource too, so Storyforge appears as its own app entry in the Sealos workspace UI.
+
 ## 4. Migrate data from the shared namespace
 
 If you are moving an existing deployment out of a shared namespace, use the migration helper:
@@ -38,10 +40,12 @@ powershell -ExecutionPolicy Bypass -File scripts/migrate_storyforge_workspace.ps
 This script:
 
 - freezes the source deployment to stop SQLite writes
-- copies `/app/projects` into the new PVC
+- copies `/app/projects` into the new PVC, including hidden files like `.arcreel.db` and `.novel_workbench`
 - copies the runtime secret
-- applies the standalone Storyforge manifest in the target namespace
-- restarts the new deployment
+- applies the standalone Storyforge manifest in the target namespace with the target deployment initially scaled to `0`
+- restores data before the new deployment starts
+- waits for the new deployment to pass an internal health check
+- cuts ingress only after the target deployment is healthy
 
 When you are ready to remove the old shared deployment too:
 

@@ -5,6 +5,7 @@ param(
     [string]$DeploymentName = "storyforge",
     [string]$SecretName = "storyforge-env",
     [string]$PvcName = "storyforge-data",
+    [string]$SourceIngressName = "network-boyqxnosbdrk",
     [string]$IngressHost = "bjmmuazhczom.cloud.sealos.io",
     [switch]$DeleteSourceAfterCutover
 )
@@ -38,21 +39,44 @@ function Copy-JsonResource {
 
     $json = kubectl get $Kind $Name -n $Namespace -o json | ConvertFrom-Json
     $json.metadata.namespace = $TargetNamespace
-    $json.metadata.resourceVersion = $null
-    $json.metadata.uid = $null
-    $json.metadata.creationTimestamp = $null
-    $json.metadata.annotations.'kubectl.kubernetes.io/last-applied-configuration' = $null
-    $json.metadata.managedFields = $null
+    [void]$json.metadata.PSObject.Properties.Remove("resourceVersion")
+    [void]$json.metadata.PSObject.Properties.Remove("uid")
+    [void]$json.metadata.PSObject.Properties.Remove("creationTimestamp")
+    [void]$json.metadata.PSObject.Properties.Remove("managedFields")
+    if ($json.metadata.annotations) {
+        [void]$json.metadata.annotations.PSObject.Properties.Remove("kubectl.kubernetes.io/last-applied-configuration")
+    }
     $json.status = $null
     $json | ConvertTo-Json -Depth 100 | kubectl apply -f -
 }
 
+function Copy-BackupItemsToTarget {
+    param(
+        [string]$LocalBackupDir,
+        [string]$Namespace,
+        [string]$PodName
+    )
+
+    $items = Get-ChildItem -Force $LocalBackupDir
+    foreach ($item in $items) {
+        $targetPath = "/data/$($item.Name)"
+        if ($item.PSIsContainer) {
+            kubectl exec -n $Namespace $PodName -- sh -lc "mkdir -p '$targetPath'" | Out-Null
+        }
+        kubectl cp $item.FullName "${Namespace}/${PodName}:$targetPath"
+    }
+}
+
+function Apply-ManifestString {
+    param([string]$Manifest)
+    $Manifest | kubectl apply -f - | Out-Null
+}
+
 Require-Command kubectl
 
-$workspace = Join-Path ([System.IO.Path]::GetTempPath()) ("storyforge-migrate-" + [guid]::NewGuid().ToString("N"))
+$workspace = ".tmp-storyforge-migrate-$([guid]::NewGuid().ToString("N"))"
 New-Item -ItemType Directory -Path $workspace | Out-Null
 $backupDir = Join-Path $workspace "projects"
-$manifestPath = Join-Path $workspace "storyforge.yaml"
 
 try {
     Write-Host "Checking source namespace access..."
@@ -104,10 +128,12 @@ spec:
     $manifest = $manifest.Replace("kind: Namespace`nmetadata:`n  name: storyforge", "kind: Namespace`nmetadata:`n  name: $TargetNamespace")
     $manifest = $manifest.Replace("namespace: storyforge", "namespace: $TargetNamespace")
     $manifest = $manifest.Replace("host: bjmmuazhczom.cloud.sealos.io", "host: $IngressHost")
-    Set-Content -Path $manifestPath -Value $manifest -Encoding UTF8
+    $nonIngressManifest = (($manifest -split "(?m)^---\s*$") | Where-Object { $_ -and ($_ -notmatch "(?m)^kind:\s*Ingress\s*$") }) -join "`n---`n"
+    $nonIngressManifest = $nonIngressManifest.Replace("replicas: 1", "replicas: 0")
+    $ingressManifest = (($manifest -split "(?m)^---\s*$") | Where-Object { $_ -and ($_ -match "(?m)^kind:\s*Ingress\s*$") }) -join "`n---`n"
 
-    Write-Host "Applying workload in target namespace..."
-    kubectl apply -f $manifestPath | Out-Null
+    Write-Host "Applying non-ingress workload in target namespace..."
+    Apply-ManifestString -Manifest $nonIngressManifest
 
     Write-Host "Creating temporary target pod..."
     @"
@@ -133,19 +159,27 @@ spec:
     Wait-ForPodReady -Namespace $TargetNamespace -Name $targetPod
 
     Write-Host "Restoring data into target PVC..."
-    kubectl cp "$backupDir/." "${TargetNamespace}/${targetPod}:/data"
+    Copy-BackupItemsToTarget -LocalBackupDir $backupDir -Namespace $TargetNamespace -PodName $targetPod
 
-    Write-Host "Restarting target deployment..."
-    kubectl rollout restart deploy/$DeploymentName -n $TargetNamespace | Out-Null
+    Write-Host "Stopping temporary target pod..."
+    kubectl delete pod $targetPod -n $TargetNamespace --ignore-not-found | Out-Null
+
+    Write-Host "Starting target deployment..."
+    kubectl scale deploy $DeploymentName -n $TargetNamespace --replicas=1 | Out-Null
     kubectl rollout status deploy/$DeploymentName -n $TargetNamespace --timeout=300s | Out-Null
+
+    Write-Host "Verifying target application health..."
+    kubectl exec -n $TargetNamespace deploy/$DeploymentName -- sh -lc "curl -fsS http://127.0.0.1:1241/health >/dev/null" | Out-Null
+
+    Write-Host "Switching ingress to target namespace..."
+    kubectl delete ingress $SourceIngressName -n $SourceNamespace --ignore-not-found | Out-Null
+    Apply-ManifestString -Manifest $ingressManifest
 
     Write-Host "Cleaning temporary pods..."
     kubectl delete pod $sourcePod -n $SourceNamespace --ignore-not-found | Out-Null
-    kubectl delete pod $targetPod -n $TargetNamespace --ignore-not-found | Out-Null
 
     if ($DeleteSourceAfterCutover) {
         Write-Host "Deleting source storyforge resources from shared namespace..."
-        kubectl delete ingress network-boyqxnosbdrk -n $SourceNamespace --ignore-not-found | Out-Null
         kubectl delete svc storyforge-lomeuvwyfvlj -n $SourceNamespace --ignore-not-found | Out-Null
         kubectl delete deploy $DeploymentName -n $SourceNamespace --ignore-not-found | Out-Null
         kubectl delete pvc $PvcName -n $SourceNamespace --ignore-not-found | Out-Null

@@ -1,7 +1,7 @@
 import type enDashboard from '../en/dashboard';
 
 export default {
-  'app_title': '叙事工厂',
+  'app_title': '叙影工场',
   'app_subtitle': '小说与视频自动生成工作台',
   'projects': '项目',
   'create_project': '创建项目',

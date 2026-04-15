@@ -1,9 +1,9 @@
 <h1 align="center">
   <br>
   <picture>
-    <source media="(prefers-color-scheme: light)" srcset="frontend/public/android-chrome-maskable-512x512.png">
-    <source media="(prefers-color-scheme: dark)" srcset="frontend/public/android-chrome-512x512.png">
-    <img src="frontend/public/android-chrome-maskable-512x512.png" alt="Storyforge Logo" width="128" style="border-radius: 16px;">
+    <source media="(prefers-color-scheme: light)" srcset="frontend/public/storyforge-logo.png">
+    <source media="(prefers-color-scheme: dark)" srcset="frontend/public/storyforge-logo.png">
+    <img src="frontend/public/storyforge-logo.png" alt="Storyforge Logo" width="168" style="border-radius: 16px;">
   </picture>
   <br>
   Storyforge
@@ -41,6 +41,35 @@
 </p>
 
 ---
+
+## Live Workspace
+
+- Public URL: `https://bjmmuazhczom.cloud.sealos.io`
+- Chinese brand shown in the UI: `叙影工场`
+- Primary positioning: `AI novel&video studio`
+
+## Current Production Topology
+
+Storyforge now runs as a split-stack deployment instead of the earlier single-container setup:
+
+- `storyforge-frontend`: React 19 workspace UI
+- `storyforge-backend`: FastAPI API and auth services
+- `storyforge-postgres`: unified PostgreSQL relational database
+- `storyforge-redis`: cache / queue support for async workloads
+
+Sealos deployment files live under [deploy/sealos](deploy/sealos), and the production compose stack lives under [deploy/production](deploy/production).
+
+## Managed Account Flows
+
+The frontend now includes a complete managed-auth surface:
+
+- `/login` for sign-in
+- `/register` for self-service sign-up
+- `/verify-email` for verification codes
+- `/forgot-password` for password reset
+- `/app/account` for profile edits, password changes, and email-verification status
+
+Bootstrap admin still comes from environment configuration, while regular users are stored in PostgreSQL. SMTP can be wired in for real email delivery; without it, verification and reset codes fall back to debug logging.
 
 ## Core Features
 

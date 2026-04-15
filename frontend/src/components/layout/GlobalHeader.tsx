@@ -9,6 +9,7 @@ import { useTasksStore } from "@/stores/tasks-store";
 import { useUsageStore, type UsageStats } from "@/stores/usage-store";
 import { useAuthStore } from "@/stores/auth-store";
 import { TaskHud } from "@/components/task-hud/TaskHud";
+import { BrandLogo } from "@/components/brand/BrandLogo";
 import { UsageDrawer } from "./UsageDrawer";
 import { WorkspaceNotificationsDrawer } from "./WorkspaceNotificationsDrawer";
 import { ExportScopeDialog } from "./ExportScopeDialog";
@@ -235,7 +236,7 @@ export function GlobalHeader({ onNavigateBack }: GlobalHeaderProps) {
       {/* ---- Left section ---- */}
       <div className="flex items-center gap-3">
         {/* Logo */}
-        <img src="/android-chrome-192x192.png" alt={t("dashboard:app_title")} className="h-5 w-5" />
+        <BrandLogo alt={t("dashboard:app_title")} variant="mark" className="h-7 w-7 rounded-lg" />
 
         {/* Back to projects */}
         <button

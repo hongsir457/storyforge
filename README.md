@@ -1,16 +1,16 @@
 <h1 align="center">
   <br>
   <picture>
-    <source media="(prefers-color-scheme: light)" srcset="frontend/public/android-chrome-maskable-512x512.png">
-    <source media="(prefers-color-scheme: dark)" srcset="frontend/public/android-chrome-512x512.png">
-    <img src="frontend/public/android-chrome-maskable-512x512.png" alt="Storyforge Logo" width="128" style="border-radius: 16px;">
+    <source media="(prefers-color-scheme: light)" srcset="frontend/public/storyforge-logo.png">
+    <source media="(prefers-color-scheme: dark)" srcset="frontend/public/storyforge-logo.png">
+    <img src="frontend/public/storyforge-logo.png" alt="Storyforge Logo" width="168" style="border-radius: 16px;">
   </picture>
   <br>
   Storyforge
   <br>
 </h1>
 
-<h4 align="center">叙事工厂 · 小说与视频自动生成工作台</h4>
+<h4 align="center">叙影工场 · 小说与视频自动生成工作台</h4>
 
 <p align="center">
   <a href="README.md"><img src="https://img.shields.io/badge/lang-中文-red?style=flat-square" alt="中文"></a>
@@ -41,6 +41,35 @@
 </p>
 
 ---
+
+## 在线工作台
+
+- 公网地址：`https://bjmmuazhczom.cloud.sealos.io`
+- 当前前端中文品牌展示：`叙影工场`
+- 英文定位：`AI novel&video studio`
+
+## 当前生产架构
+
+Storyforge 现在已经从单体容器升级为分层部署：
+
+- `storyforge-frontend`：React 19 工作台前端
+- `storyforge-backend`：FastAPI API 与账号服务
+- `storyforge-postgres`：统一 PostgreSQL 关系型数据库
+- `storyforge-redis`：异步任务缓存与队列支撑
+
+Sealos 部署清单位于 [deploy/sealos](deploy/sealos)，生产环境 Compose 清单位于 [deploy/production](deploy/production)。
+
+## 账号体系
+
+前端已经补齐托管账号链路：
+
+- `/login`：登录
+- `/register`：注册
+- `/verify-email`：邮箱验证码验证
+- `/forgot-password`：忘记密码与重置
+- `/app/account`：资料修改、改密码、邮箱验证状态
+
+管理员账号仍由环境变量引导创建，普通用户统一写入 PostgreSQL。接入 SMTP 后可以真实发邮件；未配置 SMTP 时，验证码会退回到调试日志模式。
 
 ## 核心能力
 

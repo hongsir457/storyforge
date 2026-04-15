@@ -9,6 +9,7 @@ import { useAppStore } from "@/stores/app-store";
 import { useConfigStatusStore } from "@/stores/config-status-store";
 import { useAuthStore } from "@/stores/auth-store";
 import { ArchiveDiagnosticsDialog } from "@/components/shared/ArchiveDiagnosticsDialog";
+import { BrandLogo } from "@/components/brand/BrandLogo";
 import { Popover } from "@/components/ui/Popover";
 import { ProgressBar } from "@/components/ui/ProgressBar";
 import { CreateProjectModal } from "./CreateProjectModal";
@@ -261,14 +262,15 @@ export function ProjectsPage() {
       {/* Header */}
       <header className="border-b border-gray-800 bg-gray-900/50 px-6 py-4 backdrop-blur-sm">
         <div className="mx-auto flex max-w-6xl items-center justify-between">
-          <div className="flex items-center gap-3">
-            <img src="/android-chrome-192x192.png" alt={t("dashboard:app_title")} className="h-6 w-6" />
+          <div className="flex items-center gap-4">
+            <BrandLogo
+              alt={t("dashboard:app_title")}
+              className="h-14 w-auto max-w-[11rem] rounded-2xl bg-white/95 p-1.5 shadow-[0_18px_45px_rgba(15,23,42,0.22)]"
+            />
+            <div className="h-10 w-px bg-gray-800" />
             <div>
-              <div className="flex items-center gap-2">
-                <span className="text-xl font-bold text-indigo-400">{t("dashboard:app_title")}</span>
-                <span className="text-base font-normal text-gray-400">{t("dashboard:projects")}</span>
-              </div>
-              <p className="text-xs text-gray-500">{t("dashboard:app_subtitle")}</p>
+              <p className="text-[11px] uppercase tracking-[0.28em] text-gray-500">{t("dashboard:app_subtitle")}</p>
+              <div className="mt-1 text-xl font-semibold text-white">{t("dashboard:projects")}</div>
             </div>
           </div>
           <div className="flex items-center gap-3">

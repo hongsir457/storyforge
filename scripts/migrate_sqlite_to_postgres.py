@@ -17,7 +17,7 @@ def build_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
         "--source-sqlite",
-        default=str(Path("projects") / ".arcreel.db"),
+        default=str(Path("projects") / ".autovedio.db"),
         help="Path to the source SQLite database file.",
     )
     parser.add_argument(

@@ -232,8 +232,8 @@ class TestReplacePaths:
         data = {
             "materials": {
                 "videos": [
-                    {"path": "/tmp/arcreel_jy_abc/草稿/assets/s1.mp4"},
-                    {"path": "/tmp/arcreel_jy_abc/草稿/assets/s2.mp4"},
+                    {"path": "/tmp/autovedio_jy_abc/草稿/assets/s1.mp4"},
+                    {"path": "/tmp/autovedio_jy_abc/草稿/assets/s2.mp4"},
                 ]
             },
             "other": "no change",
@@ -243,7 +243,7 @@ class TestReplacePaths:
         svc = JianyingDraftService.__new__(JianyingDraftService)
         svc._replace_paths_in_draft(
             json_path=json_path,
-            tmp_prefix="/tmp/arcreel_jy_abc/草稿/assets",
+            tmp_prefix="/tmp/autovedio_jy_abc/草稿/assets",
             target_prefix="/Users/test/Movies/JianyingPro/草稿/assets",
         )
 

@@ -43,16 +43,16 @@ class _FakeQueue:
 
 class TestReadIntEnv:
     def test_default_when_unset(self, monkeypatch):
-        monkeypatch.delenv("ARCREEL_INT", raising=False)
-        assert _read_int_env("ARCREEL_INT", 3, minimum=1) == 3
+        monkeypatch.delenv("AUTOVEDIO_INT", raising=False)
+        assert _read_int_env("AUTOVEDIO_INT", 3, minimum=1) == 3
 
     def test_default_when_bad(self, monkeypatch):
-        monkeypatch.setenv("ARCREEL_INT", "bad")
-        assert _read_int_env("ARCREEL_INT", 3, minimum=1) == 3
+        monkeypatch.setenv("AUTOVEDIO_INT", "bad")
+        assert _read_int_env("AUTOVEDIO_INT", 3, minimum=1) == 3
 
     def test_minimum_enforced(self, monkeypatch):
-        monkeypatch.setenv("ARCREEL_INT", "0")
-        assert _read_int_env("ARCREEL_INT", 3, minimum=2) == 2
+        monkeypatch.setenv("AUTOVEDIO_INT", "0")
+        assert _read_int_env("AUTOVEDIO_INT", 3, minimum=2) == 2
 
 
 class TestProviderPool:

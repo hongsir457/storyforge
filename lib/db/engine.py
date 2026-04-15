@@ -31,7 +31,7 @@ def get_database_url() -> str:
     if url:
         return url
     project_root = Path(__file__).parent.parent.parent
-    db_path = project_root / "projects" / ".arcreel.db"
+    db_path = project_root / "projects" / ".autovedio.db"
     return f"sqlite+aiosqlite:///{db_path}"
 
 

@@ -98,7 +98,7 @@ class TestRepairAllSymlinks:
         assert stats["created"] == 2  # .claude 和 CLAUDE.md 各一条
 
     def test_repair_all_skips_hidden_dirs(self, tmp_path):
-        """以 . 开头的目录应跳过（如 .arcreel.db 所在目录）。"""
+        """以 . 开头的目录应跳过（如 .autovedio.db 所在目录）。"""
         projects_root = tmp_path / "projects"
         projects_root.mkdir()
         (tmp_path / "agent_runtime_profile" / ".claude").mkdir(parents=True)

@@ -168,7 +168,7 @@ wheels = [
 ]
 
 [[package]]
-name = "arcreel"
+name = "autovedio"
 version = "0.8.1"
 source = { editable = "." }
 dependencies = [

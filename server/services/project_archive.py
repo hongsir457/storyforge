@@ -19,7 +19,7 @@ from lib.project_manager import ProjectManager
 
 logger = logging.getLogger(__name__)
 
-ARCHIVE_MANIFEST_NAME = "arcreel-export.json"
+ARCHIVE_MANIFEST_NAME = "autovedio-export.json"
 ARCHIVE_FORMAT_VERSION = 2
 ARCHIVE_SCRIPT_SCHEMA_VERSION = 2
 DEFAULT_IMPORT_FILENAME = "imported-project.zip"
@@ -246,7 +246,7 @@ class ProjectArchiveService:
                 members = self._scan_archive_members(archive)
                 root_parts, manifest = self._locate_project_root(archive, members)
 
-                with tempfile.TemporaryDirectory(prefix="arcreel-import-") as temp_dir:
+                with tempfile.TemporaryDirectory(prefix="autovedio-import-") as temp_dir:
                     staging_dir = Path(temp_dir) / "project"
                     staging_dir.mkdir(parents=True, exist_ok=True)
 
@@ -317,7 +317,7 @@ class ProjectArchiveService:
         scope: str,
     ) -> tuple[tempfile.TemporaryDirectory[str], Path, dict[str, Any], ArchiveDiagnostics]:
         source_dir = self.project_manager.get_project_path(project_name)
-        temp_dir = tempfile.TemporaryDirectory(prefix="arcreel-export-")
+        temp_dir = tempfile.TemporaryDirectory(prefix="autovedio-export-")
         snapshot_dir = Path(temp_dir.name) / project_name
         self._copy_visible_tree(source_dir, snapshot_dir)
 
@@ -1158,7 +1158,7 @@ class ProjectArchiveService:
             if len(root_candidates) != 1:
                 raise ProjectArchiveValidationError(
                     "导入包校验失败",
-                    errors=["ZIP 中包含多个 arcreel-export.json，无法确定项目根目录"],
+                    errors=["ZIP 中包含多个 autovedio-export.json，无法确定项目根目录"],
                 )
 
             root_parts = next(iter(root_candidates))

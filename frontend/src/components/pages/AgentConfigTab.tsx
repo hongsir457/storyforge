@@ -308,7 +308,7 @@ export function AgentConfigTab({ visible }: AgentConfigTabProps) {
               <ClaudeColor size={24} />
             </div>
             <div>
-              <h2 className="text-lg font-semibold text-gray-100">{t("arcreel_agent")}</h2>
+              <h2 className="text-lg font-semibold text-gray-100">{t("autovedio_agent")}</h2>
               <p className="text-sm text-gray-500">
                 {t("agent_sdk_desc")}
               </p>

@@ -91,7 +91,7 @@ class NovelWorkbenchService:
         ).resolve()
         self.importer_script = Path(
             os.environ.get(
-                "AUTONOVEL_IMPORTER_SCRIPT", str(self.workspace_root / "tools" / "import_autonovel_to_arcreel.py")
+                "AUTONOVEL_IMPORTER_SCRIPT", str(self.workspace_root / "tools" / "import_autonovel_to_autovedio.py")
             )
         ).resolve()
 
@@ -477,7 +477,7 @@ class NovelWorkbenchService:
                     str(self.importer_script),
                     "--autonovel-dir",
                     str(workspace_dir),
-                    "--arcreel-dir",
+                    "--autovedio-dir",
                     str(self.project_root),
                     "--project-name",
                     str(job["target_project_name"]),

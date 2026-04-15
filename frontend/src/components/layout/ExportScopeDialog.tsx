@@ -7,7 +7,7 @@ import type { EpisodeMeta } from "@/types/project";
 
 export type ExportScope = "current" | "full" | "jianying-draft";
 
-const DRAFT_PATH_STORAGE_KEY = "arcreel_jianying_draft_path";
+const DRAFT_PATH_STORAGE_KEY = "autovedio_jianying_draft_path";
 
 interface ExportScopeDialogProps {
   open: boolean;

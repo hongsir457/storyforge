@@ -3,7 +3,7 @@
 import logging
 import os
 
-_HANDLER_ATTR = "_arcreel_logging"
+_HANDLER_ATTR = "_autovedio_logging"
 
 
 def setup_logging(level: str | None = None) -> None:

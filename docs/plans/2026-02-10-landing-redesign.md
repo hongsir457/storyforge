@@ -2,7 +2,7 @@
 
 > **For Claude:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task.
 
-**Goal:** Rebuild the ArcReel landing page into a hero-first layout with a static "discover more" grid and a compact WeChat contact dropdown.
+**Goal:** Rebuild the autovedio landing page into a hero-first layout with a static "discover more" grid and a compact WeChat contact dropdown.
 
 **Architecture:** Keep routing unchanged and replace only landing composition in the React component layer. Move contact interaction logic into `LandingPage` so desktop hover and mobile click behaviors can be controlled by media-query detection and local component state. Preserve existing app shell and backend interfaces.
 

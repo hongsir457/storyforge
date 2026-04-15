@@ -76,7 +76,7 @@ export default {
   'system_config_title': 'System configuration and API access management',
   'config_issues': 'Configuration Issues',
   'config_issues_hint': 'The following issues were found in the current configuration and may affect functionality:',
-  'arcreel_agent': 'Storyforge Agent',
+  'autovedio_agent': 'Storyforge Agent',
   'agent_sdk_desc': 'Powered by Claude Agent SDK, driving conversational AI assistants and automated workflows',
   'claude_code_compat_hint': 'Configuration is compatible with Claude Code environment variables and Coding Plan APIs.',
   'api_access': 'API Access',

@@ -1,4 +1,4 @@
-﻿# Sealos Deploy
+# Sealos Deploy
 
 Storyforge now deploys as four workloads:
 
@@ -57,7 +57,7 @@ If you are upgrading from the old single-pod SQLite deployment, copy the old `/a
 ```bash
 kubectl exec -n ns-qkcc8vj1 deploy/storyforge-backend -- \
   python scripts/migrate_sqlite_to_postgres.py \
-    --source-sqlite /app/projects/.arcreel.db \
+    --source-sqlite /app/projects/.autovedio.db \
     --target-database-url "postgresql+asyncpg://storyforge:<postgres-password>@storyforge-postgres:5432/storyforge"
 ```
 

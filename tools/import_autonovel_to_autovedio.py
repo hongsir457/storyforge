@@ -38,7 +38,7 @@ SHOT_TYPES = (
     "Medium Long Shot",
     "Long Shot",
 )
-ARCREEL_SUBDIRS = (
+AUTOVEDIO_SUBDIRS = (
     "source",
     "scripts",
     "drafts",
@@ -71,7 +71,7 @@ def parse_args() -> argparse.Namespace:
         help="Path to the autonovel repository.",
     )
     parser.add_argument(
-        "--arcreel-dir",
+        "--autovedio-dir",
         type=Path,
         default=repo_root,
         help="Path to the Storyforge repository.",
@@ -108,7 +108,7 @@ def parse_args() -> argparse.Namespace:
         "--segment-word-target",
         type=int,
         default=110,
-        help="Target words per ArcReel segment.",
+        help="Target words per autovedio segment.",
     )
     parser.add_argument(
         "--min-segment-words",
@@ -145,7 +145,7 @@ def write_json(path: Path, payload: dict) -> None:
 
 
 def ensure_project_dirs(project_dir: Path) -> None:
-    for name in ARCREEL_SUBDIRS:
+    for name in AUTOVEDIO_SUBDIRS:
         (project_dir / name).mkdir(parents=True, exist_ok=True)
 
 
@@ -494,15 +494,15 @@ def concatenate_manuscript(chapters: list[tuple[str, str]]) -> str:
     return "\n\n---\n\n".join(parts).strip() + "\n"
 
 
-def validate_with_arcreel(
-    arcreel_dir: Path, projects_root: Path, project_name: str
+def validate_with_autovedio(
+    autovedio_dir: Path, projects_root: Path, project_name: str
 ) -> tuple[bool, list[str], list[str]]:
-    validator_path = arcreel_dir / "lib" / "data_validator.py"
+    validator_path = autovedio_dir / "lib" / "data_validator.py"
     if not validator_path.exists():
-        return False, [f"ArcReel validator file not found: {validator_path}"], []
+        return False, [f"autovedio validator file not found: {validator_path}"], []
 
     try:
-        spec = importlib.util.spec_from_file_location("arcreel_data_validator", validator_path)
+        spec = importlib.util.spec_from_file_location("autovedio_data_validator", validator_path)
         if spec is None or spec.loader is None:
             raise ImportError(f"Unable to load module spec from {validator_path}")
         module = importlib.util.module_from_spec(spec)
@@ -510,7 +510,7 @@ def validate_with_arcreel(
         spec.loader.exec_module(module)
         DataValidator = module.DataValidator
     except Exception as exc:  # pragma: no cover
-        return False, [f"Unable to import ArcReel validator: {exc}"], []
+        return False, [f"Unable to import autovedio validator: {exc}"], []
 
     validator = DataValidator(str(projects_root))
     result = validator.validate_project_dir(projects_root / project_name)
@@ -524,13 +524,13 @@ def main() -> None:
     validate_args(args)
 
     autonovel_dir = args.autonovel_dir.resolve()
-    arcreel_dir = args.arcreel_dir.resolve()
-    projects_root = arcreel_dir / "projects"
+    autovedio_dir = args.autovedio_dir.resolve()
+    projects_root = autovedio_dir / "projects"
 
     if not autonovel_dir.exists():
         raise SystemExit(f"autonovel directory does not exist: {autonovel_dir}")
-    if not arcreel_dir.exists():
-        raise SystemExit(f"Storyforge directory does not exist: {arcreel_dir}")
+    if not autovedio_dir.exists():
+        raise SystemExit(f"Storyforge directory does not exist: {autovedio_dir}")
     if not projects_root.exists():
         raise SystemExit(f"Storyforge projects directory does not exist: {projects_root}")
 
@@ -650,7 +650,7 @@ def main() -> None:
     }
     write_json(temp_project_dir / "project.json", project_payload)
 
-    valid, errors, warnings = validate_with_arcreel(arcreel_dir, projects_root, temp_project_name)
+    valid, errors, warnings = validate_with_autovedio(autovedio_dir, projects_root, temp_project_name)
     if not valid:
         joined = "\n".join(f"- {item}" for item in errors)
         raise SystemExit(

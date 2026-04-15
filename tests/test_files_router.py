@@ -349,7 +349,7 @@ class TestFilesRouter:
         assert files._get_step_files("narration") == {1: "step1_segments.md"}
         assert files._get_step_files("drama") == {1: "step1_normalized_script.md"}
         assert files._get_step_title("step1_segments.md", _t) == "片段拆分"
-        assert files._get_step_title("step1_normalized_script.md", _t) == "规范化剧本"
+        assert files._get_step_title("step1_normalized_script.md", _t) == "规范化脚本"
         assert files._get_step_title("unknown.md", _t) == "unknown.md"
 
         assert files._get_content_mode(tmp_path) == "drama"

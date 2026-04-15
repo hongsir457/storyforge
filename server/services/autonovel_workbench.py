@@ -650,9 +650,7 @@ class NovelWorkbenchService:
         values = self._collect_runtime_env_values()
         missing_required = [key for key in self.REQUIRED_RUNTIME_ENV if not values.get(key, "").strip()]
         if missing_required:
-            raise NovelWorkbenchError(
-                "Novel workbench is missing required runtime env: " + ", ".join(missing_required)
-            )
+            raise NovelWorkbenchError("Novel workbench is missing required runtime env: " + ", ".join(missing_required))
 
         ordered_keys = list(self.REQUIRED_RUNTIME_ENV) + list(self.OPTIONAL_RUNTIME_ENV)
         if self.autonovel_env_example.exists():

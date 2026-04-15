@@ -21,15 +21,17 @@ Post-processing:
 Full pipeline:
   python gen_art.py all                      # style → curate → batch → vectorize
 """
-import os
-import sys
-import json
-import re
-import time
-import shutil
+
 import argparse
+import json
+import os
+import re
+import shutil
 import subprocess
+import sys
+import time
 from pathlib import Path
+
 from dotenv import load_dotenv
 
 BASE_DIR = Path(__file__).parent
@@ -54,8 +56,10 @@ ANTHROPIC_BASE = os.environ.get("AUTONOVEL_API_BASE_URL", "https://api.anthropic
 # API HELPERS
 # ============================================================
 
+
 def fal_generate(prompt, resolution="1K", aspect_ratio="auto", seed=None):
     import httpx
+
     payload = {
         "prompt": prompt,
         "num_images": 1,
@@ -71,7 +75,8 @@ def fal_generate(prompt, resolution="1K", aspect_ratio="auto", seed=None):
     resp = httpx.post(
         FAL_URL,
         headers={"Authorization": f"Key {FAL_KEY}", "Content-Type": "application/json"},
-        json=payload, timeout=300,
+        json=payload,
+        timeout=300,
     )
     resp.raise_for_status()
     data = resp.json()
@@ -80,6 +85,7 @@ def fal_generate(prompt, resolution="1K", aspect_ratio="auto", seed=None):
 
 def fal_edit(prompt, image_urls, resolution="1K", aspect_ratio="1:1", seed=None):
     import httpx
+
     payload = {
         "prompt": prompt,
         "image_urls": image_urls,
@@ -96,7 +102,8 @@ def fal_edit(prompt, image_urls, resolution="1K", aspect_ratio="1:1", seed=None)
     resp = httpx.post(
         FAL_EDIT_URL,
         headers={"Authorization": f"Key {FAL_KEY}", "Content-Type": "application/json"},
-        json=payload, timeout=300,
+        json=payload,
+        timeout=300,
     )
     resp.raise_for_status()
     data = resp.json()
@@ -105,6 +112,7 @@ def fal_edit(prompt, image_urls, resolution="1K", aspect_ratio="1:1", seed=None)
 
 def download_image(url, dest_path):
     import httpx
+
     resp = httpx.get(url, timeout=60, follow_redirects=True)
     resp.raise_for_status()
     dest_path.parent.mkdir(parents=True, exist_ok=True)
@@ -114,6 +122,7 @@ def download_image(url, dest_path):
 
 def call_claude(prompt, max_tokens=1500):
     import httpx
+
     resp = httpx.post(
         f"{ANTHROPIC_BASE}/v1/messages",
         headers={
@@ -162,6 +171,7 @@ def get_reference_url(art_type):
 # STYLE
 # ============================================================
 
+
 def cmd_style(args):
     world = (BASE_DIR / "world.md").read_text()[:5000]
     voice = (BASE_DIR / "voice.md").read_text()[:3000]
@@ -200,8 +210,8 @@ JSON only."""
     result = call_claude(prompt)
     text = result.strip()
     if text.startswith("```"):
-        text = re.sub(r'^```\w*\n?', '', text)
-        text = re.sub(r'\n?```$', '', text)
+        text = re.sub(r"^```\w*\n?", "", text)
+        text = re.sub(r"\n?```$", "", text)
     style = json.loads(text)
 
     ART_DIR.mkdir(exist_ok=True)
@@ -216,6 +226,7 @@ JSON only."""
 # ============================================================
 # CURATE: generate N variants, human picks
 # ============================================================
+
 
 def cmd_curate(args):
     style = load_style()
@@ -273,12 +284,16 @@ def cmd_curate(args):
         }
         save_picks(picks)
 
-        directions_log.append({
-            "num": i, "direction": label,
-            "concept": d.get("concept", ""),
-            "medium": d.get("medium", ""),
-            "file": dest.name, "size": size,
-        })
+        directions_log.append(
+            {
+                "num": i,
+                "direction": label,
+                "concept": d.get("concept", ""),
+                "medium": d.get("medium", ""),
+                "file": dest.name,
+                "size": size,
+            }
+        )
 
         print(f"    → {dest.name} ({size:,} bytes)")
         if i < n:
@@ -288,7 +303,7 @@ def cmd_curate(args):
     log_path = VARIANTS_DIR / f"{art_type}_directions.json"
     log_path.write_text(json.dumps(directions_log, indent=2))
 
-    print(f"\n{'='*50}")
+    print(f"\n{'=' * 50}")
     print(f"{n} DIRECTIONS for {art_type}:")
     for d in directions_log:
         print(f"  {d['num']}. [{d['direction'].upper():12s}] {d['concept'][:60]}")
@@ -302,8 +317,8 @@ def _extract_geography(world_text):
     # Look for district/location names
     locations = []
     for pattern in [
-        r'\*\*([^*]+)\*\*\s*[—–-]',  # **Name** — description
-        r'###\s+(.+)',  # ### Section headers
+        r"\*\*([^*]+)\*\*\s*[—–-]",  # **Name** — description
+        r"###\s+(.+)",  # ### Section headers
     ]:
         for m in re.finditer(pattern, world_text):
             name = m.group(1).strip()
@@ -311,7 +326,7 @@ def _extract_geography(world_text):
                 locations.append(name)
 
     # Also extract named places from text
-    for pattern in [r'the ([A-Z][a-z]+ (?:Quarter|District|Tier|Line|Square|Tower|Settlement)s?)']:
+    for pattern in [r"the ([A-Z][a-z]+ (?:Quarter|District|Tier|Line|Square|Tower|Settlement)s?)"]:
         for m in re.finditer(pattern, world_text):
             loc = m.group(1)
             if loc not in locations:
@@ -325,6 +340,7 @@ def _extract_geography(world_text):
 # ============================================================
 # PICK: select a variant as the final
 # ============================================================
+
 
 def cmd_pick(args):
     art_type = args.art_type
@@ -360,12 +376,13 @@ def cmd_pick(args):
     print(f"Selected variant {number} as final {art_type}")
     print(f"  {variant_path} → {final}")
     if art_type == "ornament":
-        print(f"\nOrnament reference set. Run: gen_art.py ornaments-all")
+        print("\nOrnament reference set. Run: gen_art.py ornaments-all")
 
 
 # ============================================================
 # BATCH ORNAMENTS (use reference)
 # ============================================================
+
 
 def cmd_ornaments_all(args):
     style = load_style()
@@ -374,7 +391,7 @@ def cmd_ornaments_all(args):
     chapters = sorted(BASE_DIR.glob("chapters/ch_*.md"))
     print(f"Generating ornaments for {len(chapters)} chapters...")
     if ref_url:
-        print(f"  Using ornament reference for style consistency")
+        print("  Using ornament reference for style consistency")
 
     for ch_path in chapters:
         num = int(ch_path.stem.split("_")[1])
@@ -419,6 +436,7 @@ def cmd_scene_break(args):
 # VECTORIZE: raster → SVG via potrace
 # ============================================================
 
+
 def cmd_vectorize(args):
     target = args.target if args.target else "all"
 
@@ -451,6 +469,7 @@ def cmd_vectorize(args):
         try:
             # Step 1: Convert to grayscale PBM using Pillow
             from PIL import Image
+
             img = Image.open(png_path).convert("L")
             # Threshold to black and white
             bw = img.point(lambda x: 0 if x < 180 else 255, "1")
@@ -459,9 +478,9 @@ def cmd_vectorize(args):
 
             # Step 2: Run potrace
             result = subprocess.run(
-                [potrace, str(pbm_path), "-s", "-o", str(svg_path),
-                 "--turdsize", "4", "--opttolerance", "0.2"],
-                capture_output=True, text=True
+                [potrace, str(pbm_path), "-s", "-o", str(svg_path), "--turdsize", "4", "--opttolerance", "0.2"],
+                capture_output=True,
+                text=True,
             )
 
             # Cleanup temp file
@@ -483,6 +502,7 @@ def cmd_vectorize(args):
 # ALL: full pipeline with human curation points
 # ============================================================
 
+
 def cmd_all(args):
     print("=" * 60)
     print("AUTONOVEL ART PIPELINE (interactive)")
@@ -495,8 +515,10 @@ def cmd_all(args):
         print(f"  Using existing style from {STYLE_FILE}")
 
     print("\n--- Step 2: Generate Cover Variants ---")
+
     class CurateArgs:
         pass
+
     ca = CurateArgs()
     ca.art_type = "cover"
     ca.n = 4
@@ -504,7 +526,7 @@ def cmd_all(args):
     print("\n>>> HUMAN ACTION: Review art/variants/cover_*.png")
     print(">>> Then run: gen_art.py pick cover <number>")
     print(">>> Then re-run: gen_art.py all")
-    
+
     if not get_reference_url("cover"):
         print("\n(Stopping here — pick a cover first)")
         return
@@ -544,6 +566,7 @@ def cmd_all(args):
 # ============================================================
 # MAIN
 # ============================================================
+
 
 def main():
     parser = argparse.ArgumentParser(description="Generate novel art via Nano Banana 2")

@@ -189,9 +189,9 @@ async def ensure_bootstrap_admin() -> None:
     from lib.db import async_session_factory
     from lib.db.repositories.user_repository import UserRepository
 
-    username = (os.environ.get("AUTH_USERNAME", "admin").strip() or "admin")
-    email = (os.environ.get("AUTH_EMAIL", "").strip().lower() or f"{username}@storyforge.local")
-    display_name = (os.environ.get("AUTH_DISPLAY_NAME", "").strip() or "Storyforge Admin")
+    username = os.environ.get("AUTH_USERNAME", "admin").strip() or "admin"
+    email = os.environ.get("AUTH_EMAIL", "").strip().lower() or f"{username}@storyforge.local"
+    display_name = os.environ.get("AUTH_DISPLAY_NAME", "").strip() or "Storyforge Admin"
     password = ensure_auth_password()
 
     async with async_session_factory() as session:

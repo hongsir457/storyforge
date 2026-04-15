@@ -12,11 +12,13 @@ Usage:
   python gen_audiobook_script.py 1         # Single chapter
   python gen_audiobook_script.py 1 5       # Range of chapters
 """
-import os
-import sys
+
 import json
+import os
 import re
+import sys
 from pathlib import Path
+
 from dotenv import load_dotenv
 
 BASE_DIR = Path(__file__).parent
@@ -67,6 +69,7 @@ Rules:
 
 def call_claude(prompt, max_tokens=8000):
     import httpx
+
     resp = httpx.post(
         f"{API_BASE}/v1/messages",
         headers={
@@ -133,32 +136,34 @@ Output the JSON array only. No other text."""
     # Extract JSON from response
     result = result.strip()
     if result.startswith("```"):
-        result = re.sub(r'^```\w*\n?', '', result)
-        result = re.sub(r'\n?```$', '', result)
+        result = re.sub(r"^```\w*\n?", "", result)
+        result = re.sub(r"\n?```$", "", result)
 
     try:
         segments = json.loads(result)
     except json.JSONDecodeError:
         # Try to fix common JSON issues from LLM output
         # 1. Remove trailing commas before ] or }
-        cleaned = re.sub(r',\s*([}\]])', r'\1', result)
+        cleaned = re.sub(r",\s*([}\]])", r"\1", result)
         # 2. Fix unescaped newlines in strings
-        cleaned = cleaned.replace('\n', '\\n')
+        cleaned = cleaned.replace("\n", "\\n")
         # 3. Re-add structural newlines (between array elements)
-        cleaned = cleaned.replace('\\n{', '\n{').replace('\\n]', '\n]')
+        cleaned = cleaned.replace("\\n{", "\n{").replace("\\n]", "\n]")
         try:
             segments = json.loads(cleaned)
         except json.JSONDecodeError:
             # Last resort: extract individual objects
-            print(f" (fixing JSON...)", end="", flush=True)
+            print(" (fixing JSON...)", end="", flush=True)
             segments = []
             for m in re.finditer(r'\{\s*"speaker"\s*:\s*"([^"]+)"\s*,\s*"text"\s*:\s*"((?:[^"\\]|\\.)*)"\s*\}', result):
-                segments.append({
-                    "speaker": m.group(1),
-                    "text": m.group(2).replace('\\n', '\n').replace('\\"', '"'),
-                })
+                segments.append(
+                    {
+                        "speaker": m.group(1),
+                        "text": m.group(2).replace("\\n", "\n").replace('\\"', '"'),
+                    }
+                )
             if not segments:
-                print(f" PARSE ERROR", file=sys.stderr)
+                print(" PARSE ERROR", file=sys.stderr)
                 (SCRIPTS_DIR / f"ch{ch_num:02d}_raw.txt").write_text(result)
                 return None
 
@@ -199,8 +204,8 @@ def main():
             all_scripts.append(script)
 
     # Summary
-    print(f"\n{'='*50}")
-    print(f"AUDIOBOOK SCRIPT SUMMARY")
+    print(f"\n{'=' * 50}")
+    print("AUDIOBOOK SCRIPT SUMMARY")
     print(f"  Chapters: {len(all_scripts)}")
     total_segs = sum(s["total_segments"] for s in all_scripts)
     total_chars = sum(s["total_chars"] for s in all_scripts)
@@ -211,7 +216,7 @@ def main():
     print(f"  Total characters: {total_chars:,}")
     print(f"  Speakers found: {sorted(all_speakers)}")
     print(f"  Scripts saved to: {SCRIPTS_DIR}/")
-    print(f"{'='*50}")
+    print(f"{'=' * 50}")
 
 
 if __name__ == "__main__":

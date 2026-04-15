@@ -14,10 +14,9 @@ to tune what "good" means. The agent treats it as a black box.
 """
 
 import argparse
+import glob
 import json
 import os
-import sys
-import glob
 import re
 from datetime import datetime
 from pathlib import Path
@@ -27,6 +26,7 @@ BASE_DIR = Path(__file__).parent
 
 # Load .env file if present
 from dotenv import load_dotenv
+
 load_dotenv(BASE_DIR / ".env")
 
 # Judge uses Opus 4.6 (harsh, critical). Writer uses Sonnet 4.6 (fast, long context).
@@ -45,18 +45,52 @@ EVAL_LOG_DIR.mkdir(exist_ok=True)
 # ---- Mechanical Slop Detection (no LLM needed) ----
 
 TIER1_BANNED = [
-    "delve", "utilize", "leverage", "facilitate", "elucidate",
-    "embark", "endeavor", "encompass", "multifaceted", "tapestry",
-    "paradigm", "synergy", "synergize", "holistic", "catalyze",
-    "catalyst", "juxtapose", "myriad", "plethora",
+    "delve",
+    "utilize",
+    "leverage",
+    "facilitate",
+    "elucidate",
+    "embark",
+    "endeavor",
+    "encompass",
+    "multifaceted",
+    "tapestry",
+    "paradigm",
+    "synergy",
+    "synergize",
+    "holistic",
+    "catalyze",
+    "catalyst",
+    "juxtapose",
+    "myriad",
+    "plethora",
 ]
 
 TIER2_SUSPICIOUS = [
-    "robust", "comprehensive", "seamless", "seamlessly", "cutting-edge",
-    "innovative", "streamline", "empower", "foster", "enhance", "elevate",
-    "optimize", "pivotal", "intricate", "profound", "resonate",
-    "underscore", "harness", "cultivate", "bolster", "galvanize",
-    "cornerstone", "game-changer", "scalable",
+    "robust",
+    "comprehensive",
+    "seamless",
+    "seamlessly",
+    "cutting-edge",
+    "innovative",
+    "streamline",
+    "empower",
+    "foster",
+    "enhance",
+    "elevate",
+    "optimize",
+    "pivotal",
+    "intricate",
+    "profound",
+    "resonate",
+    "underscore",
+    "harness",
+    "cultivate",
+    "bolster",
+    "galvanize",
+    "cornerstone",
+    "game-changer",
+    "scalable",
 ]
 
 TIER3_FILLER = [
@@ -80,8 +114,14 @@ TIER3_FILLER = [
 ]
 
 TRANSITION_OPENERS = [
-    "however", "furthermore", "additionally", "moreover",
-    "nevertheless", "consequently", "nonetheless", "similarly",
+    "however",
+    "furthermore",
+    "additionally",
+    "moreover",
+    "nevertheless",
+    "consequently",
+    "nonetheless",
+    "similarly",
 ]
 
 # Fiction-specific AI tells (prose clichés that betray machine origin)
@@ -167,13 +207,13 @@ def slop_score(text):
     em_dash_density = (em_dashes / word_count) * 1000
 
     # Sentence length variation (coefficient of variation)
-    sentences = re.split(r'[.!?]+', text)
+    sentences = re.split(r"[.!?]+", text)
     sentences = [s.strip() for s in sentences if len(s.strip().split()) > 2]
     if len(sentences) > 2:
         lengths = [len(s.split()) for s in sentences]
         mean_len = sum(lengths) / len(lengths)
-        variance = sum((l - mean_len) ** 2 for l in lengths) / len(lengths)
-        std_len = variance ** 0.5
+        variance = sum((length - mean_len) ** 2 for length in lengths) / len(lengths)
+        std_len = variance**0.5
         sentence_length_cv = std_len / mean_len if mean_len > 0 else 0
     else:
         sentence_length_cv = 0.5  # not enough data, assume OK
@@ -209,8 +249,8 @@ def slop_score(text):
 
     # Composite penalty (0 = clean, 10 = disaster)
     penalty = 0.0
-    penalty += min(len(tier1_hits) * 1.5, 4.0)       # tier1: up to 4 pts
-    penalty += min(tier2_cluster_count * 1.0, 2.0)    # tier2 clusters: up to 2 pts
+    penalty += min(len(tier1_hits) * 1.5, 4.0)  # tier1: up to 4 pts
+    penalty += min(tier2_cluster_count * 1.0, 2.0)  # tier2 clusters: up to 2 pts
     penalty += min(sum(c for _, c in tier3_hits) * 0.3, 2.0)  # tier3: up to 2 pts
     if em_dash_density > 15:
         penalty += min((em_dash_density - 15) * 0.3, 1.0)  # em dashes: up to 1 pt (threshold raised for voice)
@@ -218,9 +258,9 @@ def slop_score(text):
         penalty += 1.0  # uniform sentence length: 1 pt
     if transition_ratio > 0.3:
         penalty += min(transition_ratio * 2, 1.0)  # transition abuse: up to 1 pt
-    penalty += min(fiction_tell_count * 0.3, 2.0)     # fiction AI tells: up to 2 pts
-    penalty += min(telling_count * 0.2, 1.5)          # show-don't-tell: up to 1.5 pts
-    penalty += min(structural_tic_count * 0.5, 2.0)   # structural AI tics: up to 2 pts
+    penalty += min(fiction_tell_count * 0.3, 2.0)  # fiction AI tells: up to 2 pts
+    penalty += min(telling_count * 0.2, 1.5)  # show-don't-tell: up to 1.5 pts
+    penalty += min(structural_tic_count * 0.5, 2.0)  # structural AI tics: up to 2 pts
 
     penalty = min(penalty, 10.0)
 
@@ -267,7 +307,7 @@ def load_all_chapters():
     """Load all chapter files in order."""
     chapters = {}
     for f in sorted(glob.glob(str(CHAPTERS_DIR / "ch_*.md"))):
-        num = int(re.search(r'ch_(\d+)', f).group(1))
+        num = int(re.search(r"ch_(\d+)", f).group(1))
         chapters[num] = Path(f).read_text()
     return chapters
 
@@ -287,8 +327,8 @@ def call_judge(prompt, max_tokens=2000):
         "max_tokens": max_tokens,
         "temperature": 0.3,
         "system": "You are a literary critic and novel editor. "
-                  "You evaluate fiction with precision. Always respond with valid JSON. "
-                  "No markdown fences, no preamble -- just the JSON object.",
+        "You evaluate fiction with precision. Always respond with valid JSON. "
+        "No markdown fences, no preamble -- just the JSON object.",
         "messages": [
             {"role": "user", "content": prompt},
         ],
@@ -308,10 +348,10 @@ def parse_json_response(text):
     """Extract JSON from a response that might have markdown fences or trailing text."""
     text = text.strip()
     if text.startswith("```"):
-        text = re.sub(r'^```\w*\n?', '', text)
-        text = re.sub(r'\n?```$', '', text)
+        text = re.sub(r"^```\w*\n?", "", text)
+        text = re.sub(r"\n?```$", "", text)
     # Find the outermost JSON object
-    start = text.find('{')
+    start = text.find("{")
     if start == -1:
         raise ValueError("No JSON object found in response")
     # Walk forward to find the matching closing brace
@@ -323,7 +363,7 @@ def parse_json_response(text):
         if escape:
             escape = False
             continue
-        if c == '\\' and in_string:
+        if c == "\\" and in_string:
             escape = True
             continue
         if c == '"' and not escape:
@@ -331,18 +371,18 @@ def parse_json_response(text):
             continue
         if in_string:
             continue
-        if c == '{':
+        if c == "{":
             depth += 1
-        elif c == '}':
+        elif c == "}":
             depth -= 1
             if depth == 0:
-                return json.loads(text[start:i+1], strict=False)
+                return json.loads(text[start : i + 1], strict=False)
     # Fallback: try loading as-is, with strict=False to handle control chars
     try:
         return json.loads(text, strict=False)
     except json.JSONDecodeError:
         # Last resort: fix common issues (literal newlines in strings)
-        fixed = re.sub(r'(?<!\\)\n', '\\n', text)
+        fixed = re.sub(r"(?<!\\)\n", "\\n", text)
         return json.loads(fixed, strict=False)
 
 
@@ -674,12 +714,11 @@ def evaluate_chapter(chapter_num):
     layers = load_layer_files()
     chapter_text = load_chapter(chapter_num)
     if not chapter_text.strip():
-        return {"error": f"Chapter {chapter_num} is empty or missing",
-                "overall_score": 0.0}
+        return {"error": f"Chapter {chapter_num} is empty or missing", "overall_score": 0.0}
 
     # Extract this chapter's outline entry (rough heuristic)
     outline = layers["outline"]
-    ch_pattern = rf'###\s*Ch\s*{chapter_num}\b.*?(?=###\s*Ch\s*\d|## Act|## Foreshadowing|$)'
+    ch_pattern = rf"###\s*Ch\s*{chapter_num}\b.*?(?=###\s*Ch\s*\d|## Act|## Foreshadowing|$)"
     ch_match = re.search(ch_pattern, outline, re.DOTALL)
     chapter_outline = ch_match.group(0) if ch_match else "(outline entry not found)"
 
@@ -770,11 +809,7 @@ def evaluate_full():
         word_count = len(text.split())
         head = text[:500]
         tail = text[-500:] if len(text) > 500 else ""
-        summaries.append(
-            f"Chapter {num} ({word_count} words):\n"
-            f"  Opening: {head}...\n"
-            f"  Closing: ...{tail}\n"
-        )
+        summaries.append(f"Chapter {num} ({word_count} words):\n  Opening: {head}...\n  Closing: ...{tail}\n")
 
     prompt = FULL_NOVEL_PROMPT.format(
         voice=layers["voice"],
@@ -789,15 +824,13 @@ def evaluate_full():
 
 # --- Main ---
 
+
 def main():
     parser = argparse.ArgumentParser(description="Evaluate the novel")
     group = parser.add_mutually_exclusive_group(required=True)
-    group.add_argument("--phase", choices=["foundation"],
-                       help="Evaluate planning documents")
-    group.add_argument("--chapter", type=int,
-                       help="Evaluate a specific chapter number")
-    group.add_argument("--full", action="store_true",
-                       help="Evaluate the entire novel")
+    group.add_argument("--phase", choices=["foundation"], help="Evaluate planning documents")
+    group.add_argument("--chapter", type=int, help="Evaluate a specific chapter number")
+    group.add_argument("--full", action="store_true", help="Evaluate the entire novel")
     args = parser.parse_args()
 
     if args.phase == "foundation":

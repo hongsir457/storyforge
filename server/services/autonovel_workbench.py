@@ -49,9 +49,7 @@ class NovelWorkbenchService:
         ("export", "typeset/novel.pdf"),
         ("export", "typeset/novel.epub"),
     )
-    ARTIFACT_GLOBS = (
-        ("chapters", "chapters/ch_*.md"),
-    )
+    ARTIFACT_GLOBS = (("chapters", "chapters/ch_*.md"),)
     ARTIFACT_GROUP_ORDER = {
         "inputs": 0,
         "planning": 1,
@@ -70,14 +68,14 @@ class NovelWorkbenchService:
             os.environ.get("AUTONOVEL_SOURCE_DIR", str(self.workspace_root / "autonovel"))
         ).resolve()
         self.importer_script = Path(
-            os.environ.get("AUTONOVEL_IMPORTER_SCRIPT", str(self.workspace_root / "tools" / "import_autonovel_to_arcreel.py"))
+            os.environ.get(
+                "AUTONOVEL_IMPORTER_SCRIPT", str(self.workspace_root / "tools" / "import_autonovel_to_arcreel.py")
+            )
         ).resolve()
 
         shared_env = self.workspace_root / ".env.shared"
         default_env_source = shared_env if shared_env.exists() else self.autonovel_source_dir / ".env"
-        self.autonovel_env_source = Path(
-            os.environ.get("AUTONOVEL_ENV_SOURCE", str(default_env_source))
-        ).resolve()
+        self.autonovel_env_source = Path(os.environ.get("AUTONOVEL_ENV_SOURCE", str(default_env_source))).resolve()
 
         self.state_dir = self.projects_root / ".novel_workbench"
         self.logs_dir = self.state_dir / "logs"
@@ -268,9 +266,7 @@ class NovelWorkbenchService:
             payload = json.load(handle)
         jobs = payload if isinstance(payload, list) else []
         self._jobs = {
-            str(job["job_id"]): job
-            for job in jobs
-            if isinstance(job, dict) and isinstance(job.get("job_id"), str)
+            str(job["job_id"]): job for job in jobs if isinstance(job, dict) and isinstance(job.get("job_id"), str)
         }
 
     def _save_jobs_locked(self) -> None:
@@ -282,7 +278,9 @@ class NovelWorkbenchService:
         if job is None:
             return {}
         view = dict(job)
-        view["seed_excerpt"] = textwrap.shorten(" ".join(view.get("seed_text", "").split()), width=180, placeholder="...")
+        view["seed_excerpt"] = textwrap.shorten(
+            " ".join(view.get("seed_text", "").split()), width=180, placeholder="..."
+        )
         log_path = Path(view.get("log_path") or "")
         view["log_tail"] = self._read_log_tail(log_path)
         return view
@@ -420,7 +418,9 @@ class NovelWorkbenchService:
 
     async def _run_job(self, job_id: str) -> None:
         try:
-            await self._mark_job(job_id, status="running", stage="preparing", started_at=self._now(), error_message=None)
+            await self._mark_job(
+                job_id, status="running", stage="preparing", started_at=self._now(), error_message=None
+            )
             self._assert_ready()
 
             job = await self._get_raw_job(job_id)

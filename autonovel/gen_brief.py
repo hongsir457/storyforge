@@ -9,6 +9,7 @@ Usage:
   python gen_brief.py --cuts 12     # brief from adversarial cuts for ch 12
   python gen_brief.py --auto        # auto-detect weakest chapter and generate
 """
+
 import argparse
 import json
 import re
@@ -26,6 +27,7 @@ VOICE_PATH = BASE_DIR / "voice.md"
 # ---------------------------------------------------------------------------
 # helpers
 # ---------------------------------------------------------------------------
+
 
 def load_json(path: Path) -> dict:
     return json.loads(path.read_text(encoding="utf-8"))
@@ -49,10 +51,7 @@ def chapter_title(text: str) -> str:
         if line.startswith("#"):
             # strip leading hashes and any "Chapter N/One/Two/..." prefix
             title = re.sub(r"^#+\s*", "", line)
-            title = re.sub(
-                r"^Chapter\s+(?:\d+|[A-Z][a-z]+(?:-[A-Z][a-z]+)*)\s*[:—–-]*\s*",
-                "", title, flags=re.I
-            )
+            title = re.sub(r"^Chapter\s+(?:\d+|[A-Z][a-z]+(?:-[A-Z][a-z]+)*)\s*[:—–-]*\s*", "", title, flags=re.I)
             return title.strip() if title.strip() else "Untitled"
     return "Untitled"
 
@@ -65,7 +64,6 @@ def extract_voice_rules() -> list[str]:
     """Pull the key guardrail / voice rules from voice.md Part 1 + Part 2."""
     if not VOICE_PATH.exists():
         return ["(voice.md not found)"]
-    voice = VOICE_PATH.read_text(encoding="utf-8")
 
     rules: list[str] = []
 
@@ -123,6 +121,7 @@ def load_cuts(ch: int) -> dict | None:
 # panel feedback extraction
 # ---------------------------------------------------------------------------
 
+
 def panel_mentions_for_chapter(panel: dict, ch: int) -> dict:
     """Extract all reader comments that mention this chapter."""
     readers = panel.get("readers", {})
@@ -139,9 +138,7 @@ def panel_mentions_for_chapter(panel: dict, ch: int) -> dict:
     }
 
     # Use word-boundary regex so "Chapter 2" doesn't match "Chapter 21"
-    ch_re = re.compile(
-        rf"\b(?:Chapter|Ch\.?)\s*{ch}\b", re.I
-    )
+    ch_re = re.compile(rf"\b(?:Chapter|Ch\.?)\s*{ch}\b", re.I)
 
     for reader_name, reader_data in readers.items():
         for key in mentions:
@@ -156,9 +153,7 @@ def panel_mentions_for_chapter(panel: dict, ch: int) -> dict:
             q = d.get("question", "")
             flagged = d.get("flagged_by", [])
             count = len(flagged)
-            flagged_issues.append(
-                f"{q}: flagged by {count}/4 readers ({', '.join(flagged)})"
-            )
+            flagged_issues.append(f"{q}: flagged by {count}/4 readers ({', '.join(flagged)})")
 
     return {
         "mentions": mentions,
@@ -169,6 +164,7 @@ def panel_mentions_for_chapter(panel: dict, ch: int) -> dict:
 # ---------------------------------------------------------------------------
 # brief generators
 # ---------------------------------------------------------------------------
+
 
 def build_panel_brief(ch: int) -> str:
     panel = load_panel()
@@ -185,7 +181,6 @@ def build_panel_brief(ch: int) -> str:
 
     # Determine brief type from dominant issue
     negative_keys = ["momentum_loss", "worst_scene", "cut_candidate"]
-    neg_count = sum(len(mentions[k]) for k in negative_keys)
     if len(mentions["cut_candidate"]) > 0:
         brief_type = "COMPRESS"
     elif len(mentions["worst_scene"]) > 0:
@@ -198,10 +193,7 @@ def build_panel_brief(ch: int) -> str:
     # Build PROBLEM section
     problem_parts: list[str] = []
     if flagged:
-        problem_parts.append(
-            "Panel disagreement flags for this chapter:\n"
-            + "\n".join(f"- {f}" for f in flagged)
-        )
+        problem_parts.append("Panel disagreement flags for this chapter:\n" + "\n".join(f"- {f}" for f in flagged))
     for key in negative_keys:
         if mentions[key]:
             problem_parts.append(f"### {key.replace('_', ' ').title()}")
@@ -227,9 +219,7 @@ def build_panel_brief(ch: int) -> str:
     # Check cuts file for tightest_passage
     cuts_data = load_cuts(ch)
     if cuts_data and cuts_data.get("tightest_passage"):
-        keep_parts.append(
-            f'Tightest passage (from adversarial edit): "{cuts_data["tightest_passage"]}"'
-        )
+        keep_parts.append(f'Tightest passage (from adversarial edit): "{cuts_data["tightest_passage"]}"')
     # Check per-chapter eval for strongest sentences
     ch_eval_path = latest_chapter_eval(ch)
     if ch_eval_path:
@@ -263,10 +253,7 @@ def build_panel_brief(ch: int) -> str:
     # From worst_scene
     for m in mentions["worst_scene"]:
         # Try to extract the fix suggestion — look for "Fix:" or "The fix is"
-        fix_match = re.search(
-            r"(?:The fix(?:\s+is\s*\w*)?|Fix)\s*[:—]\s*(.+)",
-            m, re.I | re.DOTALL
-        )
+        fix_match = re.search(r"(?:The fix(?:\s+is\s*\w*)?|Fix)\s*[:—]\s*(.+)", m, re.I | re.DOTALL)
         if fix_match:
             # Take up to ~300 chars of the fix suggestion
             raw_fix = fix_match.group(1).strip()
@@ -299,9 +286,7 @@ def build_panel_brief(ch: int) -> str:
 
     # From missing_scene
     if mentions["missing_scene"]:
-        change_parts.append(
-            f"{change_num}. **Add missing beat**: Panel identifies a scene gap near this chapter."
-        )
+        change_parts.append(f"{change_num}. **Add missing beat**: Panel identifies a scene gap near this chapter.")
         for m in mentions["missing_scene"]:
             snippet = m[:300] + "..." if len(m) > 300 else m
             change_parts.append(f"   {snippet}")
@@ -367,16 +352,19 @@ def build_eval_brief(ch: int) -> str:
         # Overall score and weakest dimension
         overall = ch_eval.get("overall_score", "?")
         weakest_dim = ch_eval.get("weakest_dimension", "unknown")
-        problem_parts.append(
-            f"Per-chapter eval score: **{overall}/10**. "
-            f"Weakest dimension: **{weakest_dim}**."
-        )
+        problem_parts.append(f"Per-chapter eval score: **{overall}/10**. Weakest dimension: **{weakest_dim}**.")
 
         # Collect weakest moments from each dimension
         dim_keys = [
-            "voice_adherence", "beat_coverage", "character_voice",
-            "plants_seeded", "prose_quality", "continuity",
-            "canon_compliance", "lore_integration", "engagement",
+            "voice_adherence",
+            "beat_coverage",
+            "character_voice",
+            "plants_seeded",
+            "prose_quality",
+            "continuity",
+            "canon_compliance",
+            "lore_integration",
+            "engagement",
         ]
         for dk in dim_keys:
             dim = ch_eval.get(dk)
@@ -386,9 +374,7 @@ def build_eval_brief(ch: int) -> str:
             weakest = dim.get("weakest_moment", "")
             fix = dim.get("fix", "")
             if score != "?" and int(score) <= 7 and weakest:
-                problem_parts.append(
-                    f"**{dk.replace('_', ' ').title()}** ({score}/10): {weakest}"
-                )
+                problem_parts.append(f"**{dk.replace('_', ' ').title()}** ({score}/10): {weakest}")
                 if fix:
                     change_parts.append(f"{change_num}. [{dk}] {fix}")
                     change_num += 1
@@ -428,14 +414,11 @@ def build_eval_brief(ch: int) -> str:
         novel_score = full_eval.get("novel_score", "?")
 
         if weakest_ch == ch:
-            problem_parts.insert(0,
-                f"**This is the novel's weakest chapter** per full eval "
-                f"(novel score: {novel_score}/10)."
+            problem_parts.insert(
+                0, f"**This is the novel's weakest chapter** per full eval (novel score: {novel_score}/10)."
             )
         if top_sug and (weakest_ch == ch or ch_eval_path is None):
-            change_parts.append(
-                f"{change_num}. [full eval top suggestion] {top_sug}"
-            )
+            change_parts.append(f"{change_num}. [full eval top suggestion] {top_sug}")
             change_num += 1
 
         # Pacing curve note if it mentions this chapter
@@ -448,9 +431,7 @@ def build_eval_brief(ch: int) -> str:
     # Tightest passage from cuts
     cuts_data = load_cuts(ch)
     if cuts_data and cuts_data.get("tightest_passage"):
-        keep_parts.append(
-            f'Tightest passage (adversarial edit): "{cuts_data["tightest_passage"]}"'
-        )
+        keep_parts.append(f'Tightest passage (adversarial edit): "{cuts_data["tightest_passage"]}"')
 
     if not keep_parts:
         keep_parts.append("(Review chapter for strongest passages before revising.)")
@@ -520,8 +501,7 @@ def build_cuts_brief(ch: int) -> str:
     # PROBLEM
     problem_parts: list[str] = []
     problem_parts.append(
-        f"Adversarial edit found **{total_cuttable} cuttable words** "
-        f"({fat_pct}% fat) across {len(cuts)} passages."
+        f"Adversarial edit found **{total_cuttable} cuttable words** ({fat_pct}% fat) across {len(cuts)} passages."
     )
     if verdict:
         problem_parts.append(f"Verdict: {verdict}")
@@ -532,12 +512,12 @@ def build_cuts_brief(ch: int) -> str:
             problem_parts.append(f"- {t}: {count} instances")
 
     if loosest:
-        problem_parts.append(f'\n**Loosest passage:**\n> {loosest}')
+        problem_parts.append(f"\n**Loosest passage:**\n> {loosest}")
 
     # WHAT TO KEEP
     keep_parts: list[str] = []
     if tightest:
-        keep_parts.append(f'**Tightest passage** (do not touch):\n> {tightest}')
+        keep_parts.append(f"**Tightest passage** (do not touch):\n> {tightest}")
 
     # Also pull strongest sentences from eval if available
     ch_eval_path = latest_chapter_eval(ch)
@@ -633,16 +613,19 @@ def build_auto_brief() -> tuple[int, str]:
 
     # Full eval context
     problem_parts.append(
-        f"**Weakest chapter in the novel** (novel score: {novel_score}/10, "
-        f"weakest dimension: {weakest_dim})."
+        f"**Weakest chapter in the novel** (novel score: {novel_score}/10, weakest dimension: {weakest_dim})."
     )
     if top_sug:
         problem_parts.append(f"**Top suggestion from full eval:** {top_sug}")
 
     # Per-dimension notes from full eval that mention this chapter
     dim_keys = [
-        "arc_completion", "pacing_curve", "theme_coherence",
-        "foreshadowing_resolution", "world_consistency", "voice_consistency",
+        "arc_completion",
+        "pacing_curve",
+        "theme_coherence",
+        "foreshadowing_resolution",
+        "world_consistency",
+        "voice_consistency",
         "overall_engagement",
     ]
     ch_re = re.compile(rf"\b(?:Chapters?|Ch\.?)\s*{ch}\b", re.I)
@@ -661,8 +644,14 @@ def build_auto_brief() -> tuple[int, str]:
         problem_parts.append(f"\nPer-chapter eval score: **{overall}/10**")
 
         # Weakest moments
-        for dk in ["voice_adherence", "beat_coverage", "character_voice",
-                    "plants_seeded", "prose_quality", "engagement"]:
+        for dk in [
+            "voice_adherence",
+            "beat_coverage",
+            "character_voice",
+            "plants_seeded",
+            "prose_quality",
+            "engagement",
+        ]:
             dim = ch_eval.get(dk)
             if not dim or not isinstance(dim, dict):
                 continue
@@ -730,12 +719,9 @@ def build_auto_brief() -> tuple[int, str]:
         verdict = cuts_data.get("one_sentence_verdict", "")
 
         if total_cuttable:
-            problem_parts.append(
-                f"\n**Adversarial edit:** {total_cuttable} cuttable words ({fat_pct}% fat). "
-                f"{verdict}"
-            )
+            problem_parts.append(f"\n**Adversarial edit:** {total_cuttable} cuttable words ({fat_pct}% fat). {verdict}")
         if tightest:
-            keep_parts.append(f'\nTightest passage (adversarial edit):\n> {tightest}')
+            keep_parts.append(f"\nTightest passage (adversarial edit):\n> {tightest}")
 
         # Add top cuts as change items
         cuts_list = cuts_data.get("cuts", [])
@@ -788,30 +774,28 @@ def build_auto_brief() -> tuple[int, str]:
 # main
 # ---------------------------------------------------------------------------
 
+
 def main():
-    parser = argparse.ArgumentParser(
-        description="Auto-generate revision briefs from feedback sources."
+    parser = argparse.ArgumentParser(description="Auto-generate revision briefs from feedback sources.")
+    parser.add_argument(
+        "--panel", type=int, metavar="CH", help="Generate brief from reader panel feedback for chapter CH"
     )
-    parser.add_argument("--panel", type=int, metavar="CH",
-                        help="Generate brief from reader panel feedback for chapter CH")
-    parser.add_argument("--eval", type=int, metavar="CH",
-                        help="Generate brief from eval callouts for chapter CH")
-    parser.add_argument("--cuts", type=int, metavar="CH",
-                        help="Generate brief from adversarial cuts for chapter CH")
-    parser.add_argument("--auto", action="store_true",
-                        help="Auto-detect weakest chapter and generate combined brief")
-    parser.add_argument("--dry-run", action="store_true",
-                        help="Print brief to stdout without saving")
+    parser.add_argument("--eval", type=int, metavar="CH", help="Generate brief from eval callouts for chapter CH")
+    parser.add_argument("--cuts", type=int, metavar="CH", help="Generate brief from adversarial cuts for chapter CH")
+    parser.add_argument("--auto", action="store_true", help="Auto-detect weakest chapter and generate combined brief")
+    parser.add_argument("--dry-run", action="store_true", help="Print brief to stdout without saving")
 
     args = parser.parse_args()
 
     # Validate: exactly one mode
-    modes = sum([
-        args.panel is not None,
-        args.eval is not None,
-        args.cuts is not None,
-        args.auto,
-    ])
+    modes = sum(
+        [
+            args.panel is not None,
+            args.eval is not None,
+            args.cuts is not None,
+            args.auto,
+        ]
+    )
     if modes == 0:
         parser.print_help()
         sys.exit(1)

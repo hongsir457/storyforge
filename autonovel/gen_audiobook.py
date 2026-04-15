@@ -9,14 +9,15 @@ Usage:
   python gen_audiobook.py --list-voices  # List available ElevenLabs voices
   python gen_audiobook.py --test 1       # Generate first 30 seconds of ch 1 (test)
 """
-import os
-import sys
-import json
-import io
-import re
-import time
+
 import argparse
+import json
+import os
+import re
+import sys
+import time
 from pathlib import Path
+
 from dotenv import load_dotenv
 
 BASE_DIR = Path(__file__).parent
@@ -36,6 +37,7 @@ PAUSE_BETWEEN_CALLS = 3.0  # rate limiting — ElevenLabs has per-minute caps
 def get_client():
     """Initialize ElevenLabs client."""
     from elevenlabs.client import ElevenLabs
+
     if not ELEVENLABS_KEY:
         print("ERROR: ELEVENLABS_API_KEY not set in .env", file=sys.stderr)
         sys.exit(1)
@@ -69,7 +71,7 @@ def load_script(ch_num):
 
 def chunk_segments(segments, voices, max_chars=MAX_CHARS_PER_CALL):
     """Split segments into chunks that fit within the API character limit.
-    
+
     Each chunk is a list of {text, voice_id} dicts suitable for text_to_dialogue.
     We try to keep dialogue exchanges together (don't split mid-conversation).
     """
@@ -98,7 +100,7 @@ def chunk_segments(segments, voices, max_chars=MAX_CHARS_PER_CALL):
                 chunks.append(current_chunk)
                 current_chunk = []
                 current_chars = 0
-            
+
             # Split long text into sentences
             sentences = text.replace(". ", ".\n").split("\n")
             sub_chunk = []
@@ -121,7 +123,7 @@ def chunk_segments(segments, voices, max_chars=MAX_CHARS_PER_CALL):
             current_chars = 0
 
         # Skip empty/whitespace-only segments
-        clean_text = re.sub(r'\[.*?\]', '', text).strip()
+        clean_text = re.sub(r"\[.*?\]", "", text).strip()
         if not clean_text:
             continue
 
@@ -142,26 +144,25 @@ def generate_chapter(ch_num, client, voices, test_mode=False):
 
     title = script.get("title", f"Chapter {ch_num}")
     segments = script["segments"]
-    
+
     if test_mode:
         # Only use first 10 segments for testing
         segments = segments[:10]
-        print(f"  TEST MODE: using first 10 segments only")
+        print("  TEST MODE: using first 10 segments only")
 
     chunks = chunk_segments(segments, voices)
     total_chunks = len(chunks)
-    
+
     print(f"  Ch {ch_num}: '{title}' → {len(segments)} segments → {total_chunks} API calls")
 
     OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
     audio_parts = []
 
     failed_chunks = []
-    
+
     for i, chunk in enumerate(chunks, 1):
-        chars = sum(len(s['text']) for s in chunk)
-        print(f"    [{i}/{total_chunks}] {chars} chars, "
-              f"{len(chunk)} segments...", end="", flush=True)
+        chars = sum(len(s["text"]) for s in chunk)
+        print(f"    [{i}/{total_chunks}] {chars} chars, {len(chunk)} segments...", end="", flush=True)
 
         # Retry logic: up to 3 attempts with backoff
         audio_bytes = None
@@ -195,14 +196,14 @@ def generate_chapter(ch_num, client, voices, test_mode=False):
 
     if failed_chunks:
         print(f"\n  ⚠ WARNING: {len(failed_chunks)} chunks FAILED: {failed_chunks}")
-        print(f"  The audio file will have GAPS. Re-run to retry failed chunks.")
+        print("  The audio file will have GAPS. Re-run to retry failed chunks.")
         print(f"  Failed chunk numbers: {failed_chunks} of {total_chunks}")
-        
+
         # Save a manifest of what succeeded and what failed
         manifest = {
             "chapter": ch_num,
             "total_chunks": total_chunks,
-            "succeeded": [i for i in range(1, total_chunks+1) if i not in failed_chunks],
+            "succeeded": [i for i in range(1, total_chunks + 1) if i not in failed_chunks],
             "failed": failed_chunks,
             "complete": len(failed_chunks) == 0,
         }
@@ -215,7 +216,7 @@ def generate_chapter(ch_num, client, voices, test_mode=False):
 
     # Concatenate all audio parts
     combined = b"".join(audio_parts)
-    
+
     suffix = "_test" if test_mode else ""
     out_path = OUTPUT_DIR / f"ch_{ch_num:02d}{suffix}.mp3"
     out_path.write_bytes(combined)
@@ -228,9 +229,9 @@ def generate_chapter(ch_num, client, voices, test_mode=False):
 def list_voices(client):
     """List available ElevenLabs voices."""
     response = client.voices.get_all()
-    print(f"\n{'='*60}")
+    print(f"\n{'=' * 60}")
     print(f"AVAILABLE VOICES ({len(response.voices)})")
-    print(f"{'='*60}")
+    print(f"{'=' * 60}")
     for voice in response.voices:
         labels = voice.labels or {}
         accent = labels.get("accent", "")
@@ -251,18 +252,18 @@ def assemble_full_audiobook():
     """Concatenate all chapter audio files into one."""
     chapter_files = sorted(OUTPUT_DIR.glob("ch_*.mp3"))
     chapter_files = [f for f in chapter_files if "_test" not in f.name]
-    
+
     if not chapter_files:
         print("No chapter audio files found.")
         return
-    
+
     print(f"\nAssembling {len(chapter_files)} chapters into full audiobook...")
-    
+
     combined = b""
     # Add 2 seconds of silence between chapters (simple approach: just concatenate)
     for f in chapter_files:
         combined += f.read_bytes()
-    
+
     out = AUDIO_DIR / "full_audiobook.mp3"
     out.write_bytes(combined)
     size_mb = len(combined) / (1024 * 1024)
@@ -279,7 +280,7 @@ def main():
     parser.add_argument("--status", action="store_true", help="Show generation status for all chapters")
 
     args = parser.parse_args()
-    
+
     client = get_client()
 
     if args.list_voices:
@@ -291,16 +292,16 @@ def main():
         return
 
     if args.status:
-        print(f"\n{'='*50}")
+        print(f"\n{'=' * 50}")
         print("AUDIOBOOK GENERATION STATUS")
-        print(f"{'='*50}")
+        print(f"{'=' * 50}")
         scripts = sorted(SCRIPTS_DIR.glob("ch*_script.json"))
         for script_f in scripts:
             ch_num = int(script_f.stem.replace("_script", "").replace("ch", ""))
             audio_f = OUTPUT_DIR / f"ch_{ch_num:02d}.mp3"
             manifest_f = OUTPUT_DIR / f"ch_{ch_num:02d}_manifest.json"
             if audio_f.exists():
-                size_mb = audio_f.stat().st_size / (1024*1024)
+                size_mb = audio_f.stat().st_size / (1024 * 1024)
                 if manifest_f.exists():
                     m = json.loads(manifest_f.read_text())
                     if m.get("failed"):
@@ -319,11 +320,14 @@ def main():
         print("Run: python gen_audiobook.py --list-voices")
         sys.exit(1)
 
-    unconfigured = [name for name, info in json.loads(VOICES_FILE.read_text()).items()
-                    if not name.startswith("_") and info.get("voice_id") == "REPLACE_WITH_VOICE_ID"]
+    unconfigured = [
+        name
+        for name, info in json.loads(VOICES_FILE.read_text()).items()
+        if not name.startswith("_") and info.get("voice_id") == "REPLACE_WITH_VOICE_ID"
+    ]
     if unconfigured:
         print(f"WARNING: {len(unconfigured)} voices unconfigured: {unconfigured[:5]}")
-        print(f"Edit audiobook_voices.json to set voice IDs.")
+        print("Edit audiobook_voices.json to set voice IDs.")
 
     if args.test:
         generate_chapter(args.test, client, voices, test_mode=True)
@@ -332,7 +336,7 @@ def main():
     # Determine chapter range
     scripts = sorted(SCRIPTS_DIR.glob("ch*_script.json"))
     total = len(scripts)
-    
+
     start = args.start or 1
     end = args.end or total
 

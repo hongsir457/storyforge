@@ -1886,13 +1886,13 @@ class SessionManager:
 
     def _serialize_value(self, value: Any) -> Any:
         """Recursively serialize a value to JSON-safe types."""
-        if value is None or isinstance(value, (bool, int, float, str)):
+        if value is None or isinstance(value, bool | int | float | str):
             return value
 
         if isinstance(value, dict):
             return {k: self._serialize_value(v) for k, v in value.items()}
 
-        if isinstance(value, (list, tuple)):
+        if isinstance(value, list | tuple):
             return [self._serialize_value(item) for item in value]
 
         # Pydantic models

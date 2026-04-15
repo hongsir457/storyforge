@@ -98,7 +98,6 @@ class TestResolveSchema:
         assert result["properties"]["child"]["properties"]["x"]["type"] == "integer"
 
     def test_pydantic_class(self):
-
         from pydantic import BaseModel
 
         class Item(BaseModel):

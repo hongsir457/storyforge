@@ -9,10 +9,11 @@ Usage:
   python gen_cover_composite.py art/cover.png --preset dark   # light text on dark art
   python gen_cover_composite.py art/cover.png --preset light  # dark text on light art
 """
+
 import argparse
-import sys
 from pathlib import Path
-from PIL import Image, ImageDraw, ImageFont, ImageFilter
+
+from PIL import Image, ImageDraw, ImageFont
 
 BASE_DIR = Path(__file__).parent
 
@@ -20,9 +21,11 @@ BASE_DIR = Path(__file__).parent
 def find_font(name, style="Regular"):
     """Find a font file by name."""
     import subprocess
+
     result = subprocess.run(
         ["fc-match", f"{name}:style={style}", "--format=%{file}"],
-        capture_output=True, text=True,
+        capture_output=True,
+        text=True,
     )
     path = result.stdout.strip()
     if path and Path(path).exists():
@@ -140,11 +143,17 @@ def composite_cover(
         small_spacing = int(small_size * 2.0)
 
         if line1.startswith("THE "):
-            draw_text_with_shadow(draw, (center_x, title_y), "THE", small_font, text_color, shadow_color, shadow_offset=3)
+            draw_text_with_shadow(
+                draw, (center_x, title_y), "THE", small_font, text_color, shadow_color, shadow_offset=3
+            )
             title_y += small_spacing
-            draw_text_with_shadow(draw, (center_x, title_y), line1[4:], title_font, text_color, shadow_color, shadow_offset=3)
+            draw_text_with_shadow(
+                draw, (center_x, title_y), line1[4:], title_font, text_color, shadow_color, shadow_offset=3
+            )
         else:
-            draw_text_with_shadow(draw, (center_x, title_y), line1, title_font, text_color, shadow_color, shadow_offset=3)
+            draw_text_with_shadow(
+                draw, (center_x, title_y), line1, title_font, text_color, shadow_color, shadow_offset=3
+            )
 
         title_y += spacing
         draw_text_with_shadow(draw, (center_x, title_y), line2, small_font, text_color, shadow_color, shadow_offset=3)
@@ -152,15 +161,21 @@ def composite_cover(
         draw_text_with_shadow(draw, (center_x, title_y), line3, title_font, text_color, shadow_color, shadow_offset=3)
     else:
         title_y = int(h * 0.15)
-        draw_text_with_shadow(draw, (center_x, title_y), title.upper(), title_font, text_color, shadow_color, shadow_offset=3)
+        draw_text_with_shadow(
+            draw, (center_x, title_y), title.upper(), title_font, text_color, shadow_color, shadow_offset=3
+        )
 
     # --- AUTHOR + SUBTITLE ---
     author_y = int(h * 0.90)
-    draw_text_with_shadow(draw, (center_x, author_y), author.upper(), author_font, text_color, shadow_color, shadow_offset=3)
+    draw_text_with_shadow(
+        draw, (center_x, author_y), author.upper(), author_font, text_color, shadow_color, shadow_offset=3
+    )
 
     if subtitle:
         subtitle_y = int(h * 0.84)
-        draw_text_with_shadow(draw, (center_x, subtitle_y), subtitle, subtitle_font, text_color, shadow_color, shadow_offset=3)
+        draw_text_with_shadow(
+            draw, (center_x, subtitle_y), subtitle, subtitle_font, text_color, shadow_color, shadow_offset=3
+        )
 
     # Composite
     result = Image.alpha_composite(img, overlay).convert("RGB")

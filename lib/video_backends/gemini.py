@@ -238,7 +238,7 @@ class GeminiVideoBackend:
 
         mime_type_png = "image/png"
 
-        if isinstance(image, (str, Path)):
+        if isinstance(image, str | Path):
             with open(image, "rb") as f:
                 image_bytes = f.read()
             suffix = Path(image).suffix.lower()

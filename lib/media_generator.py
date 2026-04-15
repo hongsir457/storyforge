@@ -228,7 +228,7 @@ class MediaGenerator:
                                 label=str(ref.get("label", "")),
                             )
                         )
-                    elif hasattr(ref, "__fspath__") or isinstance(ref, (str, Path)):
+                    elif hasattr(ref, "__fspath__") or isinstance(ref, str | Path):
                         ref_images.append(ReferenceImage(path=str(ref)))
                     # PIL Image 等不支持的类型忽略
 
@@ -427,7 +427,7 @@ class MediaGenerator:
                 aspect_ratio=aspect_ratio,
                 duration_seconds=duration_int,
                 resolution=resolution,
-                start_image=Path(start_image) if isinstance(start_image, (str, Path)) else None,
+                start_image=Path(start_image) if isinstance(start_image, str | Path) else None,
                 end_image=actual_end_image,
                 reference_images=actual_reference_images,
                 generate_audio=effective_generate_audio,

@@ -3,9 +3,11 @@
 One-shot characters.md generator for foundation phase.
 Reads seed.txt + voice.md + world.md + CRAFT.md, calls writer model.
 """
+
 import os
 import sys
 from pathlib import Path
+
 from dotenv import load_dotenv
 
 BASE_DIR = Path(__file__).parent
@@ -15,8 +17,10 @@ WRITER_MODEL = os.environ.get("AUTONOVEL_WRITER_MODEL", "claude-sonnet-4-6")
 API_KEY = os.environ.get("ANTHROPIC_API_KEY", "")
 API_BASE = os.environ.get("AUTONOVEL_API_BASE_URL", "https://api.anthropic.com")
 
+
 def call_writer(prompt, max_tokens=16000):
     import httpx
+
     headers = {
         "x-api-key": API_KEY,
         "anthropic-version": "2023-06-01",
@@ -39,14 +43,15 @@ def call_writer(prompt, max_tokens=16000):
     resp.raise_for_status()
     return resp.json()["content"][0]["text"]
 
+
 seed = (BASE_DIR / "seed.txt").read_text()
 world = (BASE_DIR / "world.md").read_text()
 
 # Voice Part 2 only
 voice = (BASE_DIR / "voice.md").read_text()
-voice_lines = voice.split('\n')
-part2_start = next(i for i, l in enumerate(voice_lines) if 'Part 2' in l)
-voice_part2 = '\n'.join(voice_lines[part2_start:])
+voice_lines = voice.split("\n")
+part2_start = next(i for i, line in enumerate(voice_lines) if "Part 2" in line)
+voice_part2 = "\n".join(voice_lines[part2_start:])
 
 prompt = f"""Build a complete character registry for this fantasy novel. This is CHARACTERS.MD --
 the definitive reference for WHO exists in this story, what drives them, how they speak,

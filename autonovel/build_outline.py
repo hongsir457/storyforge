@@ -4,11 +4,12 @@ Rebuild outline.md from the actual chapters.
 Reads each chapter, calls the LLM for a structured summary,
 and assembles into an outline that reflects the novel as-written.
 """
-import os
-import sys
+
 import json
+import os
 import re
 from pathlib import Path
+
 from dotenv import load_dotenv
 
 BASE_DIR = Path(__file__).parent
@@ -19,8 +20,10 @@ API_KEY = os.environ.get("ANTHROPIC_API_KEY", "")
 API_BASE = os.environ.get("AUTONOVEL_API_BASE_URL", "https://api.anthropic.com")
 CHAPTERS_DIR = BASE_DIR / "chapters"
 
+
 def call_model(prompt, max_tokens=1500):
     import httpx
+
     headers = {
         "x-api-key": API_KEY,
         "anthropic-version": "2023-06-01",
@@ -43,23 +46,21 @@ def call_model(prompt, max_tokens=1500):
     # Extract JSON from response
     text = text.strip()
     if text.startswith("```"):
-        text = re.sub(r'^```\w*\n?', '', text)
-        text = re.sub(r'\n?```$', '', text)
+        text = re.sub(r"^```\w*\n?", "", text)
+        text = re.sub(r"\n?```$", "", text)
     return json.loads(text)
 
+
 def main():
-    # Load supporting docs for context
-    characters = (BASE_DIR / "characters.md").read_text()[:3000]
-    
     entries = []
-    
+
     for ch in range(1, 20):
         path = CHAPTERS_DIR / f"ch_{ch:02d}.md"
         text = path.read_text()
         wc = len(text.split())
-        
-        title_line = text.strip().split('\n')[0].lstrip('# ').strip()
-        
+
+        title_line = text.strip().split("\n")[0].lstrip("# ").strip()
+
         prompt = f"""Analyze this chapter and produce a structured outline entry.
 
 CHAPTER {ch}: "{title_line}" ({wc} words)
@@ -85,10 +86,7 @@ JSON only, no other text."""
         data["words"] = wc
         entries.append(data)
         print(f"  {ch:2d}. {title_line} ({wc}w)")
-    
-    # Load existing outline header info
-    old_outline = (BASE_DIR / "outline.md").read_text()
-    
+
     # Build new outline
     lines = []
     lines.append("# THE SECOND SON OF THE HOUSE OF BELLS")
@@ -98,7 +96,7 @@ JSON only, no other text."""
     lines.append("")
     lines.append("---")
     lines.append("")
-    
+
     for e in entries:
         lines.append(f"### Ch {e['num']}: {e['title']}")
         lines.append(f"**{e['words']} words** | **Location:** {e.get('location', 'N/A')}")
@@ -126,13 +124,13 @@ JSON only, no other text."""
         lines.append("")
         lines.append("---")
         lines.append("")
-    
+
     # Foreshadowing ledger
     lines.append("## FORESHADOWING LEDGER")
     lines.append("")
     lines.append("| Thread | Planted | Harvested |")
     lines.append("|--------|---------|-----------|")
-    
+
     # Collect all plants and harvests
     all_plants = {}
     all_harvests = {}
@@ -147,22 +145,23 @@ JSON only, no other text."""
             if key not in all_harvests:
                 all_harvests[key] = []
             all_harvests[key].append(e["num"])
-    
+
     # Match plants to harvests by keyword overlap
     all_threads = set(list(all_plants.keys()) + list(all_harvests.keys()))
     for thread in sorted(all_threads):
         planted = ", ".join(f"Ch {n}" for n in all_plants.get(thread, []))
         harvested = ", ".join(f"Ch {n}" for n in all_harvests.get(thread, []))
         lines.append(f"| {thread} | {planted} | {harvested} |")
-    
+
     lines.append("")
     lines.append("---")
     lines.append("")
     lines.append("*Outline rebuilt from actual chapters, Cycle 5.*")
-    
-    out = '\n'.join(lines)
+
+    out = "\n".join(lines)
     (BASE_DIR / "outline.md").write_text(out)
     print(f"\nSaved outline.md ({len(out.split())} words)")
+
 
 if __name__ == "__main__":
     main()

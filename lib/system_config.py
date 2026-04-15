@@ -112,7 +112,7 @@ def parse_bool_env(value: Any, default: bool) -> bool:
         return default
     if isinstance(value, bool):
         return value
-    if isinstance(value, (int, float)):
+    if isinstance(value, int | float):
         return bool(value)
     if isinstance(value, str):
         normalized = value.strip().lower()
@@ -147,7 +147,7 @@ def _read_float(value: Any) -> float | None:
         return None
     if isinstance(value, bool):
         return float(int(value))
-    if isinstance(value, (int, float)):
+    if isinstance(value, int | float):
         return float(value)
     if isinstance(value, str):
         if not value.strip():

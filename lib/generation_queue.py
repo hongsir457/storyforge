@@ -51,7 +51,6 @@ class GenerationQueue:
         dependency_index: int | None = None,
         user_id: str = DEFAULT_USER_ID,
     ) -> dict[str, Any]:
-
         async with self._session_factory() as session:
             repo = TaskRepository(session)
             result = await repo.enqueue(
@@ -74,7 +73,6 @@ class GenerationQueue:
         return result
 
     async def claim_next_task(self, media_type: str) -> dict[str, Any] | None:
-
         async with self._session_factory() as session:
             repo = TaskRepository(session)
             task = await repo.claim_next(media_type)
@@ -83,7 +81,6 @@ class GenerationQueue:
         return task
 
     async def requeue_running_tasks(self, *, limit: int = 1000) -> int:
-
         async with self._session_factory() as session:
             repo = TaskRepository(session)
             recovered = await repo.requeue_running(limit=limit)
@@ -92,7 +89,6 @@ class GenerationQueue:
         return recovered
 
     async def mark_task_succeeded(self, task_id: str, result: dict[str, Any] | None) -> dict[str, Any] | None:
-
         async with self._session_factory() as session:
             repo = TaskRepository(session)
             task = await repo.mark_succeeded(task_id, result)
@@ -101,7 +97,6 @@ class GenerationQueue:
         return task
 
     async def mark_task_failed(self, task_id: str, error_message: str) -> dict[str, Any] | None:
-
         async with self._session_factory() as session:
             repo = TaskRepository(session)
             task = await repo.mark_failed(task_id, error_message)
@@ -137,7 +132,6 @@ class GenerationQueue:
             return await repo.get_cancel_all_preview(project_name)
 
     async def get_task(self, task_id: str) -> dict[str, Any] | None:
-
         async with self._session_factory() as session:
             repo = TaskRepository(session)
             return await repo.get(task_id)
@@ -152,7 +146,6 @@ class GenerationQueue:
         page: int = 1,
         page_size: int = 50,
     ) -> dict[str, Any]:
-
         async with self._session_factory() as session:
             repo = TaskRepository(session)
             return await repo.list_tasks(
@@ -165,7 +158,6 @@ class GenerationQueue:
             )
 
     async def get_task_stats(self, project_name: str | None = None) -> dict[str, int]:
-
         async with self._session_factory() as session:
             repo = TaskRepository(session)
             return await repo.get_stats(project_name=project_name)
@@ -176,7 +168,6 @@ class GenerationQueue:
         project_name: str | None = None,
         limit: int = 200,
     ) -> list[dict[str, Any]]:
-
         async with self._session_factory() as session:
             repo = TaskRepository(session)
             return await repo.get_recent_tasks_snapshot(
@@ -191,7 +182,6 @@ class GenerationQueue:
         project_name: str | None = None,
         limit: int = 200,
     ) -> list[dict[str, Any]]:
-
         async with self._session_factory() as session:
             repo = TaskRepository(session)
             return await repo.get_events_since(
@@ -201,7 +191,6 @@ class GenerationQueue:
             )
 
     async def get_latest_event_id(self, *, project_name: str | None = None) -> int:
-
         async with self._session_factory() as session:
             repo = TaskRepository(session)
             return await repo.get_latest_event_id(project_name=project_name)
@@ -213,7 +202,6 @@ class GenerationQueue:
         owner_id: str,
         ttl_seconds: float,
     ) -> bool:
-
         async with self._session_factory() as session:
             repo = TaskRepository(session)
             return await repo.acquire_or_renew_lease(
@@ -223,19 +211,16 @@ class GenerationQueue:
             )
 
     async def release_worker_lease(self, *, name: str, owner_id: str) -> None:
-
         async with self._session_factory() as session:
             repo = TaskRepository(session)
             await repo.release_lease(name=name, owner_id=owner_id)
 
     async def is_worker_online(self, *, name: str = "default") -> bool:
-
         async with self._session_factory() as session:
             repo = TaskRepository(session)
             return await repo.is_worker_online(name=name)
 
     async def get_worker_lease(self, *, name: str = "default") -> dict[str, Any] | None:
-
         async with self._session_factory() as session:
             repo = TaskRepository(session)
             return await repo.get_worker_lease(name=name)

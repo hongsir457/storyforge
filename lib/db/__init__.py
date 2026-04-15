@@ -42,9 +42,8 @@ async def init_db() -> None:
 
     need_stamp = has_app_tables and not has_version
 
-    from alembic.config import Config
-
     from alembic import command
+    from alembic.config import Config
 
     def _run_alembic():
         # 编程式构造 Config，不读 alembic.ini，

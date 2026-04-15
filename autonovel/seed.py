@@ -9,10 +9,10 @@ Usage:
 """
 
 import argparse
-import json
 import os
 import sys
 from pathlib import Path
+
 from dotenv import load_dotenv
 
 BASE_DIR = Path(__file__).parent
@@ -26,6 +26,7 @@ ANTHROPIC_BETA = "context-1m-2025-08-07"
 
 def call_writer(prompt, max_tokens=4000):
     import httpx
+
     headers = {
         "x-api-key": ANTHROPIC_API_KEY,
         "anthropic-version": "2023-06-01",
@@ -117,10 +118,8 @@ the structure, the thematic focus.
 
 def main():
     parser = argparse.ArgumentParser(description="Generate novel seed concepts")
-    parser.add_argument("--count", type=int, default=10,
-                        help="Number of concepts to generate (default: 10)")
-    parser.add_argument("--riff", type=str, default=None,
-                        help="Riff on an existing idea")
+    parser.add_argument("--count", type=int, default=10, help="Number of concepts to generate (default: 10)")
+    parser.add_argument("--riff", type=str, default=None, help="Riff on an existing idea")
     args = parser.parse_args()
 
     if not ANTHROPIC_API_KEY:

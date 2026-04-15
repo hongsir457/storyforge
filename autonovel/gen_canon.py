@@ -2,9 +2,11 @@
 """
 Generate canon.md by extracting all hard facts from world.md + characters.md.
 """
+
 import os
 import sys
 from pathlib import Path
+
 from dotenv import load_dotenv
 
 BASE_DIR = Path(__file__).parent
@@ -14,8 +16,10 @@ WRITER_MODEL = os.environ.get("AUTONOVEL_WRITER_MODEL", "claude-sonnet-4-6")
 API_KEY = os.environ.get("ANTHROPIC_API_KEY", "")
 API_BASE = os.environ.get("AUTONOVEL_API_BASE_URL", "https://api.anthropic.com")
 
+
 def call_writer(prompt, max_tokens=16000):
     import httpx
+
     headers = {
         "x-api-key": API_KEY,
         "anthropic-version": "2023-06-01",
@@ -36,6 +40,7 @@ def call_writer(prompt, max_tokens=16000):
     resp = httpx.post(f"{API_BASE}/v1/messages", headers=headers, json=payload, timeout=300)
     resp.raise_for_status()
     return resp.json()["content"][0]["text"]
+
 
 world = (BASE_DIR / "world.md").read_text()
 characters = (BASE_DIR / "characters.md").read_text()

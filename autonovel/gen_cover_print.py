@@ -11,18 +11,19 @@ Usage:
 The panoramic art should be wider than tall (4:3 or wider).
 RIGHT side = front cover, CENTER = spine, LEFT side = back cover.
 """
+
 import argparse
 import io
-import sys
 from pathlib import Path
+
 from PIL import Image, ImageDraw, ImageFont
 
 BASE_DIR = Path(__file__).parent
 ART_DIR = BASE_DIR / "art"
 
 # Standard trade paperback dimensions
-TRIM_W = 5.5   # inches
-TRIM_H = 8.5   # inches
+TRIM_W = 5.5  # inches
+TRIM_H = 8.5  # inches
 BLEED = 0.125  # inches
 DPI = 300
 
@@ -33,9 +34,11 @@ SPINE_PER_PAGE = 0.0025
 
 def find_font(name, style="Regular"):
     import subprocess
+
     result = subprocess.run(
         ["fc-match", f"{name}:style={style}", "--format=%{file}"],
-        capture_output=True, text=True,
+        capture_output=True,
+        text=True,
     )
     path = result.stdout.strip()
     if path and Path(path).exists():
@@ -73,10 +76,10 @@ def compose_cover(
     px_trim_w = int(TRIM_W * DPI)
     px_spine = int(spine_w * DPI)
 
-    print(f"Cover spec:")
-    print(f"  Trim: {TRIM_W}\" x {TRIM_H}\"")
-    print(f"  Spine: {spine_w:.3f}\" ({pages} pages)")
-    print(f"  Canvas: {canvas_w:.3f}\" x {canvas_h:.3f}\"")
+    print("Cover spec:")
+    print(f'  Trim: {TRIM_W}" x {TRIM_H}"')
+    print(f'  Spine: {spine_w:.3f}" ({pages} pages)')
+    print(f'  Canvas: {canvas_w:.3f}" x {canvas_h:.3f}"')
     print(f"  Pixels: {px_w} x {px_h} @ {DPI} DPI")
 
     # Load and scale art to fill canvas
@@ -113,7 +116,6 @@ def compose_cover(
     # Font setup
     gb = find_font("EB Garamond", "Bold")
     gr = find_font("EB Garamond", "Regular")
-    gi = find_font("EB Garamond", "Italic")
     bebas = find_font("Bebas Neue", "Regular")  # ultra-heavy display face
 
     # Display font for title/spine (Bebas Neue if available, else Garamond Bold)
@@ -121,24 +123,21 @@ def compose_cover(
 
     # Front cover text sizes (relative to trim width in pixels)
     title_large = int(px_trim_w * 0.10)
-    title_small = int(title_large * 0.55)
     author_size = int(px_trim_w * 0.06)
-    subtitle_size = int(px_trim_w * 0.032)
 
     title_font = ImageFont.truetype(display_face, title_large) if display_face else ImageFont.load_default()
-    title_small_font = ImageFont.truetype(display_face, title_small) if display_face else ImageFont.load_default()
     # Colors — amber/bronze that belongs in the linocut palette
-    title_color = (218, 165, 72, 255)    # warm amber-gold
-    author_color = (218, 165, 72, 255)   # same amber
-    accent_color = (180, 140, 65, 255)   # slightly muted for small text
-    shadow_color = (5, 5, 3, 220)        # near-black, heavy
+    title_color = (218, 165, 72, 255)  # warm amber-gold
+    author_color = (218, 165, 72, 255)  # same amber
+    accent_color = (180, 140, 65, 255)  # slightly muted for small text
+    shadow_color = (5, 5, 3, 220)  # near-black, heavy
 
     def text_drawn(pos, text, font, fill, shadow_offset=4):
         """Bold text with heavy dark shadow for max readability."""
         x, y = pos
         # Double shadow for extra punch
         draw.text((x + shadow_offset, y + shadow_offset), text, font=font, fill=shadow_color, anchor="mt")
-        draw.text((x + shadow_offset//2, y + shadow_offset//2), text, font=font, fill=(0,0,0,140), anchor="mt")
+        draw.text((x + shadow_offset // 2, y + shadow_offset // 2), text, font=font, fill=(0, 0, 0, 140), anchor="mt")
         draw.text(pos, text, font=font, fill=fill, anchor="mt")
 
     # === FRONT COVER TEXT ===
@@ -209,10 +208,10 @@ def compose_cover(
         # Render horizontally, then rotate
         temp = Image.new("RGBA", (px_h, px_spine), (0, 0, 0, 0))
         temp_draw = ImageDraw.Draw(temp)
-        temp_draw.text((px_h // 2 + 2, px_spine // 2 + 2), spine_text,
-                       font=spine_font, fill=(0, 0, 0, 220), anchor="mm")
-        temp_draw.text((px_h // 2, px_spine // 2), spine_text,
-                       font=spine_font, fill=spine_color, anchor="mm")
+        temp_draw.text(
+            (px_h // 2 + 2, px_spine // 2 + 2), spine_text, font=spine_font, fill=(0, 0, 0, 220), anchor="mm"
+        )
+        temp_draw.text((px_h // 2, px_spine // 2), spine_text, font=spine_font, fill=spine_color, anchor="mm")
         temp = temp.rotate(90, expand=True)
         paste_x = spine_cx - temp.width // 2
         paste_y = (px_h - temp.height) // 2
@@ -220,7 +219,6 @@ def compose_cover(
 
     # === BACK COVER TEXT (on dark panel for readability) ===
     if blurb:
-        back_cx = back_left + px_trim_w // 2
         blurb_font_size = int(px_trim_w * 0.03)
         blurb_font = ImageFont.truetype(gr, blurb_font_size) if gr else ImageFont.load_default()
         blurb_margin = int(px_trim_w * 0.10)
@@ -264,7 +262,9 @@ def compose_cover(
             if line:
                 draw.text(
                     (back_left + blurb_margin, blurb_y),
-                    line, font=blurb_font, fill=(235, 230, 215, 255),
+                    line,
+                    font=blurb_font,
+                    fill=(235, 230, 215, 255),
                 )
             blurb_y += line_height
 
@@ -273,11 +273,13 @@ def compose_cover(
     if nous_svg.exists():
         try:
             import cairosvg
+
             # Render SVG to PNG at appropriate size
             logo_size = int(px_trim_w * 0.15)  # 15% of trim width
             png_data = cairosvg.svg2png(
                 url=str(nous_svg),
-                output_width=logo_size, output_height=logo_size,
+                output_width=logo_size,
+                output_height=logo_size,
             )
             logo_img = Image.open(io.BytesIO(png_data)).convert("RGBA")
 
@@ -338,12 +340,24 @@ def main():
     parser.add_argument("--preview", action="store_true", help="Show trim/spine guides")
     parser.add_argument("--output", default=None)
     parser.add_argument("--canvas-width", type=float, default=None, help="Exact canvas width in inches (from printer)")
-    parser.add_argument("--canvas-height", type=float, default=None, help="Exact canvas height in inches (from printer)")
+    parser.add_argument(
+        "--canvas-height", type=float, default=None, help="Exact canvas height in inches (from printer)"
+    )
     parser.add_argument("--spine-width", type=float, default=None, help="Exact spine width in inches (from printer)")
     args = parser.parse_args()
-    compose_cover(args.art_path, args.title, args.author, args.subtitle,
-                  args.blurb, args.pages, args.preview, args.output,
-                  args.canvas_width, args.canvas_height, args.spine_width)
+    compose_cover(
+        args.art_path,
+        args.title,
+        args.author,
+        args.subtitle,
+        args.blurb,
+        args.pages,
+        args.preview,
+        args.output,
+        args.canvas_width,
+        args.canvas_height,
+        args.spine_width,
+    )
 
 
 if __name__ == "__main__":

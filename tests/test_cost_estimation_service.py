@@ -84,7 +84,7 @@ class TestCostEstimationService:
             assert "video" in seg["estimate"]
             for cost in seg["estimate"].values():
                 assert isinstance(cost, dict)
-                assert all(isinstance(v, (int, float)) for v in cost.values())
+                assert all(isinstance(v, int | float) for v in cost.values())
 
     async def test_actual_costs_included(self, db_factory):
         resolver = ConfigResolver(db_factory)

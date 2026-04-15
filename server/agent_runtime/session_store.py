@@ -30,14 +30,12 @@ class SessionMetaStore:
         self._session_factory = session_factory or safe_session_factory
 
     async def create(self, project_name: str, sdk_session_id: str) -> SessionMeta:
-
         async with self._session_factory() as session:
             repo = SessionRepository(session)
             d = await repo.create(project_name=project_name, sdk_session_id=sdk_session_id)
         return _dict_to_session(d)
 
     async def get(self, session_id: str) -> SessionMeta | None:
-
         async with self._session_factory() as session:
             repo = SessionRepository(session)
             d = await repo.get(session_id)
@@ -52,7 +50,6 @@ class SessionMetaStore:
         limit: int = 50,
         offset: int = 0,
     ) -> list[SessionMeta]:
-
         async with self._session_factory() as session:
             repo = SessionRepository(session)
             result = await repo.list(
@@ -64,19 +61,16 @@ class SessionMetaStore:
         return [_dict_to_session(d) for d in result]
 
     async def update_status(self, session_id: str, status: SessionStatus) -> bool:
-
         async with self._session_factory() as session:
             repo = SessionRepository(session)
             return await repo.update_status(session_id, status)
 
     async def interrupt_running_sessions(self) -> int:
-
         async with self._session_factory() as session:
             repo = SessionRepository(session)
             return await repo.interrupt_running()
 
     async def delete(self, session_id: str) -> bool:
-
         async with self._session_factory() as session:
             repo = SessionRepository(session)
             return await repo.delete(session_id)

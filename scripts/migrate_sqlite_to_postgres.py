@@ -46,7 +46,7 @@ def _coerce_value(column: sa.Column[Any], value: Any) -> Any:
     if isinstance(column.type, sa.Boolean):
         if isinstance(value, bool):
             return value
-        if isinstance(value, (int, float)):
+        if isinstance(value, int | float):
             return bool(value)
         if isinstance(value, str):
             return value.strip().lower() in {"1", "true", "t", "yes", "y"}
@@ -134,10 +134,10 @@ async def main() -> None:
         target_meta = MetaData()
 
         async with source_engine.begin() as conn:
-          await conn.run_sync(source_meta.reflect)
+            await conn.run_sync(source_meta.reflect)
 
         async with target_engine.begin() as conn:
-          await conn.run_sync(target_meta.reflect)
+            await conn.run_sync(target_meta.reflect)
 
         table_names = [
             table.name

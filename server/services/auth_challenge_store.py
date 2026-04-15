@@ -24,7 +24,7 @@ def _normalize_subject(subject: str) -> str:
 
 
 def _hash_code(subject: str, code: str) -> str:
-    material = f"{_normalize_subject(subject)}:{code}".encode("utf-8")
+    material = f"{_normalize_subject(subject)}:{code}".encode()
     return hashlib.sha256(material).hexdigest()
 
 

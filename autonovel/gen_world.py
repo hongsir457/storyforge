@@ -3,9 +3,11 @@
 One-shot world.md generator for foundation phase.
 Reads seed.txt + voice.md, calls the writer model, outputs world.md content.
 """
+
 import os
 import sys
 from pathlib import Path
+
 from dotenv import load_dotenv
 
 BASE_DIR = Path(__file__).parent
@@ -15,8 +17,10 @@ WRITER_MODEL = os.environ.get("AUTONOVEL_WRITER_MODEL", "claude-sonnet-4-6")
 API_KEY = os.environ.get("ANTHROPIC_API_KEY", "")
 API_BASE = os.environ.get("AUTONOVEL_API_BASE_URL", "https://api.anthropic.com")
 
+
 def call_writer(prompt, max_tokens=16000):
     import httpx
+
     headers = {
         "x-api-key": API_KEY,
         "anthropic-version": "2023-06-01",
@@ -40,14 +44,15 @@ def call_writer(prompt, max_tokens=16000):
     resp.raise_for_status()
     return resp.json()["content"][0]["text"]
 
+
 seed = (BASE_DIR / "seed.txt").read_text()
 voice = (BASE_DIR / "voice.md").read_text()
 craft = (BASE_DIR / "CRAFT.md").read_text()
 
 # Extract voice Part 2 only (the novel-specific voice)
-voice_lines = voice.split('\n')
-part2_start = next(i for i, l in enumerate(voice_lines) if 'Part 2' in l)
-voice_part2 = '\n'.join(voice_lines[part2_start:])
+voice_lines = voice.split("\n")
+part2_start = next(i for i, line in enumerate(voice_lines) if "Part 2" in line)
+voice_part2 = "\n".join(voice_lines[part2_start:])
 
 prompt = f"""Build a complete world bible for this fantasy novel. This is the WORLD.MD file -- 
 the definitive reference for everything that EXISTS in this world. A writer should be able 

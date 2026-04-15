@@ -22,8 +22,8 @@ from server.auth import (
     verify_password,
 )
 from server.services.auth_challenge_store import (
-    ChallengeRateLimitedError,
     ChallengeKind,
+    ChallengeRateLimitedError,
     get_auth_challenge_store,
 )
 from server.services.mailer import get_mailer_config, send_email

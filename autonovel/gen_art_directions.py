@@ -3,10 +3,12 @@
 Generate diverse art direction concepts from a novel's visual style.
 Called by gen_art.py curate to produce genuinely different variants.
 """
-import os
+
 import json
+import os
 import re
 from pathlib import Path
+
 from dotenv import load_dotenv
 
 BASE_DIR = Path(__file__).parent
@@ -19,6 +21,7 @@ ANTHROPIC_BASE = os.environ.get("AUTONOVEL_API_BASE_URL", "https://api.anthropic
 
 def call_claude(prompt, max_tokens=3000):
     import httpx
+
     resp = httpx.post(
         f"{ANTHROPIC_BASE}/v1/messages",
         headers={
@@ -45,11 +48,11 @@ def generate_directions(art_type, style, n=6, world_excerpt=""):
         task = f"""You are an art director generating {n} RADICALLY DIFFERENT cover concepts for a fantasy novel.
 
 The novel's visual style brief:
-  Style: {style.get('art_style', '')}
-  Palette: {style.get('color_palette', '')}
-  Mood: {style.get('mood', '')}
-  Reference artists: {style.get('reference_artists', '')}
-  Original cover concept: {style.get('cover_concept', '')}
+  Style: {style.get("art_style", "")}
+  Palette: {style.get("color_palette", "")}
+  Mood: {style.get("mood", "")}
+  Reference artists: {style.get("reference_artists", "")}
+  Original cover concept: {style.get("cover_concept", "")}
 
 Generate {n} cover art prompts that are FUNDAMENTALLY DIFFERENT from each other.
 They should explore different:
@@ -79,8 +82,8 @@ JSON array only."""
         task = f"""You are a book designer generating {n} RADICALLY DIFFERENT chapter ornament styles for a fantasy novel.
 
 The novel's visual style:
-  Style: {style.get('art_style', '')}
-  Ornament concept: {style.get('ornament_concept', '')}
+  Style: {style.get("art_style", "")}
+  Ornament concept: {style.get("ornament_concept", "")}
 
 Generate {n} ornament style directions that are FUNDAMENTALLY DIFFERENT:
   - Abstract geometric → figurative symbolic → minimal line → detailed engraving
@@ -100,8 +103,8 @@ JSON array only."""
 The world geography:
 {world_excerpt[:2000]}
 
-Visual style: {style.get('art_style', '')}
-Map concept: {style.get('map_concept', '')}
+Visual style: {style.get("art_style", "")}
+Map concept: {style.get("map_concept", "")}
 
 Generate {n} map prompts that are FUNDAMENTALLY DIFFERENT:
   - Traditional parchment fantasy map vs acoustic/scientific diagram vs birds-eye illustration
@@ -119,8 +122,8 @@ JSON array only."""
     elif art_type == "scene-break":
         task = f"""You are a typographer generating {n} RADICALLY DIFFERENT scene break decorations for a book.
 
-Visual style: {style.get('art_style', '')}
-Scene break concept: {style.get('scene_break_concept', '')}
+Visual style: {style.get("art_style", "")}
+Scene break concept: {style.get("scene_break_concept", "")}
 
 Each should be a SMALL horizontal decorative element. Think printer's ornaments, fleurons, dingbats.
 Some should be abstract, some symbolic, some minimal, some ornate.
@@ -135,27 +138,28 @@ JSON array only."""
     result = call_claude(task)
     text = result.strip()
     if text.startswith("```"):
-        text = re.sub(r'^```\w*\n?', '', text)
-        text = re.sub(r'\n?```$', '', text)
+        text = re.sub(r"^```\w*\n?", "", text)
+        text = re.sub(r"\n?```$", "", text)
 
     return json.loads(text)
 
 
 if __name__ == "__main__":
     import sys
+
     style_file = BASE_DIR / "art" / "visual_style.json"
     if not style_file.exists():
         print("Run gen_art.py style first")
         sys.exit(1)
     style = json.loads(style_file.read_text())
-    
+
     art_type = sys.argv[1] if len(sys.argv) > 1 else "cover"
     n = int(sys.argv[2]) if len(sys.argv) > 2 else 6
-    
+
     world = ""
     if (BASE_DIR / "world.md").exists():
         world = (BASE_DIR / "world.md").read_text()[:3000]
-    
+
     directions = generate_directions(art_type, style, n, world)
     for i, d in enumerate(directions, 1):
         print(f"\n--- Direction {i}: {d['direction'].upper()} ---")

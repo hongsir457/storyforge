@@ -13,7 +13,6 @@ from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
 
-
 PROJECT_NAME_RE = re.compile(r"^[A-Za-z0-9-]+$")
 LATIN_TOKEN_RE = re.compile(r"[A-Za-z][A-Za-z'-]*")
 SENTENCE_BREAK_RE = re.compile(r"(?<=[.!?])\s+")
@@ -256,8 +255,7 @@ def segment_chapter(chapter_body: str, target_words: int, min_words: int, max_wo
     for unit in units:
         unit_words = word_count(unit)
         if current and (
-            current_words + unit_words > max_words
-            or (current_words >= min_words and current_words >= target_words)
+            current_words + unit_words > max_words or (current_words >= min_words and current_words >= target_words)
         ):
             segments.append("\n\n".join(current).strip())
             current = [unit]
@@ -496,7 +494,9 @@ def concatenate_manuscript(chapters: list[tuple[str, str]]) -> str:
     return "\n\n---\n\n".join(parts).strip() + "\n"
 
 
-def validate_with_arcreel(arcreel_dir: Path, projects_root: Path, project_name: str) -> tuple[bool, list[str], list[str]]:
+def validate_with_arcreel(
+    arcreel_dir: Path, projects_root: Path, project_name: str
+) -> tuple[bool, list[str], list[str]]:
     validator_path = arcreel_dir / "lib" / "data_validator.py"
     if not validator_path.exists():
         return False, [f"ArcReel validator file not found: {validator_path}"], []

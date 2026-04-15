@@ -35,7 +35,6 @@ class UsageTracker:
         user_id: str = DEFAULT_USER_ID,
         segment_id: str | None = None,
     ) -> int:
-
         async with self._session_factory() as session:
             repo = UsageRepository(session)
             return await repo.start_call(
@@ -66,7 +65,6 @@ class UsageTracker:
         output_tokens: int | None = None,
         quality: str | None = None,
     ) -> None:
-
         async with self._session_factory() as session:
             repo = UsageRepository(session)
             await repo.finish_call(
@@ -90,7 +88,6 @@ class UsageTracker:
         start_date: datetime | None = None,
         end_date: datetime | None = None,
     ) -> dict[str, Any]:
-
         async with self._session_factory() as session:
             repo = UsageRepository(session)
             return await repo.get_stats(
@@ -107,7 +104,6 @@ class UsageTracker:
         start_date: datetime | None = None,
         end_date: datetime | None = None,
     ) -> dict[str, Any]:
-
         async with self._session_factory() as session:
             repo = UsageRepository(session)
             return await repo.get_stats_grouped_by_provider(
@@ -127,7 +123,6 @@ class UsageTracker:
         page: int = 1,
         page_size: int = 20,
     ) -> dict[str, Any]:
-
         async with self._session_factory() as session:
             repo = UsageRepository(session)
             return await repo.get_calls(
@@ -146,7 +141,6 @@ class UsageTracker:
             return await repo.get_actual_costs_by_segment(project_name)
 
     async def get_projects_list(self) -> list[str]:
-
         async with self._session_factory() as session:
             repo = UsageRepository(session)
             return await repo.get_projects_list()

@@ -1,8 +1,10 @@
 #!/usr/bin/env python3
 """Generate remaining chapters + foreshadowing ledger."""
+
 import os
 import sys
 from pathlib import Path
+
 from dotenv import load_dotenv
 
 BASE_DIR = Path(__file__).parent
@@ -12,8 +14,10 @@ WRITER_MODEL = os.environ.get("AUTONOVEL_WRITER_MODEL", "claude-sonnet-4-6")
 API_KEY = os.environ.get("ANTHROPIC_API_KEY", "")
 API_BASE = os.environ.get("AUTONOVEL_API_BASE_URL", "https://api.anthropic.com")
 
+
 def call_writer(prompt, max_tokens=16000):
     import httpx
+
     headers = {
         "x-api-key": API_KEY,
         "anthropic-version": "2023-06-01",
@@ -35,7 +39,8 @@ def call_writer(prompt, max_tokens=16000):
     resp.raise_for_status()
     return resp.json()["content"][0]["text"]
 
-part1 = open('/tmp/outline_output.md').read()
+
+part1 = open("/tmp/outline_output.md").read()
 mystery = (BASE_DIR / "MYSTERY.md").read_text()
 
 prompt = f"""Here are the first 17 chapters of a 24-chapter outline for "The Second Son of the House of Bells."

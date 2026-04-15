@@ -28,6 +28,13 @@ python .claude/skills/generate-script/scripts/generate_script.py --episode {N} -
 python .claude/skills/generate-script/scripts/generate_script.py --episode {N} --dry-run
 ```
 
+执行约束：
+
+- 必须前台执行 `generate_script.py`，等待命令自然结束。
+- 不要将命令放到后台。
+- 不要使用 `sleep`、`tail -f /tmp/...`、`cat /tmp/...` 轮询临时输出文件。
+- 命令退出后，直接读取 `scripts/episode_{N}.json` 做验证。
+
 ## 生成流程
 
 脚本内部通过 `ScriptGenerator` 完成以下步骤：

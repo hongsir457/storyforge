@@ -242,12 +242,13 @@ spec:
                 secretKeyRef:
                   name: storyforge-env
                   key: POSTGRES_PASSWORD
+            - name: DATABASE_URL
+              value: postgresql+asyncpg://storyforge:$(POSTGRES_PASSWORD)@storyforge-postgres:5432/storyforge?ssl=disable
             - name: REDIS_URL
               value: redis://storyforge-redis:6379/0
           command: ["sh", "-c"]
           args:
             - >
-              export DATABASE_URL="postgresql+asyncpg://storyforge:${POSTGRES_PASSWORD}@storyforge-postgres:5432/storyforge?ssl=disable";
               exec uv run uvicorn server.app:app --host 0.0.0.0 --port 1241;
           readinessProbe:
             httpGet:

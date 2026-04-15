@@ -48,12 +48,11 @@ export function LoginPage() {
         <p className="mt-2 text-sm text-slate-400">{t("dashboard:app_subtitle")}</p>
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-4">
+      <form onSubmit={(e) => void handleSubmit(e)} className="space-y-4">
         <Field
           label={t("auth:email_or_username")}
           value={identifier}
           onChange={setIdentifier}
-          autoFocus
           type="text"
         />
         <Field label={t("auth:password")} value={password} onChange={setPassword} type="password" />
@@ -97,13 +96,11 @@ function Field({
   value,
   onChange,
   type,
-  autoFocus = false,
 }: {
   label: string;
   value: string;
   onChange: (value: string) => void;
   type: string;
-  autoFocus?: boolean;
 }) {
   return (
     <label className="block">
@@ -113,7 +110,6 @@ function Field({
         value={value}
         onChange={(e) => onChange(e.target.value)}
         className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white outline-none transition focus:border-sky-400/60 focus:bg-white/8"
-        autoFocus={autoFocus}
         required
       />
     </label>

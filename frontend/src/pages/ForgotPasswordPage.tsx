@@ -63,7 +63,7 @@ export function ForgotPasswordPage() {
       description={t("forgot_password_hint")}
     >
       {step === "request" ? (
-        <form onSubmit={requestCode} className="space-y-4">
+        <form onSubmit={(e) => void requestCode(e)} className="space-y-4">
           <Field label={t("email")} value={email} onChange={setEmail} />
           {error && <Notice tone="error">{error}</Notice>}
           {notice && <Notice tone="success">{notice}</Notice>}
@@ -76,7 +76,7 @@ export function ForgotPasswordPage() {
           </button>
         </form>
       ) : (
-        <form onSubmit={resetPassword} className="space-y-4">
+        <form onSubmit={(e) => void resetPassword(e)} className="space-y-4">
           <Field label={t("email")} value={email} onChange={setEmail} />
           <Field label={t("verification_code")} value={code} onChange={setCode} />
           <Field label={t("new_password")} value={newPassword} onChange={setNewPassword} type="password" />

@@ -63,7 +63,7 @@ export function VerifyEmailPage() {
       title={t("verify_email")}
       description={t("verification_hint", { email: email || "your email" })}
     >
-      <form onSubmit={handleSubmit} className="space-y-4">
+      <form onSubmit={(e) => void handleSubmit(e)} className="space-y-4">
         <Field label={t("email")} value={email} onChange={setEmail} />
         <Field label={t("verification_code")} value={code} onChange={setCode} />
 

@@ -52,7 +52,7 @@ export function RegisterPage() {
       title={t("create_account")}
       description={t("home_hero_body")}
     >
-      <form onSubmit={handleSubmit} className="space-y-4">
+      <form onSubmit={(e) => void handleSubmit(e)} className="space-y-4">
         <Field label={t("username")} value={form.username} onChange={(value) => setForm((curr) => ({ ...curr, username: value }))} />
         <Field label={t("email")} value={form.email} onChange={(value) => setForm((curr) => ({ ...curr, email: value }))} />
         <Field label={t("display_name")} value={form.display_name} onChange={(value) => setForm((curr) => ({ ...curr, display_name: value }))} />

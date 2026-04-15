@@ -20,10 +20,14 @@ API_BASE = os.environ.get("AUTONOVEL_API_BASE_URL", "https://api.anthropic.com")
 CHAPTERS_DIR = BASE_DIR / "chapters"
 
 
+def discover_chapter_files() -> list[Path]:
+    return sorted(CHAPTERS_DIR.glob("ch_*.md"))
+
+
 def call_writer(prompt, max_tokens=4000):
     import httpx
 
-    headers = build_headers()
+    headers = build_headers(base_url=API_BASE)
     payload = {
         "model": WRITER_MODEL,
         "max_tokens": max_tokens,
@@ -53,9 +57,12 @@ def extract_key_passages(text):
 
 def main():
     summaries = []
+    chapter_files = discover_chapter_files()
+    if not chapter_files:
+        raise SystemExit("ERROR: No chapter files found.")
 
-    for ch in range(1, 20):
-        path = CHAPTERS_DIR / f"ch_{ch:02d}.md"
+    for path in chapter_files:
+        ch = int(path.stem.removeprefix("ch_"))
         text = path.read_text()
         wc = len(text.split())
         opening, closing, dialogue = extract_key_passages(text)
@@ -82,14 +89,15 @@ def main():
         print(f"Ch {ch}: summarized ({wc}w)")
 
     # Calculate total word count
-    total_wc = sum(len((CHAPTERS_DIR / f"ch_{c:02d}.md").read_text().split()) for c in range(1, 20))
+    total_wc = sum(len(path.read_text().split()) for path in chapter_files)
+    chapter_count = len(chapter_files)
 
     # Assemble
     full = f"""# THE SECOND SON OF THE HOUSE OF BELLS
 ## Full-Arc Summary for Reader Panel
 
 This document contains chapter summaries, opening/closing passages,
-and key dialogue for all 23 chapters. Total novel: {total_wc:,} words.
+and key dialogue for all {chapter_count} chapters. Total novel: {total_wc:,} words.
 
 PREMISE: In Cantamura, a city where law is sung into binding through
 specific musical intervals, 14-year-old Cass Bellwright can hear when

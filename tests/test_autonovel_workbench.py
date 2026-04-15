@@ -1,5 +1,14 @@
+# ruff: noqa: I001
+import asyncio
+import sys
 from pathlib import Path
 
+AUTONOVEL_DIR = Path(__file__).resolve().parents[1] / "autonovel"
+if str(AUTONOVEL_DIR) not in sys.path:
+    sys.path.insert(0, str(AUTONOVEL_DIR))
+
+from anthropic_compat import build_headers
+from build_arc_summary import discover_chapter_files
 from server.services.autonovel_workbench import NovelWorkbenchService
 
 
@@ -75,3 +84,63 @@ def test_status_snapshot_accepts_openrouter_auth_token(tmp_path, monkeypatch):
 
     assert status["requirements"]["autonovel_env_exists"] is True
     assert status["env_status"]["required"]["ANTHROPIC_API_KEY_OR_AUTH_TOKEN"] is True
+
+
+def test_materialize_runtime_env_prefers_openrouter_base_when_auth_token_exists(tmp_path, monkeypatch):
+    _make_workbench_layout(tmp_path)
+    monkeypatch.delenv("AUTONOVEL_ENV_SOURCE", raising=False)
+    monkeypatch.setenv("ANTHROPIC_API_KEY", "sk-ant-test")
+    monkeypatch.setenv("ANTHROPIC_AUTH_TOKEN", "sk-or-test")
+    monkeypatch.delenv("AUTONOVEL_API_BASE_URL", raising=False)
+    monkeypatch.delenv("ANTHROPIC_BASE_URL", raising=False)
+
+    service = NovelWorkbenchService(tmp_path)
+    workspace_dir = tmp_path / "workspace-run"
+    workspace_dir.mkdir()
+
+    service._materialize_autonovel_env(workspace_dir)
+
+    rendered = (workspace_dir / ".env").read_text(encoding="utf-8")
+    assert "AUTONOVEL_API_BASE_URL=https://openrouter.ai/api" in rendered
+
+
+def test_prepare_workspace_bootstraps_git_repo_when_source_is_plain_directory(tmp_path, monkeypatch):
+    _make_workbench_layout(tmp_path)
+    (tmp_path / "autonovel" / "run_pipeline.py").write_text("print('ok')\n", encoding="utf-8")
+    monkeypatch.delenv("AUTONOVEL_ENV_SOURCE", raising=False)
+    monkeypatch.setenv("ANTHROPIC_API_KEY", "sk-ant-test")
+
+    service = NovelWorkbenchService(tmp_path)
+    workspace_dir = service.workspaces_dir / "job-test"
+    job = {
+        "job_id": "job-test",
+        "log_path": str(tmp_path / "projects" / ".novel_workbench" / "logs" / "job-test.log"),
+        "seed_text": "seed",
+    }
+
+    asyncio.run(service._prepare_workspace(job, workspace_dir))
+
+    assert (workspace_dir / ".git").exists() is True
+
+
+def test_build_headers_prefers_anthropic_api_key_for_official_base(monkeypatch):
+    monkeypatch.setenv("ANTHROPIC_API_KEY", "sk-ant-test")
+    monkeypatch.setenv("ANTHROPIC_AUTH_TOKEN", "sk-or-test")
+
+    headers = build_headers(base_url="https://api.anthropic.com")
+
+    assert headers["x-api-key"] == "sk-ant-test"
+    assert "authorization" not in headers
+
+
+def test_discover_chapter_files_uses_actual_chapter_count(tmp_path, monkeypatch):
+    chapters_dir = tmp_path / "chapters"
+    chapters_dir.mkdir()
+    for chapter in (1, 2, 24):
+        (chapters_dir / f"ch_{chapter:02d}.md").write_text(f"# Ch {chapter}\ntext\n", encoding="utf-8")
+
+    monkeypatch.setattr("build_arc_summary.CHAPTERS_DIR", chapters_dir)
+
+    chapter_files = discover_chapter_files()
+
+    assert [path.name for path in chapter_files] == ["ch_01.md", "ch_02.md", "ch_24.md"]

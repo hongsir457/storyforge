@@ -39,7 +39,7 @@ def auth_error_message() -> str:
     return "Set ANTHROPIC_API_KEY or ANTHROPIC_AUTH_TOKEN in .env first"
 
 
-def build_headers(*, beta: str | None = None) -> dict[str, str]:
+def build_headers(*, beta: str | None = None, base_url: str | None = None) -> dict[str, str]:
     headers = {
         "anthropic-version": ANTHROPIC_VERSION,
         "content-type": "application/json",
@@ -47,11 +47,20 @@ def build_headers(*, beta: str | None = None) -> dict[str, str]:
     if beta:
         headers["anthropic-beta"] = beta
 
-    auth_value = resolve_auth_value()
+    api_key = get_api_key()
+    auth_token = get_auth_token()
+    use_bearer = is_openrouter_base_url(base_url)
+
+    auth_value = ""
+    if use_bearer:
+        auth_value = auth_token or api_key
+    else:
+        auth_value = api_key or auth_token
+
     if not auth_value:
         return headers
 
-    if get_auth_token() or is_openrouter_base_url():
+    if use_bearer or (auth_token and not api_key):
         headers["authorization"] = f"Bearer {auth_value}"
     else:
         headers["x-api-key"] = auth_value

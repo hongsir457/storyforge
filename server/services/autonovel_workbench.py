@@ -4,6 +4,7 @@ import asyncio
 import json
 import os
 import shutil
+import subprocess
 import sys
 import textwrap
 import uuid
@@ -20,6 +21,7 @@ class NovelWorkbenchError(RuntimeError):
 
 
 class NovelWorkbenchService:
+    OPENROUTER_ANTHROPIC_BASE_URL = "https://openrouter.ai/api"
     ACTIVE_STATUSES = {"queued", "running"}
     TERMINAL_STATUSES = {"succeeded", "failed", "cancelled"}
     PREVIEW_LIMIT_BYTES = 120_000
@@ -139,14 +141,13 @@ class NovelWorkbenchService:
             await asyncio.gather(*tasks, return_exceptions=True)
 
     def status_snapshot(self) -> dict[str, Any]:
-        git_required = (self.autonovel_source_dir / ".git").exists()
         env_status = self._runtime_env_status()
         requirements = {
             "workspace_root_exists": self.workspace_root.exists(),
             "autonovel_repo_exists": self.autonovel_source_dir.exists(),
             "importer_exists": self.importer_script.exists(),
             "autonovel_env_exists": self._autonovel_env_ready(),
-            "git_available": (shutil.which("git") is not None) if git_required else True,
+            "git_available": shutil.which("git") is not None,
             "uv_available": shutil.which("uv") is not None,
         }
         requirements["all_ready"] = all(requirements.values())
@@ -550,6 +551,7 @@ class NovelWorkbenchService:
         self._reset_workspace_outputs(workspace_dir)
         self._materialize_autonovel_env(workspace_dir)
         (workspace_dir / "seed.txt").write_text(str(job["seed_text"]).strip() + "\n", encoding="utf-8")
+        self._initialize_workspace_git_repo(workspace_dir)
 
     async def _run_command(
         self,
@@ -622,9 +624,22 @@ class NovelWorkbenchService:
         }
 
     def _collect_runtime_env_values(self) -> dict[str, str]:
+        api_key = os.environ.get("ANTHROPIC_API_KEY", "").strip()
+        auth_token = os.environ.get("ANTHROPIC_AUTH_TOKEN", "").strip()
+        explicit_api_base_url = (
+            os.environ.get("AUTONOVEL_API_BASE_URL") or os.environ.get("ANTHROPIC_BASE_URL") or ""
+        ).strip()
+
+        if explicit_api_base_url:
+            api_base_url = explicit_api_base_url
+        elif auth_token:
+            api_base_url = self.OPENROUTER_ANTHROPIC_BASE_URL
+        else:
+            api_base_url = self.RUNTIME_ENV_DEFAULTS["AUTONOVEL_API_BASE_URL"]
+
         return {
-            "ANTHROPIC_API_KEY": os.environ.get("ANTHROPIC_API_KEY", "").strip(),
-            "ANTHROPIC_AUTH_TOKEN": os.environ.get("ANTHROPIC_AUTH_TOKEN", "").strip(),
+            "ANTHROPIC_API_KEY": api_key,
+            "ANTHROPIC_AUTH_TOKEN": auth_token,
             "AUTONOVEL_WRITER_MODEL": (
                 os.environ.get("AUTONOVEL_WRITER_MODEL")
                 or os.environ.get("ANTHROPIC_DEFAULT_SONNET_MODEL")
@@ -642,11 +657,7 @@ class NovelWorkbenchService:
                 or os.environ.get("ANTHROPIC_DEFAULT_OPUS_MODEL")
                 or self.RUNTIME_ENV_DEFAULTS["AUTONOVEL_REVIEW_MODEL"]
             ).strip(),
-            "AUTONOVEL_API_BASE_URL": (
-                os.environ.get("AUTONOVEL_API_BASE_URL")
-                or os.environ.get("ANTHROPIC_BASE_URL")
-                or self.RUNTIME_ENV_DEFAULTS["AUTONOVEL_API_BASE_URL"]
-            ).strip(),
+            "AUTONOVEL_API_BASE_URL": api_base_url,
             "FAL_KEY": os.environ.get("FAL_KEY", "").strip(),
             "ELEVENLABS_API_KEY": os.environ.get("ELEVENLABS_API_KEY", "").strip(),
         }
@@ -712,6 +723,30 @@ class NovelWorkbenchService:
                 shutil.rmtree(path, ignore_errors=True)
             elif path.exists():
                 path.unlink(missing_ok=True)
+
+    def _initialize_workspace_git_repo(self, workspace_dir: Path) -> None:
+        if (workspace_dir / ".git").exists():
+            return
+
+        commands = (
+            ["git", "init"],
+            ["git", "config", "user.name", "Storyforge Autonovel"],
+            ["git", "config", "user.email", "noreply@storyforge.local"],
+            ["git", "add", "-A"],
+            ["git", "commit", "-m", "workspace bootstrap", "--allow-empty"],
+        )
+        for command in commands:
+            result = subprocess.run(
+                command,
+                cwd=workspace_dir,
+                capture_output=True,
+                text=True,
+                check=False,
+            )
+            if result.returncode != 0:
+                raise NovelWorkbenchError(
+                    f"Failed to initialize autonovel workspace git repo: {' '.join(command)}: {result.stderr.strip()}"
+                )
 
     def _now(self) -> str:
         return datetime.now(UTC).strftime("%Y-%m-%dT%H:%M:%SZ")

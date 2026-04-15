@@ -505,6 +505,11 @@ def run_revision(state: dict, max_cycles: int = MAX_REVISION_CYCLES) -> dict:
             step("apply_cuts.py not found, skipping mechanical cuts")
 
         # -- Step 3: Reader panel --
+        build_arc = BASE_DIR / "build_arc_summary.py"
+        if build_arc.exists() and count_chapter_files() > 0:
+            step("Refreshing arc summary for reader panel...")
+            uv_run("build_arc_summary.py", timeout=600)
+
         step("Running reader panel evaluation...")
         uv_run("reader_panel.py", timeout=600)
 

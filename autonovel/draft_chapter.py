@@ -88,7 +88,7 @@ def main():
     else:
         prev_tail = "(first chapter -- no previous)"
 
-    prompt = f"""Write Chapter {chapter_num} of "The Second Son of the House of Bells."
+    prompt = f"""Write Chapter {chapter_num} of this novel.
 
 VOICE DEFINITION (follow this exactly):
 {voice}
@@ -110,16 +110,16 @@ CHARACTER REGISTRY (reference for speech patterns and behavior):
 
 WRITING INSTRUCTIONS:
 1. Write the COMPLETE chapter. Target ~3,200 words. Do not truncate or summarize.
-2. Third-person limited, past tense, locked to Cass's POV.
+2. Follow the POV, tense, and focal distance implied by the chapter outline and voice definition.
 3. Hit ALL numbered beats from the outline in order.
 4. Plant ALL foreshadowing elements listed under "Plants."
-5. Show sensory detail: what Cass hears, smells, feels physically.
-6. The under-note causes specific physical pain (needle behind left eye, not vague discomfort).
+5. Show sensory detail specific to the POV character and setting.
+6. Use concrete bodily sensation instead of vague discomfort or generic emotional summary.
 7. Dialogue follows the speech patterns defined in characters.md.
 8. No banned words from voice.md Part 1 guardrails.
 9. No AI fiction tells: no "a sense of," no "couldn't help but feel," no "eyes widened."
 10. Vary sentence length. Short sentences for impact. Longer ones to build.
-11. Metaphors from Cass's experience: sound, bronze, craft, the body's response to pitch.
+11. Metaphors must arise from the POV character's lived experience, profession, body, and world.
 12. Trust the reader. Don't explain what scenes mean. Let them land.
 13. Start the chapter in scene, not with exposition. End on a moment, not a summary.
 
@@ -140,7 +140,7 @@ PATTERNS TO AVOID (these have been flagged in previous chapters):
     paragraphs of similar length. Include at least one 1-2 sentence
     paragraph and one 6+ sentence paragraph.
 21. END the chapter differently from previous chapters. Do NOT end with
-    Cass outside listening to his father work. Find the ending that
+    a canned image repeated from some other draft. Find the ending that
     belongs to THIS chapter specifically.
 22. INCLUDE at least one moment that surprises -- a character saying
     the wrong thing, an emotional beat arriving early or late, a detail

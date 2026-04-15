@@ -13,6 +13,7 @@ from dotenv import load_dotenv
 
 BASE_DIR = Path(__file__).parent
 load_dotenv(BASE_DIR / ".env")
+OUTPUT_PATH = BASE_DIR / "world.md"
 
 WRITER_MODEL = os.environ.get("AUTONOVEL_WRITER_MODEL", "claude-sonnet-4-6")
 API_BASE = os.environ.get("AUTONOVEL_API_BASE_URL", "https://api.anthropic.com")
@@ -50,9 +51,11 @@ voice_lines = voice.split("\n")
 part2_start = next(i for i, line in enumerate(voice_lines) if "Part 2" in line)
 voice_part2 = "\n".join(voice_lines[part2_start:])
 
-prompt = f"""Build a complete world bible for this fantasy novel. This is the WORLD.MD file -- 
-the definitive reference for everything that EXISTS in this world. A writer should be able 
-to resolve any worldbuilding question from this document alone.
+prompt = f"""Build a complete WORLD.MD file for this novel.
+
+This document is the definitive reference for everything that EXISTS in the story world.
+A writer should be able to resolve setting, power-system, history, and culture questions
+from this file alone.
 
 SEED CONCEPT:
 {seed}
@@ -66,7 +69,7 @@ CRAFT REQUIREMENTS (from CRAFT.md -- follow these):
 - Trace implications of magic through society, economy, law, religion
 - At least 2-3 societal implications of magic explored in depth
 - History must create PRESENT-DAY TENSIONS that drive the plot (not just backdrop)
-- Geography must be specific and sensory (not generic fantasy)
+- Geography / setting must be specific and sensory (not generic)
 - Iceberg principle: imply more than you state
 - Interconnection: pulling one thread should move everything
 
@@ -76,29 +79,32 @@ STRUCTURE THE DOCUMENT WITH THESE SECTIONS:
 A timeline of major events. Focus on events that create PRESENT-DAY tensions.
 Include the founding myth, key turning points, and recent events that matter to the plot.
 
-## Magic System
-### Hard Rules (Tonal Law)
-Specific, testable rules. What intervals do what. What progressions bind.
-What happens when you break the rules. Include COSTS and LIMITATIONS prominently.
+## Core Forces / Power Systems
+If the novel has magic, cultivation, technology, religion, law, or any other
+special force that shapes the plot, define it here with specific, testable rules.
+Include COSTS, LIMITATIONS, edge cases, and failure modes prominently.
 
-### Soft Magic (Cass's Gift)
-What he perceives, how it works, what it costs HIM specifically.
-This should be mysterious but have consistent internal logic.
+## Exceptional Perception / Special Cases
+If the protagonist or another key character has an unusual gift, curse, bloodline,
+tool, training, or sensory ability, define how it works, what it costs, and what
+it cannot do. Keep mystery if needed, but the author-facing logic must still be coherent.
 
 ### Societal Implications
-How does tonal law shape: governance, commerce, education, class structure,
-crime, family life, childhood, aging, disability?
+How do the world's core forces shape: governance, commerce, education, class structure,
+crime, family life, childhood, aging, disability, and daily routines?
 
-## Geography
-Cantamura's physical layout, districts, the natural amphitheater's acoustic properties.
-Neighboring places (at least 2-3). Sensory signatures for each location.
+## Geography / Setting
+The primary setting's physical layout, districts/regions, climate, built environment,
+and sensory logic. Include neighboring places (at least 2-3) and the sensory signature
+for each location.
 
 ## Factions & Politics
 Who holds power, who wants it, who's being crushed by it.
 At least 3-4 factions with opposing interests.
 
-## Bestiary / Flora / Natural World
-What's unique about the natural world in and around Cantamura?
+## Bestiary / Flora / Material World
+What's unique about the natural world, objects, resources, hazards, foodways,
+architecture, and material culture around this story?
 
 ## Cultural Details
 Customs, taboos, festivals, food, clothing, coming-of-age rituals.
@@ -124,4 +130,6 @@ IMPORTANT:
 
 print("Calling writer model...", file=sys.stderr)
 result = call_writer(prompt)
+OUTPUT_PATH.write_text(result, encoding="utf-8")
+print(f"Saved to {OUTPUT_PATH}", file=sys.stderr)
 print(result)

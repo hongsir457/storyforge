@@ -12,6 +12,7 @@ from dotenv import load_dotenv
 
 BASE_DIR = Path(__file__).parent
 load_dotenv(BASE_DIR / ".env")
+OUTPUT_PATH = BASE_DIR / "canon.md"
 
 WRITER_MODEL = os.environ.get("AUTONOVEL_WRITER_MODEL", "claude-sonnet-4-6")
 API_BASE = os.environ.get("AUTONOVEL_API_BASE_URL", "https://api.anthropic.com")
@@ -66,8 +67,8 @@ FORMAT THE OUTPUT AS CANON.MD with these categories:
 - Dated events, ages, durations
 
 ## Magic System Rules
-- Hard rules of Tonal Law (intervals, costs, limitations)
-- Cass's gift specifics
+- Hard rules of the world's power systems / technology / institutions
+- Special abilities, exceptions, costs, and limitations
 
 ## Character Facts
 - Ages, physical descriptions, habits, relationships
@@ -81,7 +82,7 @@ FORMAT THE OUTPUT AS CANON.MD with these categories:
 
 ## Established In-Story
 - Events that have already happened in the story's past
-- The Perin contract, the Expansion Wars, etc.
+- Prior deals, betrayals, wars, deaths, inheritances, revelations, and binding events
 
 RULES:
 - One fact per bullet point. Short. Specific. Checkable.
@@ -93,4 +94,6 @@ RULES:
 
 print("Calling writer model...", file=sys.stderr)
 result = call_writer(prompt)
+OUTPUT_PATH.write_text(result, encoding="utf-8")
+print(f"Saved to {OUTPUT_PATH}", file=sys.stderr)
 print(result)

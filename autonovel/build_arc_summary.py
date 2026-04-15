@@ -60,6 +60,8 @@ def main():
     chapter_files = discover_chapter_files()
     if not chapter_files:
         raise SystemExit("ERROR: No chapter files found.")
+    seed_excerpt = (BASE_DIR / "seed.txt").read_text(encoding="utf-8").strip()
+    seed_excerpt = " ".join(seed_excerpt.split())[:1200]
 
     for path in chapter_files:
         ch = int(path.stem.removeprefix("ch_"))
@@ -93,21 +95,14 @@ def main():
     chapter_count = len(chapter_files)
 
     # Assemble
-    full = f"""# THE SECOND SON OF THE HOUSE OF BELLS
+    full = f"""# ARC SUMMARY
 ## Full-Arc Summary for Reader Panel
 
 This document contains chapter summaries, opening/closing passages,
 and key dialogue for all {chapter_count} chapters. Total novel: {total_wc:,} words.
 
-PREMISE: In Cantamura, a city where law is sung into binding through
-specific musical intervals, 14-year-old Cass Bellwright can hear when
-someone is lying -- a quarter-tone between F and F-sharp that causes
-him physical pain. His older brother Perin has been bound to service
-in the House of Corda for 10 years through a contract their father
-allowed. The bells their family maintains contain a secret: a question
-("Do you consent to be bound?") embedded in the sub-harmonics by the
-city's founder 200 years ago. No one has ever heard it. No one has
-ever answered. Every binding in Cantamura is technically void.
+SEED / PREMISE:
+{seed_excerpt}
 
 ---
 

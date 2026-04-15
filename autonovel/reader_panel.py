@@ -77,10 +77,9 @@ READERS = {
     },
 }
 
-READER_PROMPT = """You have just read a complete fantasy novel in summary form.
+READER_PROMPT = """You have just read a complete novel in summary form.
 The summaries include chapter-by-chapter events, opening and closing passages
-from each chapter, and key dialogue. The full novel is 72,422 words across
-24 chapters.
+from each chapter, and key dialogue.
 
 {arc_summary}
 
@@ -91,7 +90,7 @@ Respond with JSON:
 {{
   "momentum_loss": "Where does the story lose momentum? Name the specific chapter(s) and what causes the drag. If it never loses momentum, say so and explain why.",
   
-  "earned_ending": "Does the ending feel earned by everything before it? Does Cass's choice in Ch 22 land? Does the final image in Ch 24 mirror Ch 1 in a way that satisfies? What, if anything, feels unearned?",
+  "earned_ending": "Does the ending feel earned by everything before it? Does the climax land? Does the final image satisfy what the opening promised? What, if anything, feels unearned?",
   
   "cut_candidate": "If the novel had to be 10% shorter (~7,000 words), which chapter or section would you cut first? Why? What would be lost?",
   

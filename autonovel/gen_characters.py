@@ -13,6 +13,7 @@ from dotenv import load_dotenv
 
 BASE_DIR = Path(__file__).parent
 load_dotenv(BASE_DIR / ".env")
+OUTPUT_PATH = BASE_DIR / "characters.md"
 
 WRITER_MODEL = os.environ.get("AUTONOVEL_WRITER_MODEL", "claude-sonnet-4-6")
 API_BASE = os.environ.get("AUTONOVEL_API_BASE_URL", "https://api.anthropic.com")
@@ -49,9 +50,10 @@ voice_lines = voice.split("\n")
 part2_start = next(i for i, line in enumerate(voice_lines) if "Part 2" in line)
 voice_part2 = "\n".join(voice_lines[part2_start:])
 
-prompt = f"""Build a complete character registry for this fantasy novel. This is CHARACTERS.MD --
-the definitive reference for WHO exists in this story, what drives them, how they speak,
-and what secrets they carry.
+prompt = f"""Build a complete CHARACTERS.MD file for this novel.
+
+This document is the definitive reference for WHO exists in the story, what drives them,
+how they speak, what they hide, and how they collide with one another.
 
 SEED CONCEPT:
 {seed}
@@ -84,43 +86,14 @@ Rules: Want and Need must be IN TENSION. Lie statable in one sentence.
 7. Metaphor domain  8. Directness vs indirectness
 Test: Remove dialogue tags. Can you tell who's speaking?
 
-BUILD THE REGISTRY WITH AT LEAST THESE CHARACTERS:
+BUILD THE REGISTRY AROUND THE STORY'S ACTUAL CAST:
 
-1. **Cass Bellwright** (protagonist, POV character)
-   - Full wound/want/need/lie chain
-   - Three sliders with justification
-   - Arc type (positive/negative/flat)
-   - Detailed speech pattern (8 dimensions)
-   - Physical habits and tells
-   - At least 2 secrets
-   - Key relationships mapped
-
-2. **Eddan Bellwright** (father)
-   - Same depth as Cass
-   - His relationship to the sealed journals, the shaking hands
-   - What he knows and what he's hiding
-
-3. **Perin Bellwright** (brother) 
-   - Even though he's absent for much of the story, he needs full depth
-   - What actually happened with the Corda contract
-   - His presence through absence
-
-4. **Maret Corda** (antagonist)
-   - Not a villain -- someone whose interests conflicts with Cass's
-   - Her own wound/want/need/lie (she should be understandable)
-
-5. **Rector Suvaine** (Academy Chancellor)
-   - The institutional antagonist -- the system personified
-   - She believes she's protecting Cantamura
-
-6. **Torvald Hess** (Compact leader)
-   - The outsider perspective on the system
-   - What he represents thematically
-
-7. **At least 1-2 additional characters** that the story needs
-   - A peer/friend for Cass at the Academy?
-   - Someone at the House of Corda who knows Perin?
-   - A Court Singer with divided loyalties?
+- Identify the protagonist or protagonist group implied by the seed.
+- Identify the primary antagonist or opposing force.
+- Identify key allies, rivals, mentors, family/intimate ties, institutional forces,
+  and wildcard characters the plot will need.
+- Create at least 6 significant characters unless the seed clearly demands a smaller cast.
+- If a character is absent for long stretches but crucial to the plot, still give them full depth.
 
 FOR EACH CHARACTER INCLUDE:
 - Name, age, role
@@ -138,12 +111,14 @@ IMPORTANT:
 - Characters must INTERCONNECT. Their wants should conflict with each other.
 - Every secret should be something that would CHANGE the story if revealed.
 - Speech patterns must be distinct enough to pass the no-tags test.
-- Give Cass habits that come from his gift (the pain, the constant listening).
-- The father's shaking hands should connect to something specific.
-- Maret Corda should be as fully realized as Cass -- a worthy antagonist.
+- Give major characters bodily habits, unconscious tells, and private contradictions.
+- If the seed implies a special ability, burden, injury, duty, or inheritance, tie it to habits and speech.
+- Antagonists must be as fully realized as protagonists -- understandable, not cardboard.
 - Target ~3000-4000 words. Dense character work, not padding.
 """
 
 print("Calling writer model...", file=sys.stderr)
 result = call_writer(prompt)
+OUTPUT_PATH.write_text(result, encoding="utf-8")
+print(f"Saved to {OUTPUT_PATH}", file=sys.stderr)
 print(result)

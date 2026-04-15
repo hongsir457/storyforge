@@ -586,6 +586,8 @@ class NovelWorkbenchService:
         await self._mark_job(job_id, stage=stage)
         env = os.environ.copy()
         env.setdefault("PYTHONUTF8", "1")
+        env.setdefault("UV_LINK_MODE", "copy")
+        env.pop("VIRTUAL_ENV", None)
 
         log_path.parent.mkdir(parents=True, exist_ok=True)
         with open(log_path, "a", encoding="utf-8") as log_handle:

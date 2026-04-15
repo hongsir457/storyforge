@@ -312,6 +312,19 @@ def main():
         if path.exists():
             results[f"ch_{ch:02d}"] = analyze_chapter(path)
 
+    out_path = BASE_DIR / "edit_logs" / "voice_fingerprint.json"
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+
+    if not results:
+        payload = {"chapters": {}, "outliers": {}, "note": "No chapter files found; fingerprint skipped."}
+        with open(out_path, "w") as f:
+            json.dump(payload, f, indent=2)
+        print("VOICE FINGERPRINT")
+        print("=" * 70)
+        print("No chapter files found; skipping quantitative voice analysis.")
+        print(f"\nSaved to {out_path}")
+        return
+
     # Compute novel-wide averages
     all_vals = list(results.values())
     avg = {}
@@ -344,9 +357,10 @@ def main():
     print(
         f"{'Ch':<8} {'Words':<7} {'AvgSnt':<7} {'CV':<6} {'Frag%':<7} {'Long%':<7} {'Dial%':<7} {'Mus%':<6} {'Trd%':<6} {'Bod%':<6} {'AbsPK':<6} {'HeStrt':<7}"
     )
-    for ch in range(1, 25):
-        key = f"ch_{ch:02d}"
+    chapter_keys = sorted(k for k in results if k.startswith("ch_"))
+    for key in chapter_keys:
         r = results[key]
+        ch = int(key.removeprefix("ch_"))
         print(
             f"  {ch:<6} {r['word_count']:<7} {r['avg_sentence_length']:<7} {r['sentence_length_cv']:<6} {r['fragments_pct']:<7} {r['long_sentences_pct']:<7} {r['dialogue_ratio']:<7} {r['well_musical_pct']:<6} {r['well_trade_pct']:<6} {r['well_body_pct']:<6} {r['abstract_per_1k']:<6} {r['he_start_pct']:<7}"
         )
@@ -363,7 +377,6 @@ def main():
             print(f"    {o}")
 
     # Save full results
-    out_path = BASE_DIR / "edit_logs" / "voice_fingerprint.json"
     with open(out_path, "w") as f:
         json.dump({"chapters": results, "outliers": outliers}, f, indent=2)
     print(f"\nSaved to {out_path}")

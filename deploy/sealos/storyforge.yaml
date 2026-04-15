@@ -59,22 +59,23 @@ spec:
     spec:
       automountServiceAccountToken: false
       securityContext:
-        fsGroup: 1001
         seccompProfile:
           type: RuntimeDefault
       containers:
         - name: postgres
-          image: bitnami/postgresql:16
+          image: postgres:16-alpine
           imagePullPolicy: IfNotPresent
           ports:
             - name: postgres
               containerPort: 5432
           env:
-            - name: POSTGRESQL_USERNAME
+            - name: POSTGRES_USER
               value: storyforge
-            - name: POSTGRESQL_DATABASE
+            - name: POSTGRES_DB
               value: storyforge
-            - name: POSTGRESQL_PASSWORD
+            - name: PGDATA
+              value: /var/lib/postgresql/data/pgdata
+            - name: POSTGRES_PASSWORD
               valueFrom:
                 secretKeyRef:
                   name: storyforge-env
@@ -98,13 +99,10 @@ spec:
               memory: 2Gi
           securityContext:
             allowPrivilegeEscalation: false
-            runAsNonRoot: true
-            runAsUser: 1001
-            capabilities:
-              drop: ["ALL"]
+            runAsUser: 0
           volumeMounts:
             - name: postgres-data
-              mountPath: /bitnami/postgresql
+              mountPath: /var/lib/postgresql/data
   volumeClaimTemplates:
     - metadata:
         name: postgres-data
@@ -249,7 +247,7 @@ spec:
           command: ["sh", "-c"]
           args:
             - >
-              export DATABASE_URL="postgresql+asyncpg://storyforge:${POSTGRES_PASSWORD}@storyforge-postgres:5432/storyforge";
+              export DATABASE_URL="postgresql+asyncpg://storyforge:${POSTGRES_PASSWORD}@storyforge-postgres:5432/storyforge?ssl=disable";
               exec uv run uvicorn server.app:app --host 0.0.0.0 --port 1241;
           readinessProbe:
             httpGet:

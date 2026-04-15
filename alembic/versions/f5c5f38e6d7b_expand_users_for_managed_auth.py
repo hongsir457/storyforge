@@ -34,7 +34,7 @@ def upgrade() -> None:
             "SET email = COALESCE(NULLIF(email, ''), LOWER(username || '@storyforge.local')), "
             "display_name = COALESCE(NULLIF(display_name, ''), username), "
             "password_hash = COALESCE(password_hash, ''), "
-            "is_email_verified = 1"
+            "is_email_verified = TRUE"
         )
     )
 

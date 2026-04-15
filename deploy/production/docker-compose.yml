@@ -1,12 +1,12 @@
 ﻿services:
   postgres:
-    image: bitnami/postgresql:16
+    image: postgres:16-alpine
     environment:
-      POSTGRESQL_USERNAME: storyforge
-      POSTGRESQL_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in deploy/production/.env}
-      POSTGRESQL_DATABASE: storyforge
+      POSTGRES_USER: storyforge
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in deploy/production/.env}
+      POSTGRES_DB: storyforge`r`n      PGDATA: /var/lib/postgresql/data/pgdata
     volumes:
-      - ./pgdata:/bitnami/postgresql
+      - ./pgdata:/var/lib/postgresql/data
     restart: unless-stopped
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U storyforge -d storyforge"]
@@ -30,7 +30,7 @@
     image: ghcr.io/hongsir457/storyforge-backend:main
     env_file: .env
     environment:
-      DATABASE_URL: postgresql+asyncpg://storyforge:${POSTGRES_PASSWORD}@postgres:5432/storyforge
+      DATABASE_URL: postgresql+asyncpg://storyforge:${POSTGRES_PASSWORD}@postgres:5432/storyforge?ssl=disable
       REDIS_URL: redis://redis:6379/0
     volumes:
       - ./projects:/app/projects
@@ -56,4 +56,7 @@
       storyforge-backend:
         condition: service_healthy
     restart: unless-stopped
+
+
+
 

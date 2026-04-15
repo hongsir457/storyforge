@@ -20,9 +20,9 @@ class CreateNovelJobRequest(BaseModel):
     title: str
     seed_text: str
     project_name: str | None = None
-    style: str = "Photographic"
-    aspect_ratio: Literal["9:16", "16:9"] = "9:16"
-    default_duration: Literal[4, 6, 8] = 4
+    style: str | None = None
+    aspect_ratio: Literal["9:16", "16:9"] | None = None
+    default_duration: Literal[4, 6, 8] | None = None
 
 
 def _raise_http_error(exc: NovelWorkbenchError) -> None:
@@ -70,6 +70,15 @@ async def create_novel_job(req: CreateNovelJobRequest, _user: CurrentUser):
 async def cancel_novel_job(job_id: str, _user: CurrentUser):
     try:
         job = await get_novel_workbench_service().cancel_job(job_id)
+    except NovelWorkbenchError as exc:
+        _raise_http_error(exc)
+    return {"success": True, "job": job}
+
+
+@router.delete("/novel-workbench/jobs/{job_id}")
+async def delete_novel_job(job_id: str, _user: CurrentUser):
+    try:
+        job = await get_novel_workbench_service().delete_job(job_id)
     except NovelWorkbenchError as exc:
         _raise_http_error(exc)
     return {"success": True, "job": job}

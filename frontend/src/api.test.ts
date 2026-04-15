@@ -320,6 +320,16 @@ describe("API", () => {
       await API.answerAssistantQuestion("demo", "session-1", "q-1", { key: "a" });
       await API.listAssistantSkills("demo");
       await API.deleteAssistantSession("demo", "session-1");
+      await API.getNovelWorkbenchStatus();
+      await API.listNovelWorkbenchJobs();
+      await API.getNovelWorkbenchJob("job-1");
+      await API.createNovelWorkbenchJob({
+        title: "Bell",
+        seed_text: "seed",
+        project_name: "bell",
+      });
+      await API.cancelNovelWorkbenchJob("job-1");
+      await API.deleteNovelWorkbenchJob("job-1");
 
       await API.getUsageStats({
         projectName: "demo",
@@ -349,6 +359,23 @@ describe("API", () => {
         "/projects/demo/assistant/sessions?status=running",
       );
       expect(requestSpy).toHaveBeenCalledWith("/projects/demo/assistant/skills");
+      expect(requestSpy).toHaveBeenCalledWith("/novel-workbench/status");
+      expect(requestSpy).toHaveBeenCalledWith("/novel-workbench/jobs");
+      expect(requestSpy).toHaveBeenCalledWith("/novel-workbench/jobs/job-1");
+      expect(requestSpy).toHaveBeenCalledWith("/novel-workbench/jobs", expect.objectContaining({
+        method: "POST",
+        body: JSON.stringify({
+          title: "Bell",
+          seed_text: "seed",
+          project_name: "bell",
+        }),
+      }));
+      expect(requestSpy).toHaveBeenCalledWith("/novel-workbench/jobs/job-1/cancel", expect.objectContaining({
+        method: "POST",
+      }));
+      expect(requestSpy).toHaveBeenCalledWith("/novel-workbench/jobs/job-1", expect.objectContaining({
+        method: "DELETE",
+      }));
       expect(requestSpy).toHaveBeenCalledWith(
         "/usage/stats?project_name=demo&start_date=2026-01-01&end_date=2026-02-01",
       );

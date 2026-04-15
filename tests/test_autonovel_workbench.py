@@ -3,6 +3,8 @@ import asyncio
 import sys
 from pathlib import Path
 
+import pytest
+
 AUTONOVEL_DIR = Path(__file__).resolve().parents[1] / "autonovel"
 if str(AUTONOVEL_DIR) not in sys.path:
     sys.path.insert(0, str(AUTONOVEL_DIR))
@@ -158,3 +160,101 @@ def test_build_outline_discovers_actual_chapter_count(tmp_path, monkeypatch):
     chapter_files = discover_outline_chapter_files()
 
     assert [path.name for path in chapter_files] == ["ch_01.md", "ch_02.md", "ch_24.md"]
+
+
+def test_create_job_defaults_visual_import_fields(tmp_path, monkeypatch):
+    _make_workbench_layout(tmp_path)
+    monkeypatch.delenv("AUTONOVEL_ENV_SOURCE", raising=False)
+    monkeypatch.setenv("ANTHROPIC_API_KEY", "sk-ant-test")
+
+    service = NovelWorkbenchService(tmp_path)
+    asyncio.run(service.startup())
+
+    job = asyncio.run(
+        service.create_job(
+            title="Bell",
+            seed_text="seed",
+            project_name=None,
+            style=None,
+            aspect_ratio=None,
+            default_duration=None,
+        )
+    )
+
+    assert job["style"] == "Photographic"
+    assert job["aspect_ratio"] == "9:16"
+    assert job["default_duration"] == 4
+
+
+def test_delete_job_removes_terminal_record_and_files(tmp_path, monkeypatch):
+    _make_workbench_layout(tmp_path)
+    monkeypatch.delenv("AUTONOVEL_ENV_SOURCE", raising=False)
+    monkeypatch.setenv("ANTHROPIC_API_KEY", "sk-ant-test")
+
+    service = NovelWorkbenchService(tmp_path)
+    asyncio.run(service.startup())
+
+    workspace_dir = service.workspaces_dir / "job-delete"
+    workspace_dir.mkdir(parents=True)
+    (workspace_dir / "seed.txt").write_text("seed\n", encoding="utf-8")
+    log_path = service.logs_dir / "job-delete.log"
+    log_path.write_text("log\n", encoding="utf-8")
+    service._jobs["job-delete"] = {
+        "job_id": "job-delete",
+        "title": "Bell",
+        "seed_text": "seed",
+        "style": "Photographic",
+        "aspect_ratio": "9:16",
+        "default_duration": 4,
+        "target_project_name": "bell",
+        "imported_project_name": None,
+        "status": "failed",
+        "stage": "failed",
+        "error_message": "boom",
+        "workspace_dir": str(workspace_dir),
+        "log_path": str(log_path),
+        "created_at": "2026-04-15T00:00:00Z",
+        "updated_at": "2026-04-15T00:00:00Z",
+        "started_at": "2026-04-15T00:00:00Z",
+        "finished_at": "2026-04-15T00:00:00Z",
+    }
+    service._save_jobs_locked()
+
+    deleted = asyncio.run(service.delete_job("job-delete"))
+
+    assert deleted["job_id"] == "job-delete"
+    assert "job-delete" not in service._jobs
+    assert workspace_dir.exists() is False
+    assert log_path.exists() is False
+
+
+def test_delete_job_rejects_active_runs(tmp_path, monkeypatch):
+    _make_workbench_layout(tmp_path)
+    monkeypatch.delenv("AUTONOVEL_ENV_SOURCE", raising=False)
+    monkeypatch.setenv("ANTHROPIC_API_KEY", "sk-ant-test")
+
+    service = NovelWorkbenchService(tmp_path)
+    asyncio.run(service.startup())
+
+    service._jobs["job-running"] = {
+        "job_id": "job-running",
+        "title": "Bell",
+        "seed_text": "seed",
+        "style": "Photographic",
+        "aspect_ratio": "9:16",
+        "default_duration": 4,
+        "target_project_name": "bell",
+        "imported_project_name": None,
+        "status": "running",
+        "stage": "pipeline",
+        "error_message": None,
+        "workspace_dir": str(service.workspaces_dir / "job-running"),
+        "log_path": str(service.logs_dir / "job-running.log"),
+        "created_at": "2026-04-15T00:00:00Z",
+        "updated_at": "2026-04-15T00:00:00Z",
+        "started_at": "2026-04-15T00:00:00Z",
+        "finished_at": None,
+    }
+
+    with pytest.raises(Exception, match="Cancel the novel job before deleting"):
+        asyncio.run(service.delete_job("job-running"))

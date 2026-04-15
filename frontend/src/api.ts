@@ -475,9 +475,9 @@ class API {
     title: string;
     seed_text: string;
     project_name?: string;
-    style: string;
-    aspect_ratio: "9:16" | "16:9";
-    default_duration: 4 | 6 | 8;
+    style?: string;
+    aspect_ratio?: "9:16" | "16:9";
+    default_duration?: 4 | 6 | 8;
   }): Promise<{ success: boolean; job: NovelWorkbenchJob }> {
     return this.request("/novel-workbench/jobs", {
       method: "POST",
@@ -488,6 +488,12 @@ class API {
   static async cancelNovelWorkbenchJob(jobId: string): Promise<{ success: boolean; job: NovelWorkbenchJob }> {
     return this.request(`/novel-workbench/jobs/${encodeURIComponent(jobId)}/cancel`, {
       method: "POST",
+    });
+  }
+
+  static async deleteNovelWorkbenchJob(jobId: string): Promise<{ success: boolean; job: NovelWorkbenchJob }> {
+    return this.request(`/novel-workbench/jobs/${encodeURIComponent(jobId)}`, {
+      method: "DELETE",
     });
   }
 

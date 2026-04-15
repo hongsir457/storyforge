@@ -177,13 +177,15 @@ class NovelWorkbenchService:
         title: str,
         seed_text: str,
         project_name: str | None,
-        style: str,
-        aspect_ratio: str,
-        default_duration: int,
+        style: str | None = None,
+        aspect_ratio: str | None = None,
+        default_duration: int | None = None,
     ) -> dict[str, Any]:
         title = title.strip()
         seed_text = seed_text.strip()
         style = (style or "").strip() or "Photographic"
+        aspect_ratio = (aspect_ratio or "9:16").strip()
+        default_duration = int(default_duration or 4)
 
         if not title:
             raise NovelWorkbenchError("Novel title cannot be empty.")
@@ -262,6 +264,25 @@ class NovelWorkbenchService:
         if task and not task.done():
             task.cancel()
         return await self.get_job(job_id) or {"job_id": job_id, "status": "cancelled"}
+
+    async def delete_job(self, job_id: str) -> dict[str, Any]:
+        async with self._lock:
+            job = self._jobs.get(job_id)
+            if not job:
+                raise NovelWorkbenchError(f"Novel job not found: {job_id}")
+            if job.get("status") in self.ACTIVE_STATUSES:
+                raise NovelWorkbenchError("Cancel the novel job before deleting its run record.")
+
+            deleted_job = self._job_view(job)
+            self._jobs.pop(job_id, None)
+            self._save_jobs_locked()
+
+        workspace_dir = Path(job["workspace_dir"])
+        log_path = Path(job["log_path"])
+        if workspace_dir.exists():
+            shutil.rmtree(workspace_dir, ignore_errors=True)
+        log_path.unlink(missing_ok=True)
+        return deleted_job
 
     async def list_job_artifacts(self, job_id: str) -> dict[str, Any]:
         job = await self._get_raw_job(job_id)

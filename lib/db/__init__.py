@@ -31,6 +31,9 @@ async def init_db() -> None:
     from sqlalchemy import inspect as sa_inspect
     from sqlalchemy import text
 
+    from alembic import command
+    from alembic.config import Config
+
     # Detect pre-Alembic databases (tables exist but no version tracking)
     async with async_engine.connect() as conn:
         tables = await conn.run_sync(lambda c: sa_inspect(c).get_table_names())
@@ -41,9 +44,6 @@ async def init_db() -> None:
             has_version = row is not None
 
     need_stamp = has_app_tables and not has_version
-
-    from alembic import command
-    from alembic.config import Config
 
     def _run_alembic():
         # 编程式构造 Config，不读 alembic.ini，

@@ -1,25 +1,31 @@
 # Sealos Deploy
 
-Storyforge now deploys as four workloads:
+Storyforge currently runs on Sealos as a split stack:
 
 - `storyforge-frontend`
 - `storyforge-backend`
 - `storyforge-postgres`
 - `storyforge-redis`
 
-The public URL stays `https://bjmmuazhczom.cloud.sealos.io`.
+Public URL:
+
+- `https://bjmmuazhczom.cloud.sealos.io`
 
 ## 1. Target namespace
 
-The checked-in manifest is wired to the current Sealos workspace namespace: `ns-qkcc8vj1`.
+The checked-in manifest targets the isolated Storyforge workspace namespace:
+
+- `ns-qkcc8vj1`
 
 ## 2. Create the runtime secret
+
+Create the secret used by the frontend, backend, and database workloads:
 
 ```bash
 kubectl create secret generic storyforge-env \
   --namespace ns-qkcc8vj1 \
   --from-literal=POSTGRES_PASSWORD='<postgres-password>' \
-  --from-literal=AUTH_USERNAME=admin \
+  --from-literal=AUTH_USERNAME='admin' \
   --from-literal=AUTH_PASSWORD='<bootstrap-admin-password>' \
   --from-literal=AUTH_EMAIL='admin@storyforge.local' \
   --from-literal=AUTH_TOKEN_SECRET='<long-random-secret>' \
@@ -32,15 +38,26 @@ kubectl create secret generic storyforge-env \
   --dry-run=client -o yaml | kubectl apply -f -
 ```
 
-If you want registration and forgot-password to work before SMTP is ready, add:
+If SMTP is not ready yet and you still want registration, verification, and password reset flows to be testable:
 
 ```bash
---from-literal=AUTH_EMAIL_DEBUG='true'
+kubectl create secret generic storyforge-env \
+  --namespace ns-qkcc8vj1 \
+  --from-literal=AUTH_EMAIL_DEBUG='true' \
+  --dry-run=client -o yaml | kubectl apply -f -
 ```
 
-That mode logs verification and reset codes in the backend container logs.
+If you want OpenRouter available immediately after deploy, add these literals to the same secret update:
 
-## 3. Apply the split-stack manifest
+```bash
+--from-literal=ANTHROPIC_BASE_URL='https://openrouter.ai/api' \
+--from-literal=AUTONOVEL_API_BASE_URL='https://openrouter.ai/api' \
+--from-literal=ANTHROPIC_AUTH_TOKEN='<openrouter-api-key>'
+```
+
+That enables the Anthropic-compatible OpenRouter path for `Storyforge Agent` and the novel workbench. You can also leave these unset and configure them later in `/app/settings`.
+
+## 3. Apply the manifest
 
 ```bash
 kubectl apply -f deploy/sealos/storyforge.yaml
@@ -50,9 +67,9 @@ kubectl rollout status deployment/storyforge-backend -n ns-qkcc8vj1
 kubectl rollout status deployment/storyforge-frontend -n ns-qkcc8vj1
 ```
 
-## 4. Migrate SQLite data into PostgreSQL
+## 4. Migrate old SQLite data into PostgreSQL
 
-If you are upgrading from the old single-pod SQLite deployment, copy the old `/app/projects` volume first, then run:
+If you are upgrading from the old single-pod SQLite deployment, copy the legacy `/app/projects` volume first, then run:
 
 ```bash
 kubectl exec -n ns-qkcc8vj1 deploy/storyforge-backend -- \
@@ -61,7 +78,7 @@ kubectl exec -n ns-qkcc8vj1 deploy/storyforge-backend -- \
     --target-database-url "postgresql+asyncpg://storyforge:<postgres-password>@storyforge-postgres:5432/storyforge"
 ```
 
-The target PostgreSQL schema must already be on the latest Alembic revision before running the copy.
+Make sure the target PostgreSQL schema is already on the latest Alembic revision before running the copy.
 
 ## 5. Verify
 
@@ -72,5 +89,14 @@ curl -I https://bjmmuazhczom.cloud.sealos.io
 curl https://bjmmuazhczom.cloud.sealos.io/health
 ```
 
-The default Sealos `App` resource in the manifest points at `storyforge-frontend:80`, so Storyforge appears as its own app entry in the Sealos workspace UI.
+Expected result:
 
+- frontend, backend, postgres, and redis pods are all `Running`
+- ingress resolves to the public URL
+- `/health` returns the Storyforge health payload
+
+## 6. Notes
+
+- The Sealos `App` resource in the manifest points at `storyforge-frontend:80`
+- Public brand is `Storyforge / 叙影工场`
+- Internal compatibility identifiers may still use `autovedio` in filenames and migration scripts

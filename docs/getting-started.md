@@ -1,268 +1,253 @@
 # 完整入门教程
 
-本教程指导你从零开始，使用 autovedio 将小说转换为短视频。
+这份教程面向当前版本的 `Storyforge / 叙影工场`，目标是带你从零完成部署、登录、模型配置，并跑通“小说工坊”到项目资产生成的最小闭环。
 
-## 你将学到
+## 你会完成什么
 
-1. **环境准备** — 获取 API 密钥
-2. **部署服务** — 通过 Docker 部署
-3. **完整流程** — 从小说到视频的每一步操作
-4. **进阶技巧** — 重新生成、费用控制、本地开发
+1. 部署 Storyforge
+2. 初始化管理员账号
+3. 配置 Anthropic 或 OpenRouter
+4. 配置至少一个图像或视频供应商
+5. 进入 `小说工坊` 启动自动写小说流程
+6. 把结果导回项目并继续做分镜和视频
 
-## 预计耗时
+## 先理解当前架构
 
-- 环境准备：10-20 分钟（仅首次需要）
-- 生成一个 1 分钟视频：约 30 分钟
+当前线上和生产部署已经不是单体容器，而是四个工作负载：
 
-## 费用预估
+- `storyforge-frontend`
+- `storyforge-backend`
+- `storyforge-postgres`
+- `storyforge-redis`
 
-autovedio 支持多个供应商（Gemini、火山方舟、Grok、OpenAI 及自定义供应商），以下以 Gemini 为例：
+本地开发默认仍可先用 SQLite 跑起来，生产环境建议直接用 PostgreSQL。
 
-| 类型 | 模型 | 单价 | 说明 |
-|------|------|------|------|
-| 图片生成 | Nano Banana Pro | $0.134/张 (1K/2K) | 高质量，适合角色设计图 |
-| 图片生成 | Nano Banana 2 | $0.067/张 (1K) | 更快更便宜，适合分镜图 |
-| 视频生成 | Veo 3.1 | $0.40/秒 (1080p 含音频) | 高质量 |
-| 视频生成 | Veo 3.1 Fast | $0.15/秒 (1080p 含音频) | 更快更便宜 |
-| 视频生成 | Veo 3.1 Lite | 更低 | 轻量模型，仅 AI Studio |
+## 准备项
 
-> 💡 **示例**（Gemini）：一个包含 10 个场景（每场景 8 秒）的短视频
-> - 图片：3 张角色设计（Pro）+ 10 张分镜（Flash）= $0.40 + $0.67 = $1.07
-> - 视频：80 秒 × $0.15（Fast 模式）= $12
-> - **总计约 $13**
+### 1. 运行环境
 
-> 🎁 **新用户福利**：Google Cloud 新用户可获得 **$300 免费赠金**，有效期 90 天，足够生成大量视频！
->
-> 其他供应商费用请参考各自官方定价页面，autovedio 在设置页提供实时费用追踪。
+- Linux / macOS / Windows WSL2
+- Docker 和 Docker Compose
+- 至少 4GB 可用内存
 
----
+### 2. 必需配置
 
-## 第一章：环境准备
+你至少需要准备两类能力：
 
-### 1.1 获取图片/视频生成供应商 API 密钥
+- 文本大模型
+- 图像或视频生成模型
 
-autovedio 支持多个供应商，**至少配置一个**即可开始使用：
+当前推荐路径：
 
-| 供应商 | 获取地址 | 说明 |
-|--------|---------|------|
-| **Gemini** (Google) | [AI Studio](https://aistudio.google.com/apikey) | 需付费层级，新用户自动获 $300 赠金 |
-| **火山方舟** | [火山引擎控制台](https://console.volcengine.com/ark) | 按 token/张数计费 (CNY) |
-| **Grok** (xAI) | [xAI Console](https://console.x.ai/) | 按张/秒计费 (USD) |
-| **OpenAI** | [OpenAI Platform](https://platform.openai.com/) | 按张/秒计费 (USD) |
+- 文本模型：Anthropic 官方 API，或 OpenRouter
+- 图像/视频模型：Gemini、火山方舟、Grok、OpenAI，或自定义兼容供应商
 
-也可以在部署后通过设置页添加**自定义供应商**（任何 OpenAI 兼容 / Google 兼容 API）。
+### 3. OpenRouter 和 Anthropic 的区别
 
-> ⚠️ API 密钥是敏感信息，请妥善保管，不要分享给他人或上传到公开仓库。
+如果你想用一把 key 统一走 Claude、GPT、Gemini 等文本模型，推荐直接使用 OpenRouter。
 
-### 1.2 获取 Anthropic API 密钥
+当前产品里：
 
-autovedio 内置基于 Claude Agent SDK 的 AI 助手，负责剧本创作、智能对话引导等关键环节。
+- `Storyforge Agent` 支持 Anthropic 官方 API
+- 也支持 OpenRouter 的 Anthropic-compatible 接法
+- OpenRouter 推荐通过前端设置页完成，不需要你手改额外配置文件
 
-**方式 A：使用 Anthropic 官方 API**
+## 部署方式一：默认部署（SQLite）
 
-1. 访问 [Anthropic Console](https://console.anthropic.com/)
-2. 注册账号并创建 API 密钥
-3. 后续在 Web UI 设置页配置
-
-**方式 B：使用第三方 Anthropic 兼容 API**
-
-如果无法直接访问 Anthropic API，可在设置页配置：
-
-- **Base URL** — 填写中转服务或兼容 API 的地址
-- **Model** — 指定使用的模型名称（如 `claude-sonnet-4-6`）
-- 还可分别配置 Haiku / Sonnet / Opus 的默认模型和 Subagent 模型
-
-### 1.3 准备服务器
-
-**服务器要求：**
-
-- 操作系统：Linux / MacOS / Windows WSL
-- 内存：建议 2GB+
-- 已安装 Docker 和 Docker Compose
-
-**安装 Docker（如未安装）：**
+适合本地快速试用。
 
 ```bash
-# Ubuntu / Debian
-curl -fsSL https://get.docker.com | sh
-sudo usermod -aG docker $USER
-
-# 重新登录后验证
-docker --version
-docker compose version
-```
-
----
-
-## 第二章：部署服务
-
-### 2.1 下载并启动
-
-#### 方式 A：默认部署（SQLite，推荐入门）
-
-```bash
-# 1. 克隆项目
-git clone https://github.com/autovedio/autovedio.git
-cd autovedio/deploy
-
-# 2. 创建环境变量文件
+git clone https://github.com/hongsir457/storyforge.git
+cd storyforge/deploy
 cp .env.example .env
-
-# 3. 启动服务
 docker compose up -d
 ```
 
-#### 方式 B：生产部署（PostgreSQL，推荐正式使用）
+启动后访问：
+
+- 本地：`http://localhost:1241`
+
+## 部署方式二：生产部署（PostgreSQL）
+
+适合正式使用或多人环境。
 
 ```bash
-cd autovedio/deploy/production
-
-# 创建环境变量文件（需设置 POSTGRES_PASSWORD）
+git clone https://github.com/hongsir457/storyforge.git
+cd storyforge/deploy/production
 cp .env.example .env
+```
 
+至少补齐这些环境变量：
+
+```env
+POSTGRES_PASSWORD=replace-me
+AUTH_USERNAME=admin
+AUTH_PASSWORD=replace-me
+AUTH_EMAIL=admin@storyforge.local
+AUTH_TOKEN_SECRET=replace-me-with-a-long-random-secret
+```
+
+然后启动：
+
+```bash
 docker compose up -d
 ```
 
-等待容器启动完成后，在浏览器访问 **http://你的服务器IP:1241**
+如果你需要注册、邮箱验证、忘记密码真实可用，再继续补齐：
 
-### 2.2 首次配置
+```env
+SMTP_HOST=
+SMTP_PORT=587
+SMTP_USERNAME=
+SMTP_PASSWORD=
+SMTP_FROM_EMAIL=
+SMTP_FROM_NAME=Storyforge
+```
 
-1. 使用默认账号登录（用户名 `admin`，密码在 `.env` 中通过 `AUTH_PASSWORD` 设置；未设置则首次启动时自动生成并回写到 `.env`）
-2. 进入 **设置页**（`/settings`）
-3. 配置 **Anthropic API Key**（驱动 AI 助手），支持自定义 Base URL 和模型
-4. 配置至少一个图片/视频**供应商 API Key**（Gemini / 火山方舟 / Grok / OpenAI），或添加自定义供应商
-5. 根据需要调整模型选择、速率限制等参数
+如果暂时没有 SMTP，可以先打开：
 
-> 💡 所有配置项都可以在设置页修改，无需手动编辑配置文件。
+```env
+AUTH_EMAIL_DEBUG=true
+```
 
----
+这样验证码和重置码会打印到后端日志。
 
-## 第三章：完整流程
+## 首次登录
 
-以下步骤在 Web UI 工作台中完成。
+启动完成后访问登录页：
 
-### 3.1 创建项目
+- `/login`
 
-1. 在项目列表页点击「新建项目」
-2. 输入项目名称（如「我的小说」）
-3. 上传小说文本文件（.txt 格式）
+管理员账号来自环境变量：
 
-### 3.2 生成分镜剧本
+- 用户名：`AUTH_USERNAME`
+- 密码：`AUTH_PASSWORD`
 
-在项目工作台右侧打开 AI 助手面板，通过对话让助手生成剧本：
+当前账号体系完整入口包括：
 
-- AI 会自动分析小说内容，将其拆分为适合视频的片段
-- 每个片段包含画面描述、出场角色、重要道具/场景（线索）
+- `/login`
+- `/register`
+- `/verify-email`
+- `/forgot-password`
+- `/app/account`
 
-**审核点**：检查剧本结构是否合理，角色和线索是否识别正确。
+## 首次配置模型
 
-### 3.3 生成角色设计图
+登录后进入：
 
-AI 为每个角色生成设计图，用于保持后续所有场景中的角色外观一致。
+- `/app/settings`
 
-**审核点**：检查角色形象是否符合小说描述，不满意可重新生成。
+### 路径 A：使用 OpenRouter
 
-### 3.4 生成线索设计图
+推荐给想统一调 Claude、GPT、Gemini 的用户。
 
-AI 为重要道具和场景元素（如信物、特定地点）生成参考图。
+1. 在设置页找到 `OpenRouter API Key`
+2. 填入你的 OpenRouter key
+3. 应用 OpenRouter 预设
+4. 确认 Anthropic 兼容地址为 `https://openrouter.ai/api`
 
-**审核点**：检查线索设计是否符合预期。
+建议同时检查默认文本模型是否符合你的预算和质量要求。
 
-### 3.5 生成分镜图片
+### 路径 B：使用 Anthropic 官方 API
 
-AI 根据剧本生成每个场景的静态图片，自动引用角色和线索设计图确保一致性。
+如果你只想先让 `Storyforge Agent` 和小说工坊跑起来，也可以直接填写 Anthropic API Key。
 
-**审核点**：检查场景构图、角色一致性、氛围是否正确。
+### 图像与视频供应商
 
-### 3.6 生成视频片段
+自动写小说之外，后续角色图、分镜图、视频片段仍然依赖图像或视频供应商。你至少要配置其中一个：
 
-分镜图片作为起始帧，通过所选视频供应商（Veo 3.1 / Seedance / Grok / Sora 2 等）生成 4-8 秒的动态视频片段。
+- Gemini
+- 火山方舟
+- Grok
+- OpenAI
+- 自定义兼容供应商
 
-生成任务进入异步任务队列，你可以在任务监控面板实时查看进度。Image 和 Video 通道独立并发，RPM 限速确保不超 API 配额。
+## 跑通小说工坊
 
-**审核点**：预览每个视频片段，不满意可单独重新生成。
+### 1. 创建项目
 
-### 3.7 合成最终视频
+进入：
 
-所有片段通过 FFmpeg 拼接，添加转场效果和背景音乐，输出最终视频。
+- `/app/projects`
 
-默认输出 **9:16 竖屏**格式，适合发布到短视频平台。
+你可以：
 
----
+- 新建项目
+- 上传小说源文件
+- 导入历史项目 ZIP
 
-## 第四章：进阶技巧
+### 2. 进入小说工坊
 
-### 4.1 版本历史与回滚
+入口：
 
-每次重新生成素材时，系统自动保存历史版本。在工作台的时间线视图中，可以浏览历史版本并一键回滚。
+- `/app/novel-workbench`
 
-### 4.2 控制费用
+需要填写的核心信息：
 
-**查看费用统计：**
+- 小说标题
+- Seed 文案
+- 风格
+- 画幅
+- 默认时长
 
-在设置页可查看 API 调用次数和费用明细。
+然后点击启动小说流水线。
 
-**减少开支的技巧：**
+### 3. 流程实际做了什么
 
-- 仔细审核每个阶段的输出，减少返工
-- 先生成少量场景测试效果，满意后再批量生成
-- 视频生成使用 Fast 模式可节省约 60% 费用
-- 分镜图使用 Flash 模型，角色设计图使用 Pro 模型
+小说工坊会调用 `autonovel` 流程，生成结构化的叙事结果，并把结果导回 Storyforge 项目。你之后就可以继续：
 
-### 4.3 项目导入/导出
+- 生成角色设定图
+- 生成线索或道具图
+- 生成分镜图
+- 生成宫格图
+- 生成视频片段
+- 导出项目 ZIP
+- 导出剪映草稿
 
-项目支持打包归档，方便备份和迁移：
+## 最小可用闭环
 
-- **导出**：将整个项目（含所有素材）打包为归档文件
-- **导入**：从归档文件恢复项目
+如果你想最快验证整条链路，建议按这个顺序：
 
----
+1. 用 PostgreSQL 或默认 SQLite 部署成功
+2. 用管理员登录
+3. 在 `/app/settings` 配好 OpenRouter 或 Anthropic
+4. 至少再配一个图像供应商
+5. 在 `/app/novel-workbench` 启动小说流水线
+6. 回到项目里验证角色、分镜和视频生成入口可用
 
-## 第五章：常见问题
+## 常见问题
 
-### Q: Docker 启动失败？
+### 1. 为什么登录、注册、忘记密码没有邮件？
 
-1. 确认 Docker 服务正在运行：`systemctl status docker`
-2. 检查端口 1241 是否被占用：`ss -tlnp | grep 1241`
-3. 查看容器日志：`docker compose logs`（在对应的 `deploy/` 或 `deploy/production/` 目录下执行）
+因为你还没配置 SMTP。
+如果只是在本地联调，先开 `AUTH_EMAIL_DEBUG=true`。
 
-### Q: API 调用失败？
+### 2. 为什么小说工坊按钮不可用？
 
-1. 确认设置页中对应供应商的 API Key 填写正确
-2. Gemini 用户需确认已启用付费层级（免费层级不支持图片/视频生成）
-3. 检查服务器网络是否可以访问对应供应商的 API 服务
-4. 在供应商控制台查看 API 使用量是否超限
+通常是因为 `Storyforge Agent` 没配置好。优先检查：
 
-### Q: 角色在不同场景中长得不一样？
+- 是否已填 Anthropic 或 OpenRouter
+- 是否保存成功
+- 后端日志里是否有认证错误
 
-1. 确保先生成角色设计图
-2. 检查角色设计图质量，不满意要先重新生成
-3. 系统会自动使用角色设计图作为参考，确保后续场景一致
+### 3. 为什么能写小说，但后续图像或视频生成失败？
 
-### Q: 视频生成很慢？
+因为小说工坊和媒体供应商是两套能力。
+文本模型可用，不代表图像和视频供应商已经配置完成。
 
-视频生成通常需要 1-3 分钟/片段，这是正常的。影响因素：
+### 4. 为什么仓库和某些文件里还会看到 `autovedio`？
 
-- 视频时长（4 秒 vs 8 秒）
-- API 服务器负载
-- 网络状况
+这是当前仓库内部兼容标识，用于迁移和历史文件命名。
+对外品牌仍然是：
 
-任务队列支持并发处理，多个视频片段可同时生成。
+- `Storyforge`
+- `叙影工场`
 
-### Q: 生成中断了怎么办？
+## 进一步阅读
 
-任务队列支持断点续传。重新触发生成时，系统会自动跳过已完成的片段，只处理剩余部分。
+- [README.md](../README.md)
+- [deploy/sealos/README.md](../deploy/sealos/README.md)
+- [deploy/production/MIGRATE-TO-POSTGRES.md](../deploy/production/MIGRATE-TO-POSTGRES.md)
+- [docs/jianying-export-guide.md](jianying-export-guide.md)
 
----
-
-## 下一步
-
-恭喜你完成了入门教程！接下来你可以：
-
-- 💰 查看 [Google GenAI 费用说明](google-genai-docs/Google视频&图片生成费用参考.md) 和 [火山方舟费用说明](ark-docs/火山方舟费用参考.md) 了解详细定价
-- 🐛 遇到问题？提交 [Issue](https://github.com/autovedio/autovedio/issues) 反馈
-- 💬 扫码加入飞书交流群，获取帮助和最新动态：
-
-<img src="assets/feishu-qr.png" alt="飞书交流群二维码" width="280">
-
-如果觉得项目有用，请给个 ⭐ Star 支持一下！
+如果部署后要接 Sealos 独立命名空间，请直接看 Sealos 部署文档，不要再沿用旧的单体 SQLite 迁移方式。

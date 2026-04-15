@@ -1,12 +1,12 @@
-services:
+﻿services:
   postgres:
-    image: postgres:16-alpine
+    image: bitnami/postgresql:16
     environment:
-      POSTGRES_USER: storyforge
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in deploy/.env}
-      POSTGRES_DB: storyforge
+      POSTGRESQL_USERNAME: storyforge
+      POSTGRESQL_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in deploy/.env}
+      POSTGRESQL_DATABASE: storyforge
     volumes:
-      - ./pgdata:/var/lib/postgresql/data
+      - ./pgdata:/bitnami/postgresql
     restart: unless-stopped
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U storyforge -d storyforge"]
@@ -57,8 +57,9 @@ services:
       dockerfile: Dockerfile.frontend
     image: storyforge-frontend-local:latest
     ports:
-      - "1241:80"
+      - "1241:8080"
     depends_on:
       storyforge-backend:
         condition: service_healthy
     restart: unless-stopped
+

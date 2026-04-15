@@ -59,21 +59,22 @@ spec:
     spec:
       automountServiceAccountToken: false
       securityContext:
+        fsGroup: 1001
         seccompProfile:
           type: RuntimeDefault
       containers:
         - name: postgres
-          image: postgres:16-alpine
+          image: bitnami/postgresql:16
           imagePullPolicy: IfNotPresent
           ports:
             - name: postgres
               containerPort: 5432
           env:
-            - name: POSTGRES_USER
+            - name: POSTGRESQL_USERNAME
               value: storyforge
-            - name: POSTGRES_DB
+            - name: POSTGRESQL_DATABASE
               value: storyforge
-            - name: POSTGRES_PASSWORD
+            - name: POSTGRESQL_PASSWORD
               valueFrom:
                 secretKeyRef:
                   name: storyforge-env
@@ -97,11 +98,13 @@ spec:
               memory: 2Gi
           securityContext:
             allowPrivilegeEscalation: false
+            runAsNonRoot: true
+            runAsUser: 1001
             capabilities:
               drop: ["ALL"]
           volumeMounts:
             - name: postgres-data
-              mountPath: /var/lib/postgresql/data
+              mountPath: /bitnami/postgresql
   volumeClaimTemplates:
     - metadata:
         name: postgres-data
@@ -299,7 +302,7 @@ spec:
   ports:
     - name: http
       port: 80
-      targetPort: 80
+      targetPort: 8080
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -331,17 +334,17 @@ spec:
           imagePullPolicy: Always
           ports:
             - name: http
-              containerPort: 80
+              containerPort: 8080
           readinessProbe:
             httpGet:
               path: /health
-              port: 80
+              port: 8080
             initialDelaySeconds: 10
             periodSeconds: 10
           livenessProbe:
             httpGet:
               path: /
-              port: 80
+              port: 8080
             initialDelaySeconds: 30
             periodSeconds: 20
           resources:

@@ -22,7 +22,7 @@ async function getConfigIssues(): Promise<ConfigIssue[]> {
   const settings = configRes.settings;
 
   // 1. Check anthropic key
-  if (!settings.anthropic_api_key?.is_set) {
+  if (!settings.anthropic_api_key?.is_set && !settings.anthropic_auth_token?.is_set) {
     issues.push({
       key: "anthropic",
       tab: "agent",

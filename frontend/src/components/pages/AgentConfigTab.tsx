@@ -16,6 +16,7 @@ import { TabSaveFooter } from "./TabSaveFooter";
 
 interface AgentDraft {
   anthropicKey: string;        // new API key input (empty = don't change)
+  anthropicAuthToken: string;  // new bearer token input (empty = don't change)
   anthropicBaseUrl: string;    // in-place editing; empty = clear
   anthropicModel: string;      // in-place editing; empty = clear
   haikuModel: string;
@@ -30,6 +31,7 @@ function buildDraft(data: GetSystemConfigResponse): AgentDraft {
   const s = data.settings;
   return {
     anthropicKey: "",
+    anthropicAuthToken: "",
     anthropicBaseUrl: s.anthropic_base_url ?? "",
     anthropicModel: s.anthropic_model ?? "",
     haikuModel: s.anthropic_default_haiku_model ?? "",
@@ -44,6 +46,7 @@ function buildDraft(data: GetSystemConfigResponse): AgentDraft {
 function deepEqual(a: AgentDraft, b: AgentDraft): boolean {
   return (
     a.anthropicKey === b.anthropicKey &&
+    a.anthropicAuthToken === b.anthropicAuthToken &&
     a.anthropicBaseUrl === b.anthropicBaseUrl &&
     a.anthropicModel === b.anthropicModel &&
     a.haikuModel === b.haikuModel &&
@@ -58,6 +61,7 @@ function deepEqual(a: AgentDraft, b: AgentDraft): boolean {
 function buildPatch(draft: AgentDraft, saved: AgentDraft): SystemConfigPatch {
   const patch: SystemConfigPatch = {};
   if (draft.anthropicKey.trim()) patch.anthropic_api_key = draft.anthropicKey.trim();
+  if (draft.anthropicAuthToken.trim()) patch.anthropic_auth_token = draft.anthropicAuthToken.trim();
   if (draft.anthropicBaseUrl !== saved.anthropicBaseUrl)
     patch.anthropic_base_url = draft.anthropicBaseUrl || "";
   if (draft.anthropicModel !== saved.anthropicModel)
@@ -150,6 +154,7 @@ export function AgentConfigTab({ visible }: AgentConfigTabProps) {
   const [loadError, setLoadError] = useState<string | null>(null);
   const [draft, setDraft] = useState<AgentDraft>({
     anthropicKey: "",
+    anthropicAuthToken: "",
     anthropicBaseUrl: "",
     anthropicModel: "",
     haikuModel: "",
@@ -161,6 +166,7 @@ export function AgentConfigTab({ visible }: AgentConfigTabProps) {
   });
   const savedRef = useRef<AgentDraft>({
     anthropicKey: "",
+    anthropicAuthToken: "",
     anthropicBaseUrl: "",
     anthropicModel: "",
     haikuModel: "",
@@ -214,7 +220,7 @@ export function AgentConfigTab({ visible }: AgentConfigTabProps) {
       const newDraft = buildDraft(res);
       savedRef.current = newDraft;
       setDraft(newDraft);
-      useConfigStatusStore.getState().refresh();
+      void useConfigStatusStore.getState().refresh();
       useAppStore.getState().pushToast(t("agent_config_saved"), "success");
     } catch (err) {
       setSaveError((err as Error).message);
@@ -228,6 +234,19 @@ export function AgentConfigTab({ visible }: AgentConfigTabProps) {
     setSaveError(null);
   }, []);
 
+  const applyOpenRouterPreset = useCallback(() => {
+    setDraft((prev) => ({
+      ...prev,
+      anthropicBaseUrl: "https://openrouter.ai/api",
+      anthropicModel: prev.anthropicModel || "openrouter/auto",
+      haikuModel: prev.haikuModel || "openrouter/auto",
+      sonnetModel: prev.sonnetModel || "anthropic/claude-sonnet-4",
+      opusModel: prev.opusModel || "anthropic/claude-opus-4",
+      subagentModel: prev.subagentModel || "openrouter/auto",
+    }));
+    setSaveError(null);
+  }, []);
+
   // Clear a single field immediately via PATCH
   const handleClearField = useCallback(
     async (fieldId: string, patch: SystemConfigPatch, label: string) => {
@@ -238,7 +257,7 @@ export function AgentConfigTab({ visible }: AgentConfigTabProps) {
         const nextSavedDraft = buildDraft(res);
         savedRef.current = nextSavedDraft;
         setDraft(nextSavedDraft);
-        useConfigStatusStore.getState().refresh();
+        void useConfigStatusStore.getState().refresh();
         useAppStore.getState().pushToast(`${t(`dashboard:${label}`)} ${t("field_cleared")}`, "success");
       } catch (err) {
         useAppStore.getState().pushToast(`${t("clear_failed")}${(err as Error).message}`, "error");
@@ -383,34 +402,116 @@ export function AgentConfigTab({ visible }: AgentConfigTabProps) {
               </div>
             </div>
 
+            <div className="border-t border-gray-800 pt-4">
+              <div className="flex items-center justify-between">
+                <label htmlFor="agent-openrouter-token" className="text-sm font-medium text-gray-100">
+                  {t("openrouter_api_key")}
+                </label>
+                {settings.anthropic_auth_token.is_set && (
+                  <div className="flex items-center text-xs text-gray-500">
+                    <span className="truncate">
+                      {t("current_label")}{settings.anthropic_auth_token.masked ?? t("encrypted")}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        void handleClearField(
+                          "anthropic_auth_token",
+                          { anthropic_auth_token: "" },
+                          "openrouter_api_key",
+                        )
+                      }
+                      disabled={isBusy}
+                      className={inlineClearClassName}
+                      aria-label={t("clear_saved_openrouter_key")}
+                    >
+                      {clearingField === "anthropic_auth_token" ? (
+                        <Loader2 className="h-3 w-3 animate-spin" />
+                      ) : (
+                        <X className="h-3 w-3" />
+                      )}
+                    </button>
+                  </div>
+                )}
+              </div>
+              <p className="mt-0.5 text-xs text-gray-500">
+                {t("env_anthropic_auth_token")}
+              </p>
+              <div className="relative mt-2">
+                <input
+                  id="agent-openrouter-token"
+                  type={showKey ? "text" : "password"}
+                  value={draft.anthropicAuthToken}
+                  onChange={(e) => updateDraft("anthropicAuthToken", e.target.value)}
+                  placeholder="sk-or-..."
+                  className={`${inputClassName} pr-10`}
+                  autoComplete="off"
+                  spellCheck={false}
+                  name="anthropic_auth_token"
+                  disabled={saving}
+                />
+                {draft.anthropicAuthToken && (
+                  <button
+                    type="button"
+                    onClick={() => updateDraft("anthropicAuthToken", "")}
+                    className={`absolute right-8 top-1/2 -translate-y-1/2 ${smallBtnClassName}`}
+                    aria-label={t("clear_input")}
+                  >
+                    <X className="h-3.5 w-3.5" />
+                  </button>
+                )}
+                <button
+                  type="button"
+                  onClick={() => setShowKey((v) => !v)}
+                  className={`absolute right-2 top-1/2 -translate-y-1/2 ${smallBtnClassName}`}
+                  aria-label={showKey ? t("hide_key") : t("show_key")}
+                >
+                  {showKey ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
+              </div>
+              <p className="mt-2 text-xs text-amber-200/80">
+                {t("openrouter_auth_token_hint")}
+              </p>
+            </div>
+
             {/* Base URL */}
             <div className="border-t border-gray-800 pt-4">
               <div className="flex items-center justify-between">
                 <label htmlFor="agent-base-url" className="text-sm font-medium text-gray-100">
                   {t("api_base_url")}
                 </label>
-                {settings.anthropic_base_url && (
+                <div className="flex items-center gap-3">
                   <button
                     type="button"
-                    onClick={() =>
-                      void handleClearField(
-                        "anthropic_base_url",
-                        { anthropic_base_url: "" },
-                        "api_base_url",
-                      )
-                    }
+                    onClick={applyOpenRouterPreset}
                     disabled={isBusy}
-                    className="inline-flex items-center gap-1 rounded text-xs text-gray-600 transition-colors hover:text-rose-400 disabled:cursor-not-allowed disabled:opacity-50 focus-ring"
-                    aria-label={t("clear_saved_base_url")}
+                    className="inline-flex items-center gap-1 rounded text-xs text-indigo-300 transition-colors hover:text-indigo-200 disabled:cursor-not-allowed disabled:opacity-50 focus-ring"
                   >
-                    {clearingField === "anthropic_base_url" ? (
-                      <Loader2 className="h-3 w-3 animate-spin" />
-                    ) : (
-                      <X className="h-3 w-3" />
-                    )}
-                    {t("clear_saved")}
+                    {t("apply_openrouter_preset")}
                   </button>
-                )}
+                  {settings.anthropic_base_url && (
+                    <button
+                      type="button"
+                      onClick={() =>
+                        void handleClearField(
+                          "anthropic_base_url",
+                          { anthropic_base_url: "" },
+                          "api_base_url",
+                        )
+                      }
+                      disabled={isBusy}
+                      className="inline-flex items-center gap-1 rounded text-xs text-gray-600 transition-colors hover:text-rose-400 disabled:cursor-not-allowed disabled:opacity-50 focus-ring"
+                      aria-label={t("clear_saved_base_url")}
+                    >
+                      {clearingField === "anthropic_base_url" ? (
+                        <Loader2 className="h-3 w-3 animate-spin" />
+                      ) : (
+                        <X className="h-3 w-3" />
+                      )}
+                      {t("clear_saved")}
+                    </button>
+                  )}
+                </div>
               </div>
               <p className="mt-0.5 text-xs text-gray-500">
                 {t("env_anthropic_base_url")}

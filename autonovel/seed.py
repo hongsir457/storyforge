@@ -13,13 +13,13 @@ import os
 import sys
 from pathlib import Path
 
+from anthropic_compat import auth_error_message, build_headers, has_auth_config, messages_url
 from dotenv import load_dotenv
 
 BASE_DIR = Path(__file__).parent
 load_dotenv(BASE_DIR / ".env")
 
 WRITER_MODEL = os.environ.get("AUTONOVEL_WRITER_MODEL", "claude-sonnet-4-6-20250217")
-ANTHROPIC_API_KEY = os.environ.get("ANTHROPIC_API_KEY", "")
 API_BASE_URL = os.environ.get("AUTONOVEL_API_BASE_URL", "https://api.anthropic.com")
 ANTHROPIC_BETA = "context-1m-2025-08-07"
 
@@ -27,12 +27,7 @@ ANTHROPIC_BETA = "context-1m-2025-08-07"
 def call_writer(prompt, max_tokens=4000):
     import httpx
 
-    headers = {
-        "x-api-key": ANTHROPIC_API_KEY,
-        "anthropic-version": "2023-06-01",
-        "anthropic-beta": ANTHROPIC_BETA,
-        "content-type": "application/json",
-    }
+    headers = build_headers(beta=ANTHROPIC_BETA)
     payload = {
         "model": WRITER_MODEL,
         "max_tokens": max_tokens,
@@ -48,7 +43,7 @@ def call_writer(prompt, max_tokens=4000):
         "messages": [{"role": "user", "content": prompt}],
     }
     resp = httpx.post(
-        f"{API_BASE_URL}/v1/messages",
+        messages_url(API_BASE_URL),
         headers=headers,
         json=payload,
         timeout=120,
@@ -122,8 +117,8 @@ def main():
     parser.add_argument("--riff", type=str, default=None, help="Riff on an existing idea")
     args = parser.parse_args()
 
-    if not ANTHROPIC_API_KEY:
-        print("ERROR: Set ANTHROPIC_API_KEY in .env first")
+    if not has_auth_config():
+        print(f"ERROR: {auth_error_message()}")
         sys.exit(1)
 
     if args.riff:

@@ -23,8 +23,16 @@ class NovelWorkbenchService:
     ACTIVE_STATUSES = {"queued", "running"}
     TERMINAL_STATUSES = {"succeeded", "failed", "cancelled"}
     PREVIEW_LIMIT_BYTES = 120_000
+    AUTH_STATUS_KEY = "ANTHROPIC_API_KEY_OR_AUTH_TOKEN"
     REQUIRED_RUNTIME_ENV = (
+        "AUTONOVEL_WRITER_MODEL",
+        "AUTONOVEL_JUDGE_MODEL",
+        "AUTONOVEL_REVIEW_MODEL",
+        "AUTONOVEL_API_BASE_URL",
+    )
+    RUNTIME_ENV_FILE_KEYS = (
         "ANTHROPIC_API_KEY",
+        "ANTHROPIC_AUTH_TOKEN",
         "AUTONOVEL_WRITER_MODEL",
         "AUTONOVEL_JUDGE_MODEL",
         "AUTONOVEL_REVIEW_MODEL",
@@ -601,7 +609,10 @@ class NovelWorkbenchService:
 
     def _runtime_env_status(self) -> dict[str, Any]:
         values = self._collect_runtime_env_values()
-        required = {key: bool(values.get(key, "").strip()) for key in self.REQUIRED_RUNTIME_ENV}
+        required = {
+            self.AUTH_STATUS_KEY: self._runtime_auth_ready(values),
+            **{key: bool(values.get(key, "").strip()) for key in self.REQUIRED_RUNTIME_ENV},
+        }
         optional = {key: bool(values.get(key, "").strip()) for key in self.OPTIONAL_RUNTIME_ENV}
         return {
             "required": required,
@@ -613,6 +624,7 @@ class NovelWorkbenchService:
     def _collect_runtime_env_values(self) -> dict[str, str]:
         return {
             "ANTHROPIC_API_KEY": os.environ.get("ANTHROPIC_API_KEY", "").strip(),
+            "ANTHROPIC_AUTH_TOKEN": os.environ.get("ANTHROPIC_AUTH_TOKEN", "").strip(),
             "AUTONOVEL_WRITER_MODEL": (
                 os.environ.get("AUTONOVEL_WRITER_MODEL")
                 or os.environ.get("ANTHROPIC_DEFAULT_SONNET_MODEL")
@@ -639,6 +651,9 @@ class NovelWorkbenchService:
             "ELEVENLABS_API_KEY": os.environ.get("ELEVENLABS_API_KEY", "").strip(),
         }
 
+    def _runtime_auth_ready(self, values: dict[str, str]) -> bool:
+        return bool(values.get("ANTHROPIC_API_KEY", "").strip() or values.get("ANTHROPIC_AUTH_TOKEN", "").strip())
+
     def _materialize_autonovel_env(self, workspace_dir: Path) -> None:
         destination = workspace_dir / ".env"
         if self.autonovel_env_source.exists():
@@ -648,11 +663,14 @@ class NovelWorkbenchService:
 
     def _render_runtime_env(self) -> str:
         values = self._collect_runtime_env_values()
-        missing_required = [key for key in self.REQUIRED_RUNTIME_ENV if not values.get(key, "").strip()]
+        missing_required: list[str] = []
+        if not self._runtime_auth_ready(values):
+            missing_required.append(self.AUTH_STATUS_KEY)
+        missing_required.extend(key for key in self.REQUIRED_RUNTIME_ENV if not values.get(key, "").strip())
         if missing_required:
             raise NovelWorkbenchError("Novel workbench is missing required runtime env: " + ", ".join(missing_required))
 
-        ordered_keys = list(self.REQUIRED_RUNTIME_ENV) + list(self.OPTIONAL_RUNTIME_ENV)
+        ordered_keys = list(self.RUNTIME_ENV_FILE_KEYS) + list(self.OPTIONAL_RUNTIME_ENV)
         if self.autonovel_env_example.exists():
             lines: list[str] = []
             seen: set[str] = set()

@@ -90,3 +90,28 @@ async def test_creates_vertex_backend():
             gcs_bucket="my-bucket",
         )
         assert result is mock_backend
+
+
+async def test_creates_openrouter_backend():
+    mock_resolver = _make_mock_resolver(
+        text_backend_for_task=("openrouter", "anthropic/claude-sonnet-4"),
+        provider_config={"api_key": "sk-or-test", "base_url": "https://openrouter.ai/api/v1"},
+    )
+
+    with (
+        patch("lib.text_backends.factory.ConfigResolver", return_value=mock_resolver),
+        patch("lib.text_backends.factory.create_backend") as mock_create,
+    ):
+        mock_backend = MagicMock()
+        mock_create.return_value = mock_backend
+
+        result = await create_text_backend_for_task(TextTaskType.SCRIPT)
+
+        mock_create.assert_called_once_with(
+            "openai",
+            api_key="sk-or-test",
+            model="anthropic/claude-sonnet-4",
+            base_url="https://openrouter.ai/api/v1",
+            provider_name="openrouter",
+        )
+        assert result is mock_backend

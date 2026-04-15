@@ -143,6 +143,7 @@ class TestGetSystemConfig:
             "default_text_backend",
             "video_generate_audio",
             "anthropic_api_key",
+            "anthropic_auth_token",
             "anthropic_base_url",
             "anthropic_model",
             "anthropic_default_haiku_model",
@@ -200,6 +201,15 @@ class TestGetSystemConfig:
         ak = res.json()["settings"]["anthropic_api_key"]
         assert ak["is_set"] is False
         assert ak["masked"] is None
+
+    def test_anthropic_auth_token_masked(self):
+        mock_svc = _make_mock_svc(settings={"anthropic_auth_token": "sk-or-secret-123456"})
+        with TestClient(_make_app_with_mock(mock_svc)) as client:
+            res = client.get("/api/v1/system/config")
+        token = res.json()["settings"]["anthropic_auth_token"]
+        assert token["is_set"] is True
+        assert token["masked"] is not None
+        assert "123456" not in token["masked"]
 
     def test_settings_reflect_stored_values(self):
         mock_svc = _make_mock_svc(
@@ -289,6 +299,17 @@ class TestPatchSystemConfig:
         assert res.status_code == 200
         ak = res.json()["settings"]["anthropic_api_key"]
         assert ak["is_set"] is False
+
+    def test_patch_sets_openrouter_token(self):
+        mock_svc = _make_mock_svc()
+        with TestClient(self._make_patch_app(mock_svc)) as client:
+            res = client.patch(
+                "/api/v1/system/config",
+                json={"anthropic_auth_token": "sk-or-new-key-12345678"},
+            )
+        assert res.status_code == 200
+        token = res.json()["settings"]["anthropic_auth_token"]
+        assert token["is_set"] is True
 
     def test_patch_sets_anthropic_base_url(self):
         mock_svc = _make_mock_svc()

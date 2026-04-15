@@ -15,13 +15,13 @@ import sys
 from datetime import datetime
 from pathlib import Path
 
+from anthropic_compat import build_headers, messages_url
 from dotenv import load_dotenv
 
 BASE_DIR = Path(__file__).parent
 load_dotenv(BASE_DIR / ".env")
 
 JUDGE_MODEL = os.environ.get("AUTONOVEL_JUDGE_MODEL", "claude-opus-4-6")
-API_KEY = os.environ.get("ANTHROPIC_API_KEY", "")
 API_BASE = os.environ.get("AUTONOVEL_API_BASE_URL", "https://api.anthropic.com")
 CHAPTERS_DIR = BASE_DIR / "chapters"
 
@@ -29,11 +29,7 @@ CHAPTERS_DIR = BASE_DIR / "chapters"
 def call_judge(prompt, max_tokens=4000):
     import httpx
 
-    headers = {
-        "x-api-key": API_KEY,
-        "anthropic-version": "2023-06-01",
-        "content-type": "application/json",
-    }
+    headers = build_headers()
     payload = {
         "model": JUDGE_MODEL,
         "max_tokens": max_tokens,
@@ -46,7 +42,7 @@ def call_judge(prompt, max_tokens=4000):
         ),
         "messages": [{"role": "user", "content": prompt}],
     }
-    resp = httpx.post(f"{API_BASE}/v1/messages", headers=headers, json=payload, timeout=300)
+    resp = httpx.post(messages_url(API_BASE), headers=headers, json=payload, timeout=300)
     resp.raise_for_status()
     return resp.json()["content"][0]["text"]
 

@@ -51,6 +51,13 @@ class TestOpenAITextBackend:
             backend = OpenAITextBackend(api_key="test-key", model="gpt-5.4")
             assert backend.model == "gpt-5.4"
 
+    def test_custom_provider_name(self):
+        with patch("lib.openai_shared.AsyncOpenAI"):
+            from lib.text_backends.openai import OpenAITextBackend
+
+            backend = OpenAITextBackend(api_key="test-key", provider_name="openrouter")
+            assert backend.name == "openrouter"
+
     def test_capabilities(self):
         with patch("lib.openai_shared.AsyncOpenAI"):
             from lib.text_backends.openai import OpenAITextBackend

@@ -9,13 +9,13 @@ import os
 import re
 from pathlib import Path
 
+from anthropic_compat import build_headers, messages_url
 from dotenv import load_dotenv
 
 BASE_DIR = Path(__file__).parent
 load_dotenv(BASE_DIR / ".env", override=True)
 
 WRITER_MODEL = os.environ.get("AUTONOVEL_WRITER_MODEL", "claude-sonnet-4-6")
-ANTHROPIC_KEY = os.environ.get("ANTHROPIC_API_KEY", "")
 ANTHROPIC_BASE = os.environ.get("AUTONOVEL_API_BASE_URL", "https://api.anthropic.com")
 
 
@@ -23,12 +23,8 @@ def call_claude(prompt, max_tokens=3000):
     import httpx
 
     resp = httpx.post(
-        f"{ANTHROPIC_BASE}/v1/messages",
-        headers={
-            "x-api-key": ANTHROPIC_KEY,
-            "anthropic-version": "2023-06-01",
-            "content-type": "application/json",
-        },
+        messages_url(ANTHROPIC_BASE),
+        headers=build_headers(),
         json={
             "model": WRITER_MODEL,
             "max_tokens": max_tokens,

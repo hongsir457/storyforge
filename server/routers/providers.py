@@ -585,6 +585,7 @@ def _test_grok(config: dict[str, str], _t: Callable[..., str]) -> ConnectionTest
 
 
 _OPENAI_MODEL_KEYWORDS = ("gpt", "sora", "dall", "o1", "o3", "o4")
+_OPENROUTER_MODEL_PREFIXES = ("anthropic/", "openai/", "google/", "openrouter/", "meta-", "mistralai/")
 
 
 def _test_openai(config: dict[str, str], _t: Callable[..., str]) -> ConnectionTestResponse:
@@ -605,12 +606,34 @@ def _test_openai(config: dict[str, str], _t: Callable[..., str]) -> ConnectionTe
     )
 
 
+def _test_openrouter(config: dict[str, str], _t: Callable[..., str]) -> ConnectionTestResponse:
+    """Validate OpenRouter via its OpenAI-compatible endpoint."""
+    from openai import OpenAI
+
+    client = OpenAI(
+        api_key=config["api_key"],
+        base_url=config.get("base_url") or "https://openrouter.ai/api/v1",
+    )
+    models = client.models.list()
+    available = sorted(
+        m.id
+        for m in models.data
+        if any(m.id.lower().startswith(prefix) for prefix in _OPENROUTER_MODEL_PREFIXES)
+    )
+    return ConnectionTestResponse(
+        success=True,
+        available_models=available[:50],
+        message=_t("connection_success"),
+    )
+
+
 _TEST_DISPATCH: dict[str, Callable[[dict[str, str], Any], ConnectionTestResponse]] = {
     "gemini-aistudio": _test_gemini_aistudio,
     "gemini-vertex": _test_gemini_vertex,
     "ark": _test_ark,
     "grok": _test_grok,
     "openai": _test_openai,
+    "openrouter": _test_openrouter,
 }
 
 

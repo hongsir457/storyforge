@@ -197,6 +197,7 @@ class SystemConfigManager:
         "GEMINI_API_KEY",
         "GEMINI_BASE_URL",
         "ANTHROPIC_API_KEY",
+        "ANTHROPIC_AUTH_TOKEN",
         "ANTHROPIC_BASE_URL",
         "ANTHROPIC_MODEL",
         "ANTHROPIC_DEFAULT_HAIKU_MODEL",
@@ -402,6 +403,7 @@ class SystemConfigManager:
             ("gemini_api_key", "GEMINI_API_KEY"),
             ("gemini_base_url", "GEMINI_BASE_URL"),
             ("anthropic_api_key", "ANTHROPIC_API_KEY"),
+            ("anthropic_auth_token", "ANTHROPIC_AUTH_TOKEN"),
             ("anthropic_base_url", "ANTHROPIC_BASE_URL"),
         ):
             if override_key in overrides:

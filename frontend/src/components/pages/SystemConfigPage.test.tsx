@@ -24,6 +24,7 @@ function makeConfigResponse(
       text_backend_style: "",
       video_generate_audio: true,
       anthropic_api_key: { is_set: true, masked: "sk-ant-***" },
+      anthropic_auth_token: { is_set: false, masked: null },
       anthropic_base_url: "",
       anthropic_model: "",
       anthropic_default_haiku_model: "",

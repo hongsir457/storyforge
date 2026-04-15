@@ -321,4 +321,39 @@ PROVIDER_REGISTRY: dict[str, ProviderMeta] = {
             ),
         },
     ),
+    "openrouter": ProviderMeta(
+        display_name="OpenRouter",
+        description="OpenRouter 聚合多家大模型，使用单个 API Key 即可路由 Claude、GPT、Gemini 等文本模型。",
+        required_keys=["api_key"],
+        optional_keys=["base_url"],
+        secret_keys=["api_key"],
+        models={
+            "openrouter/auto": ModelInfo(
+                display_name="OpenRouter Auto",
+                media_type="text",
+                capabilities=["text_generation", "structured_output", "vision"],
+                default=True,
+            ),
+            "anthropic/claude-sonnet-4": ModelInfo(
+                display_name="Claude Sonnet 4",
+                media_type="text",
+                capabilities=["text_generation", "structured_output", "vision"],
+            ),
+            "anthropic/claude-opus-4": ModelInfo(
+                display_name="Claude Opus 4",
+                media_type="text",
+                capabilities=["text_generation", "structured_output", "vision"],
+            ),
+            "openai/gpt-4o-mini": ModelInfo(
+                display_name="GPT-4o Mini",
+                media_type="text",
+                capabilities=["text_generation", "structured_output", "vision"],
+            ),
+            "google/gemini-2.5-flash-preview": ModelInfo(
+                display_name="Gemini 2.5 Flash",
+                media_type="text",
+                capabilities=["text_generation", "structured_output", "vision"],
+            ),
+        },
+    ),
 }

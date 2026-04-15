@@ -32,6 +32,7 @@ _GEMINI_RATE_KEYS: list[tuple[str, str]] = [
 _SYSTEM_SETTING_KEYS: list[str] = [
     "video_generate_audio",
     "anthropic_api_key",
+    "anthropic_auth_token",
     "anthropic_base_url",
     "anthropic_model",
     "anthropic_default_haiku_model",

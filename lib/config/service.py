@@ -17,6 +17,7 @@ _DEFAULT_TEXT_BACKEND = "gemini-aistudio/gemini-3-flash-preview"
 # DB setting key → environment variable name
 _ANTHROPIC_ENV_MAP: dict[str, str] = {
     "anthropic_api_key": "ANTHROPIC_API_KEY",
+    "anthropic_auth_token": "ANTHROPIC_AUTH_TOKEN",
     "anthropic_base_url": "ANTHROPIC_BASE_URL",
     "anthropic_model": "ANTHROPIC_MODEL",
     "anthropic_default_haiku_model": "ANTHROPIC_DEFAULT_HAIKU_MODEL",

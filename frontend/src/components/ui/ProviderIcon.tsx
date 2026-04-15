@@ -10,6 +10,7 @@ export const PROVIDER_NAMES: Record<string, string> = {
   ark: "火山方舟",
   grok: "Grok",
   openai: "OpenAI",
+  openrouter: "OpenRouter",
 };
 
 /**
@@ -23,6 +24,7 @@ export function ProviderIcon({ providerId, className }: { providerId: string; cl
   if (providerId.startsWith("grok")) return <GrokMono className={cls} />;
   if (providerId === "ark") return <VolcengineColor className={cls} />;
   if (providerId === "openai") return <OpenAIMono className={cls} />;
+  if (providerId === "openrouter") return <OpenAIMono className={cls} />;
   // Fallback: first letter badge
   return (
     <span className={`inline-flex items-center justify-center rounded bg-gray-700 text-xs font-bold uppercase text-gray-300 ${cls}`}>

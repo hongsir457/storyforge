@@ -96,6 +96,7 @@ class SystemConfigPatchRequest(BaseModel):
     default_text_backend: str | None = None
     video_generate_audio: bool | None = None
     anthropic_api_key: str | None = None
+    anthropic_auth_token: str | None = None
     anthropic_base_url: str | None = None
     anthropic_model: str | None = None
     anthropic_default_haiku_model: str | None = None
@@ -139,6 +140,7 @@ async def get_system_config(
     video_generate_audio_raw = all_s.get("video_generate_audio", "false")
     video_generate_audio = video_generate_audio_raw.lower() in ("true", "1", "yes")
     anthropic_key = all_s.get("anthropic_api_key", "")
+    anthropic_auth_token = all_s.get("anthropic_auth_token", "")
 
     settings: dict[str, Any] = {
         "default_video_backend": all_s.get("default_video_backend", ""),
@@ -148,6 +150,10 @@ async def get_system_config(
         "anthropic_api_key": {
             "is_set": bool(anthropic_key),
             "masked": mask_secret(anthropic_key) if anthropic_key else None,
+        },
+        "anthropic_auth_token": {
+            "is_set": bool(anthropic_auth_token),
+            "masked": mask_secret(anthropic_auth_token) if anthropic_auth_token else None,
         },
         "anthropic_base_url": all_s.get("anthropic_base_url") or None,
         "anthropic_model": all_s.get("anthropic_model") or None,
@@ -203,6 +209,13 @@ async def patch_system_config(
             await svc.set_setting("anthropic_api_key", str(value).strip())
         else:
             await svc.set_setting("anthropic_api_key", "")
+
+    if "anthropic_auth_token" in patch:
+        value = patch["anthropic_auth_token"]
+        if value:
+            await svc.set_setting("anthropic_auth_token", str(value).strip())
+        else:
+            await svc.set_setting("anthropic_auth_token", "")
 
     # Integer settings with range validation
     _INT_SETTINGS_RANGES = {

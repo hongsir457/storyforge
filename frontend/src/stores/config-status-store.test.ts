@@ -14,6 +14,7 @@ function makeConfigResponse(overrides?: Partial<GetSystemConfigResponse["setting
       text_backend_style: "",
       video_generate_audio: true,
       anthropic_api_key: { is_set: false, masked: null },
+      anthropic_auth_token: { is_set: false, masked: null },
       anthropic_base_url: "",
       anthropic_model: "",
       anthropic_default_haiku_model: "",
@@ -87,6 +88,20 @@ describe("config-status-store", () => {
     const { issues, isComplete } = useConfigStatusStore.getState();
     expect(issues).toHaveLength(0);
     expect(isComplete).toBe(true);
+  });
+
+  it("treats openrouter token as satisfying agent auth", async () => {
+    vi.spyOn(API, "getProviders").mockResolvedValue(
+      makeProviders([{ id: "openrouter", display_name: "OpenRouter", status: "ready", media_types: ["text"], capabilities: [], configured_keys: ["api_key"], missing_keys: [], models: {} }]),
+    );
+    vi.spyOn(API, "getSystemConfig").mockResolvedValue(
+      makeConfigResponse({ anthropic_auth_token: { is_set: true, masked: "sk-or-***" } }),
+    );
+
+    await useConfigStatusStore.getState().fetch();
+
+    const { issues } = useConfigStatusStore.getState();
+    expect(issues.find((i) => i.key === "anthropic")).toBeFalsy();
   });
 
   it("allows fetch to retry after a transient error", async () => {

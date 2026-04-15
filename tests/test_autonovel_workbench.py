@@ -12,6 +12,7 @@ def _make_workbench_layout(root: Path) -> None:
         "\n".join(
             [
                 "ANTHROPIC_API_KEY=",
+                "ANTHROPIC_AUTH_TOKEN=",
                 "AUTONOVEL_WRITER_MODEL=claude-sonnet-4-6",
                 "AUTONOVEL_JUDGE_MODEL=claude-sonnet-4-6",
                 "AUTONOVEL_REVIEW_MODEL=claude-opus-4-6",
@@ -35,7 +36,7 @@ def test_status_snapshot_accepts_generated_runtime_env(tmp_path, monkeypatch):
 
     assert status["requirements"]["autonovel_env_exists"] is True
     assert status["autonovel_env_mode"] == "generated"
-    assert status["env_status"]["required"]["ANTHROPIC_API_KEY"] is True
+    assert status["env_status"]["required"]["ANTHROPIC_API_KEY_OR_AUTH_TOKEN"] is True
     assert status["env_status"]["optional"]["FAL_KEY"] is False
     assert status["env_status"]["missing_required"] == []
 
@@ -61,3 +62,16 @@ def test_materialize_runtime_env_uses_defaults_when_source_file_missing(tmp_path
     assert "AUTONOVEL_JUDGE_MODEL=claude-sonnet-4-6" in rendered
     assert "AUTONOVEL_REVIEW_MODEL=claude-opus-4-6" in rendered
     assert "AUTONOVEL_API_BASE_URL=https://api.anthropic.com" in rendered
+
+
+def test_status_snapshot_accepts_openrouter_auth_token(tmp_path, monkeypatch):
+    _make_workbench_layout(tmp_path)
+    monkeypatch.delenv("AUTONOVEL_ENV_SOURCE", raising=False)
+    monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
+    monkeypatch.setenv("ANTHROPIC_AUTH_TOKEN", "sk-or-test")
+
+    service = NovelWorkbenchService(tmp_path)
+    status = service.status_snapshot()
+
+    assert status["requirements"]["autonovel_env_exists"] is True
+    assert status["env_status"]["required"]["ANTHROPIC_API_KEY_OR_AUTH_TOKEN"] is True

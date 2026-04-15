@@ -32,6 +32,7 @@ def json_file(tmp_path: Path) -> Path:
             "image_model": "gemini-3.1-flash-image-preview",
             "video_generate_audio": False,
             "anthropic_api_key": "sk-ant-test",
+            "anthropic_auth_token": "sk-or-test",
             "anthropic_base_url": "https://proxy.example.com",
             "gemini_image_rpm": 15,
             "gemini_video_rpm": 10,
@@ -65,6 +66,8 @@ async def test_migrate_system_settings(session: AsyncSession, json_file: Path):
     assert val == "gemini-aistudio/gemini-3.1-flash-image-preview"
     val = await repo.get("anthropic_api_key")
     assert val == "sk-ant-test"
+    val = await repo.get("anthropic_auth_token")
+    assert val == "sk-or-test"
 
 
 async def test_migrate_renames_file(session: AsyncSession, json_file: Path):

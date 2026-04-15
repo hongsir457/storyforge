@@ -31,10 +31,12 @@ class OpenAITextBackend:
         api_key: str | None = None,
         model: str | None = None,
         base_url: str | None = None,
+        provider_name: str = PROVIDER_OPENAI,
     ):
         # 禁用 SDK 内置重试，由本层 generate() 统一管理重试策略
         self._client = create_openai_client(api_key=api_key, base_url=base_url, max_retries=0)
         self._model = model or DEFAULT_MODEL
+        self._provider_name = provider_name
         self._capabilities: set[TextCapability] = {
             TextCapability.TEXT_GENERATION,
             TextCapability.STRUCTURED_OUTPUT,
@@ -43,7 +45,7 @@ class OpenAITextBackend:
 
     @property
     def name(self) -> str:
-        return PROVIDER_OPENAI
+        return self._provider_name
 
     @property
     def model(self) -> str:
@@ -88,7 +90,13 @@ class OpenAITextBackend:
                     "原生 response_format 失败 (%s)，降级到 Instructor 路径",
                     exc,
                 )
-                return await _instructor_fallback(self._client, self._model, request, messages)
+                return await _instructor_fallback(
+                    self._client,
+                    self._model,
+                    request,
+                    messages,
+                    provider_name=self._provider_name,
+                )
             raise
 
         usage = response.usage
@@ -96,13 +104,13 @@ class OpenAITextBackend:
         output_tokens = usage.completion_tokens if usage else None
         warn_if_truncated(
             getattr(choice, "finish_reason", None),
-            provider=PROVIDER_OPENAI,
+            provider=self._provider_name,
             model=self._model,
             output_tokens=output_tokens,
         )
         return TextGenerationResult(
             text=choice.message.content or "",
-            provider=PROVIDER_OPENAI,
+            provider=self._provider_name,
             model=self._model,
             input_tokens=usage.prompt_tokens if usage else None,
             output_tokens=output_tokens,
@@ -163,6 +171,8 @@ async def _instructor_fallback(
     model: str,
     request: TextGenerationRequest,
     messages: list[dict],
+    *,
+    provider_name: str = PROVIDER_OPENAI,
 ) -> TextGenerationResult:
     """Instructor 降级：当原生 response_format 不可用时的备选路径。"""
     from lib.text_backends.instructor_support import instructor_fallback_async
@@ -172,6 +182,6 @@ async def _instructor_fallback(
         model=model,
         messages=messages,
         response_schema=request.response_schema,
-        provider=PROVIDER_OPENAI,
+        provider=provider_name,
         max_tokens=request.max_output_tokens,
     )

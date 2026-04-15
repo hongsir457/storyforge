@@ -20,6 +20,7 @@ import sys
 from datetime import datetime
 from pathlib import Path
 
+from anthropic_compat import auth_error_message, build_headers, has_auth_config, messages_url
 from dotenv import load_dotenv
 
 BASE_DIR = Path(__file__).parent
@@ -27,7 +28,6 @@ load_dotenv(BASE_DIR / ".env", override=True)
 
 # Use Opus for reviews — it's the best at literary analysis
 REVIEW_MODEL = os.environ.get("AUTONOVEL_REVIEW_MODEL", "claude-opus-4-6")
-API_KEY = os.environ.get("ANTHROPIC_API_KEY", "")
 API_BASE = os.environ.get("AUTONOVEL_API_BASE_URL", "https://api.anthropic.com")
 
 CHAPTERS_DIR = BASE_DIR / "chapters"
@@ -42,12 +42,7 @@ def call_opus(prompt, max_tokens=8000):
     """Call Opus with the full manuscript."""
     import httpx
 
-    headers = {
-        "x-api-key": API_KEY,
-        "anthropic-version": "2023-06-01",
-        "anthropic-beta": "context-1m-2025-08-07",
-        "content-type": "application/json",
-    }
+    headers = build_headers(beta="context-1m-2025-08-07")
     payload = {
         "model": REVIEW_MODEL,
         "max_tokens": max_tokens,
@@ -56,7 +51,7 @@ def call_opus(prompt, max_tokens=8000):
     }
     print(f"Sending to {REVIEW_MODEL} ({len(prompt):,} chars)...", file=sys.stderr)
     resp = httpx.post(
-        f"{API_BASE}/v1/messages",
+        messages_url(API_BASE),
         headers=headers,
         json=payload,
         timeout=600,
@@ -297,8 +292,8 @@ def main():
 
     args = parser.parse_args()
 
-    if not API_KEY:
-        print("ERROR: ANTHROPIC_API_KEY not set in .env", file=sys.stderr)
+    if not has_auth_config():
+        print(f"ERROR: {auth_error_message()}", file=sys.stderr)
         sys.exit(1)
 
     if args.parse:

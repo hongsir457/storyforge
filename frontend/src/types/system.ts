@@ -7,6 +7,7 @@ export interface SystemConfigSettings {
   text_backend_style: string;
   video_generate_audio: boolean;
   anthropic_api_key: { is_set: boolean; masked: string | null };
+  anthropic_auth_token: { is_set: boolean; masked: string | null };
   anthropic_base_url: string;
   anthropic_model: string;
   anthropic_default_haiku_model: string;
@@ -38,6 +39,7 @@ export interface SystemConfigPatch {
   text_backend_style?: string;
   video_generate_audio?: boolean;
   anthropic_api_key?: string;
+  anthropic_auth_token?: string;
   anthropic_base_url?: string;
   anthropic_model?: string;
   anthropic_default_haiku_model?: string;

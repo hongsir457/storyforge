@@ -28,11 +28,11 @@ async def init_db() -> None:
     import asyncio
     from pathlib import Path
 
+    from alembic.config import Config
     from sqlalchemy import inspect as sa_inspect
     from sqlalchemy import text
 
     from alembic import command
-    from alembic.config import Config
 
     # Detect pre-Alembic databases (tables exist but no version tracking)
     async with async_engine.connect() as conn:

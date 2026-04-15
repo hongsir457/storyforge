@@ -7,6 +7,7 @@ import { useConfigStatusStore } from "@/stores/config-status-store";
 import { useProjectsStore } from "@/stores/projects-store";
 import { useTasksStore } from "@/stores/tasks-store";
 import { useUsageStore, type UsageStats } from "@/stores/usage-store";
+import { useAuthStore } from "@/stores/auth-store";
 import { TaskHud } from "@/components/task-hud/TaskHud";
 import { UsageDrawer } from "./UsageDrawer";
 import { WorkspaceNotificationsDrawer } from "./WorkspaceNotificationsDrawer";
@@ -126,6 +127,8 @@ export function GlobalHeader({ onNavigateBack }: GlobalHeaderProps) {
   const isConfigComplete = useConfigStatusStore((s) => s.isComplete);
   const fetchConfigStatus = useConfigStatusStore((s) => s.fetch);
   const workspaceNotifications = useAppStore((s) => s.workspaceNotifications);
+  const user = useAuthStore((s) => s.user);
+  const logout = useAuthStore((s) => s.logout);
 
   const currentPhase = currentProjectData?.status?.current_phase;
   const contentMode = currentProjectData?.content_mode;
@@ -376,6 +379,15 @@ export function GlobalHeader({ onNavigateBack }: GlobalHeaderProps) {
         {/* Settings (placeholder) */}
         <button
           type="button"
+          onClick={() => setLocation("/app/account")}
+          className="rounded-md px-2 py-1 text-xs text-gray-300 transition-colors hover:bg-gray-800 hover:text-white"
+          title={user?.display_name || user?.username || t("auth:account_settings")}
+        >
+          {user?.display_name || user?.username || t("auth:account_settings")}
+        </button>
+
+        <button
+          type="button"
           onClick={() => setLocation(
             currentProjectName
               ? `~/app/projects/${encodeURIComponent(currentProjectName)}/settings`
@@ -389,6 +401,17 @@ export function GlobalHeader({ onNavigateBack }: GlobalHeaderProps) {
           {!isConfigComplete && !currentProjectName && (
             <span className="absolute right-0.5 top-0.5 h-2 w-2 rounded-full bg-rose-500" aria-label={t("dashboard:config_incomplete")} />
           )}
+        </button>
+
+        <button
+          type="button"
+          onClick={() => {
+            logout();
+            setLocation("/login");
+          }}
+          className="rounded-md px-2 py-1 text-xs text-rose-200 transition-colors hover:bg-rose-500/10 hover:text-rose-100"
+        >
+          {t("auth:logout")}
         </button>
 
 

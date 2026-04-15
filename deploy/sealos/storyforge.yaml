@@ -1,49 +1,233 @@
-apiVersion: v1
-kind: Namespace
-metadata:
-  name: storyforge
-  labels:
-    app.kubernetes.io/name: storyforge
----
-apiVersion: v1
+﻿apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: storyforge-data
-  namespace: storyforge
+  name: storyforge-projects-data
+  namespace: ns-qkcc8vj1
 spec:
   accessModes:
     - ReadWriteOnce
   resources:
     requests:
-      storage: 10Gi
+      storage: 20Gi
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: storyforge-redis-data
+  namespace: ns-qkcc8vj1
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 2Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: storyforge-postgres
+  namespace: ns-qkcc8vj1
+  labels:
+    app.kubernetes.io/name: storyforge-postgres
+spec:
+  selector:
+    app: storyforge-postgres
+  ports:
+    - name: postgres
+      port: 5432
+      targetPort: 5432
 ---
 apiVersion: apps/v1
-kind: Deployment
+kind: StatefulSet
 metadata:
-  name: storyforge
-  namespace: storyforge
+  name: storyforge-postgres
+  namespace: ns-qkcc8vj1
   labels:
-    app: storyforge
-    app.kubernetes.io/name: storyforge
+    app: storyforge-postgres
+    app.kubernetes.io/name: storyforge-postgres
 spec:
+  serviceName: storyforge-postgres
   replicas: 1
-  revisionHistoryLimit: 2
   selector:
     matchLabels:
-      app: storyforge
+      app: storyforge-postgres
   template:
     metadata:
       labels:
-        app: storyforge
-        app.kubernetes.io/name: storyforge
+        app: storyforge-postgres
+        app.kubernetes.io/name: storyforge-postgres
     spec:
       automountServiceAccountToken: false
       securityContext:
         seccompProfile:
           type: RuntimeDefault
       containers:
-        - name: storyforge
-          image: ghcr.io/hongsir457/storyforge:main
+        - name: postgres
+          image: postgres:16-alpine
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: postgres
+              containerPort: 5432
+          env:
+            - name: POSTGRES_USER
+              value: storyforge
+            - name: POSTGRES_DB
+              value: storyforge
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: storyforge-env
+                  key: POSTGRES_PASSWORD
+          readinessProbe:
+            exec:
+              command: ["sh", "-c", "pg_isready -U storyforge -d storyforge"]
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          livenessProbe:
+            exec:
+              command: ["sh", "-c", "pg_isready -U storyforge -d storyforge"]
+            initialDelaySeconds: 30
+            periodSeconds: 20
+          resources:
+            requests:
+              cpu: 250m
+              memory: 512Mi
+            limits:
+              cpu: "1"
+              memory: 2Gi
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: ["ALL"]
+          volumeMounts:
+            - name: postgres-data
+              mountPath: /var/lib/postgresql/data
+  volumeClaimTemplates:
+    - metadata:
+        name: postgres-data
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        resources:
+          requests:
+            storage: 20Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: storyforge-redis
+  namespace: ns-qkcc8vj1
+  labels:
+    app.kubernetes.io/name: storyforge-redis
+spec:
+  selector:
+    app: storyforge-redis
+  ports:
+    - name: redis
+      port: 6379
+      targetPort: 6379
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: storyforge-redis
+  namespace: ns-qkcc8vj1
+  labels:
+    app: storyforge-redis
+    app.kubernetes.io/name: storyforge-redis
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: storyforge-redis
+  template:
+    metadata:
+      labels:
+        app: storyforge-redis
+        app.kubernetes.io/name: storyforge-redis
+    spec:
+      automountServiceAccountToken: false
+      securityContext:
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: redis
+          image: redis:7-alpine
+          imagePullPolicy: IfNotPresent
+          command: ["redis-server", "--appendonly", "yes"]
+          ports:
+            - name: redis
+              containerPort: 6379
+          readinessProbe:
+            exec:
+              command: ["redis-cli", "ping"]
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            exec:
+              command: ["redis-cli", "ping"]
+            initialDelaySeconds: 20
+            periodSeconds: 20
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: ["ALL"]
+          volumeMounts:
+            - name: redis-data
+              mountPath: /data
+      volumes:
+        - name: redis-data
+          persistentVolumeClaim:
+            claimName: storyforge-redis-data
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: storyforge-backend
+  namespace: ns-qkcc8vj1
+  labels:
+    app.kubernetes.io/name: storyforge-backend
+spec:
+  selector:
+    app: storyforge-backend
+  ports:
+    - name: http
+      port: 1241
+      targetPort: 1241
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: storyforge-backend
+  namespace: ns-qkcc8vj1
+  labels:
+    app: storyforge-backend
+    app.kubernetes.io/name: storyforge-backend
+spec:
+  replicas: 1
+  revisionHistoryLimit: 2
+  selector:
+    matchLabels:
+      app: storyforge-backend
+  template:
+    metadata:
+      labels:
+        app: storyforge-backend
+        app.kubernetes.io/name: storyforge-backend
+    spec:
+      automountServiceAccountToken: false
+      securityContext:
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: backend
+          image: ghcr.io/hongsir457/storyforge-backend:main
           imagePullPolicy: Always
           ports:
             - name: http
@@ -51,6 +235,19 @@ spec:
           envFrom:
             - secretRef:
                 name: storyforge-env
+          env:
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: storyforge-env
+                  key: POSTGRES_PASSWORD
+            - name: REDIS_URL
+              value: redis://storyforge-redis:6379/0
+          command: ["sh", "-c"]
+          args:
+            - >
+              export DATABASE_URL="postgresql+asyncpg://storyforge:${POSTGRES_PASSWORD}@storyforge-postgres:5432/storyforge";
+              exec uv run uvicorn server.app:app --host 0.0.0.0 --port 1241;
           readinessProbe:
             httpGet:
               path: /health
@@ -66,46 +263,107 @@ spec:
           resources:
             requests:
               cpu: 250m
-              memory: 512Mi
+              memory: 768Mi
             limits:
-              cpu: "1"
-              memory: 2Gi
+              cpu: "2"
+              memory: 3Gi
           securityContext:
             allowPrivilegeEscalation: false
             capabilities:
-              drop:
-                - ALL
+              drop: ["ALL"]
           volumeMounts:
-            - name: storyforge-data
+            - name: storyforge-projects-data
               mountPath: /app/projects
+              subPath: projects
+            - name: storyforge-projects-data
+              mountPath: /app/vertex_keys
+              subPath: vertex_keys
+            - name: storyforge-projects-data
+              mountPath: /root/.claude
+              subPath: claude_data
       volumes:
-        - name: storyforge-data
+        - name: storyforge-projects-data
           persistentVolumeClaim:
-            claimName: storyforge-data
+            claimName: storyforge-projects-data
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: storyforge
-  namespace: storyforge
+  name: storyforge-frontend
+  namespace: ns-qkcc8vj1
   labels:
-    app.kubernetes.io/name: storyforge
+    app.kubernetes.io/name: storyforge-frontend
 spec:
   selector:
-    app: storyforge
+    app: storyforge-frontend
   ports:
     - name: http
       port: 80
-      targetPort: 1241
+      targetPort: 80
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: storyforge-frontend
+  namespace: ns-qkcc8vj1
+  labels:
+    app: storyforge-frontend
+    app.kubernetes.io/name: storyforge-frontend
+spec:
+  replicas: 1
+  revisionHistoryLimit: 2
+  selector:
+    matchLabels:
+      app: storyforge-frontend
+  template:
+    metadata:
+      labels:
+        app: storyforge-frontend
+        app.kubernetes.io/name: storyforge-frontend
+    spec:
+      automountServiceAccountToken: false
+      securityContext:
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: frontend
+          image: ghcr.io/hongsir457/storyforge-frontend:main
+          imagePullPolicy: Always
+          ports:
+            - name: http
+              containerPort: 80
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 80
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 80
+            initialDelaySeconds: 30
+            periodSeconds: 20
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: ["ALL"]
 ---
 apiVersion: app.sealos.io/v1
 kind: App
 metadata:
   name: storyforge-app
-  namespace: storyforge
+  namespace: ns-qkcc8vj1
 spec:
   data:
-    url: storyforge:80
+    url: storyforge-frontend:80
   displayType: normal
   name: Storyforge
   type: normal
@@ -113,10 +371,12 @@ spec:
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: storyforge
-  namespace: storyforge
+  name: network-boyqxnosbdrk
+  namespace: ns-qkcc8vj1
   labels:
     app.kubernetes.io/name: storyforge
+    cloud.sealos.io/app-deploy-manager: storyforge
+    cloud.sealos.io/app-deploy-manager-domain: bjmmuazhczom
   annotations:
     kubernetes.io/ingress.class: nginx
     nginx.ingress.kubernetes.io/backend-protocol: HTTP
@@ -139,10 +399,11 @@ spec:
             pathType: Prefix
             backend:
               service:
-                name: storyforge
+                name: storyforge-frontend
                 port:
                   number: 80
   tls:
     - hosts:
         - bjmmuazhczom.cloud.sealos.io
       secretName: wildcard-cloud-sealos-io-cert
+

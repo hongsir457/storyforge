@@ -1,5 +1,5 @@
-/**
- * API 调用封装 (TypeScript)
+﻿/**
+ * API 璋冪敤灏佽 (TypeScript)
  *
  * Typed API layer for all backend endpoints.
  * Import: import { API } from '@/api';
@@ -119,6 +119,29 @@ export interface SuccessResponse {
   message?: string;
 }
 
+export interface AuthUser {
+  id: string;
+  username: string;
+  email: string | null;
+  display_name: string;
+  role: string;
+  is_active: boolean;
+  is_email_verified: boolean;
+}
+
+export interface AuthTokenResponse {
+  access_token: string;
+  token_type: string;
+  user: AuthUser;
+}
+
+export interface RegisterResponse {
+  success: boolean;
+  email: string;
+  verification_required: boolean;
+  email_delivery: "sent" | "debug_logged" | "unavailable";
+}
+
 /** Draft metadata returned by listDrafts. */
 export interface DraftInfo {
   episode: number;
@@ -169,12 +192,20 @@ function normalizeExportDiagnostics(value: unknown): ExportDiagnostics {
 const API_BASE = "/api/v1";
 
 /**
- * 检查 fetch 响应状态，抛出包含后端错误信息的 Error。
- * 用于不经过 API.request() 的自定义 fetch 调用。
+ * 妫€鏌?fetch 鍝嶅簲鐘舵€侊紝鎶涘嚭鍖呭惈鍚庣閿欒淇℃伅鐨?Error銆?
+ * 鐢ㄤ簬涓嶇粡杩?API.request() 鐨勮嚜瀹氫箟 fetch 璋冪敤銆?
  */
-async function throwIfNotOk(response: Response, fallbackMsg: string): Promise<void> {
+interface RequestOptions extends RequestInit {
+  redirectOnUnauthorized?: boolean;
+}
+
+async function throwIfNotOk(
+  response: Response,
+  fallbackMsg: string,
+  { redirectOnUnauthorized = true }: Pick<RequestOptions, "redirectOnUnauthorized"> = {},
+): Promise<void> {
   if (!response.ok) {
-    handleUnauthorized(response);
+    handleUnauthorized(response, redirectOnUnauthorized);
     const error = await response
       .json()
       .catch(() => ({ detail: response.statusText }));
@@ -182,15 +213,17 @@ async function throwIfNotOk(response: Response, fallbackMsg: string): Promise<vo
   }
 }
 
-function handleUnauthorized(response: Response): void {
+function handleUnauthorized(response: Response, redirectOnUnauthorized = true): void {
   if (response.status !== 401) return;
 
   clearToken();
-  globalThis.location.href = "/login";
-  throw new Error("认证已过期，请重新登录");
+  if (redirectOnUnauthorized) {
+    globalThis.location.href = "/login";
+  }
+  throw new Error("Authentication expired, please log in again");
 }
 
-/** 为 fetch options 注入 Authorization header */
+/** 注入 Authorization 与语言头 */
 function withAuth(options: RequestInit = {}): RequestInit {
   const token = getToken();
   const headers = new Headers(options.headers);
@@ -202,7 +235,7 @@ function withAuth(options: RequestInit = {}): RequestInit {
   return { ...options, headers };
 }
 
-/** 为 URL 追加 token query param（用于 EventSource） */
+/** 涓?URL 杩藉姞 token query param锛堢敤浜?EventSource锛?*/
 function withAuthQuery(url: string): string {
   const token = getToken();
   if (!token) return url;
@@ -212,27 +245,28 @@ function withAuthQuery(url: string): string {
 
 class API {
   /**
-   * 通用请求方法
+   * 閫氱敤璇锋眰鏂规硶
    */
   static async request<T = unknown>(
     endpoint: string,
-    options: RequestInit = {}
+    options: RequestOptions = {}
   ): Promise<T> {
     const url = `${API_BASE}${endpoint}`;
+    const { redirectOnUnauthorized = true, ...requestInit } = options;
     const defaultOptions: RequestInit = {
       headers: {
         "Content-Type": "application/json",
       },
     };
 
-    const response = await fetch(url, withAuth({ ...defaultOptions, ...options }));
+    const response = await fetch(url, withAuth({ ...defaultOptions, ...requestInit }));
 
     if (!response.ok) {
-      handleUnauthorized(response);
+      handleUnauthorized(response, redirectOnUnauthorized);
       const error = await response
         .json()
         .catch(() => ({ detail: response.statusText }));
-      let message = "请求失败";
+      let message = "璇锋眰澶辫触";
       if (typeof error.detail === "string") {
         message = error.detail;
       } else if (Array.isArray(error.detail) && error.detail.length > 0) {
@@ -247,7 +281,113 @@ class API {
     return response.json();
   }
 
-  // ==================== 系统配置 ====================
+  // ==================== 绯荤粺閰嶇疆 ====================
+
+  static async publicRequest<T = unknown>(
+    endpoint: string,
+    options: RequestInit = {},
+  ): Promise<T> {
+    const headers = new Headers(options.headers);
+    if (!headers.has("Content-Type")) {
+      headers.set("Content-Type", "application/json");
+    }
+    headers.set("Accept-Language", i18n.language || "zh");
+
+    const response = await fetch(`${API_BASE}${endpoint}`, { ...options, headers });
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({ detail: response.statusText }));
+      throw new Error(typeof error.detail === "string" ? error.detail : response.statusText);
+    }
+
+    if (response.status === 204) {
+      return undefined as T;
+    }
+    return response.json();
+  }
+
+  static async login(identifier: string, password: string): Promise<AuthTokenResponse> {
+    const body = new URLSearchParams({
+      username: identifier,
+      password,
+      grant_type: "password",
+    });
+
+    const response = await fetch(`${API_BASE}/auth/token`, {
+      method: "POST",
+      headers: {
+        "Accept-Language": i18n.language || "zh",
+      },
+      body,
+    });
+
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({ detail: response.statusText }));
+      throw new Error(typeof error.detail === "string" ? error.detail : response.statusText);
+    }
+
+    return response.json();
+  }
+
+  static async getMe(): Promise<AuthUser> {
+    return this.request("/auth/me", { redirectOnUnauthorized: false });
+  }
+
+  static async register(payload: {
+    username: string;
+    email: string;
+    password: string;
+    display_name?: string;
+  }): Promise<RegisterResponse> {
+    return this.publicRequest("/auth/register", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    });
+  }
+
+  static async requestEmailVerification(email: string): Promise<SuccessResponse> {
+    return this.publicRequest("/auth/verify-email/request", {
+      method: "POST",
+      body: JSON.stringify({ email }),
+    });
+  }
+
+  static async confirmEmailVerification(email: string, code: string): Promise<AuthTokenResponse> {
+    return this.publicRequest("/auth/verify-email/confirm", {
+      method: "POST",
+      body: JSON.stringify({ email, code }),
+    });
+  }
+
+  static async forgotPassword(email: string): Promise<SuccessResponse> {
+    return this.publicRequest("/auth/password/forgot", {
+      method: "POST",
+      body: JSON.stringify({ email }),
+    });
+  }
+
+  static async resetPassword(email: string, code: string, newPassword: string): Promise<SuccessResponse> {
+    return this.publicRequest("/auth/password/reset", {
+      method: "POST",
+      body: JSON.stringify({ email, code, new_password: newPassword }),
+    });
+  }
+
+  static async updateProfile(payload: { display_name: string }): Promise<AuthUser> {
+    return this.request("/auth/me", {
+      method: "PATCH",
+      body: JSON.stringify(payload),
+    });
+  }
+
+  static async changePassword(currentPassword: string, newPassword: string): Promise<SuccessResponse> {
+    return this.request("/auth/password/change", {
+      method: "POST",
+      body: JSON.stringify({
+        current_password: currentPassword,
+        new_password: newPassword,
+      }),
+    });
+  }
 
   static async getSystemConfig(): Promise<GetSystemConfigResponse> {
     return this.request("/system/config");
@@ -263,7 +403,7 @@ class API {
   }
 
 
-  // ==================== 项目管理 ====================
+  // ==================== 椤圭洰绠＄悊 ====================
 
   static async listProjects(): Promise<{ projects: ProjectSummary[] }> {
     return this.request("/projects");
@@ -305,7 +445,7 @@ class API {
     updates: Partial<ProjectData>
   ): Promise<{ success: boolean; project: ProjectData }> {
     if ("content_mode" in updates) {
-      throw new Error("项目创建后不支持修改 content_mode");
+      throw new Error("Project mode cannot be changed after creation");
     }
     return this.request(`/projects/${encodeURIComponent(name)}`, {
       method: "PATCH",
@@ -402,7 +542,7 @@ class API {
     return `${API_BASE}/projects/${encodeURIComponent(projectName)}/export?download_token=${encodeURIComponent(downloadToken)}&scope=${encodeURIComponent(scope)}`;
   }
 
-  /** 构造剪映草稿下载 URL */
+  /** 鏋勯€犲壀鏄犺崏绋夸笅杞?URL */
   static getJianyingDraftDownloadUrl(
     projectName: string,
     episode: number,
@@ -436,7 +576,7 @@ class API {
         .json()
         .catch(() => ({ detail: response.statusText, errors: [], warnings: [] }));
       const error = new Error(
-        typeof payload.detail === "string" ? payload.detail : "导入失败"
+        typeof payload.detail === "string" ? payload.detail : "瀵煎叆澶辫触"
       ) as Error & {
         status?: number;
         detail?: string;
@@ -446,7 +586,7 @@ class API {
         diagnostics?: ImportFailureDiagnostics;
       };
       error.status = response.status;
-      error.detail = typeof payload.detail === "string" ? payload.detail : "导入失败";
+      error.detail = typeof payload.detail === "string" ? payload.detail : "瀵煎叆澶辫触";
       error.errors = Array.isArray(payload.errors) ? payload.errors : [];
       error.warnings = Array.isArray(payload.warnings) ? payload.warnings : [];
       if (typeof payload.conflict_project_name === "string") {
@@ -466,7 +606,7 @@ class API {
     };
   }
 
-  // ==================== 角色管理 ====================
+  // ==================== 瑙掕壊绠＄悊 ====================
 
   static async addCharacter(
     projectName: string,
@@ -513,7 +653,7 @@ class API {
     );
   }
 
-  // ==================== 线索管理 ====================
+  // ==================== 绾跨储绠＄悊 ====================
 
   static async addClue(
     projectName: string,
@@ -562,7 +702,7 @@ class API {
     );
   }
 
-  // ==================== 场景管理 ====================
+  // ==================== 鍦烘櫙绠＄悊 ====================
 
   static async getScript(
     projectName: string,
@@ -588,7 +728,7 @@ class API {
     );
   }
 
-  // ==================== 片段管理（说书模式） ====================
+  // ==================== 鐗囨绠＄悊锛堣涔︽ā寮忥級 ====================
 
   static async updateSegment(
     projectName: string,
@@ -604,7 +744,7 @@ class API {
     );
   }
 
-  // ==================== 文件管理 ====================
+  // ==================== 鏂囦欢绠＄悊 ====================
 
   static async uploadFile(
     projectName: string,
@@ -625,7 +765,7 @@ class API {
       body: formData,
     }));
 
-    await throwIfNotOk(response, "上传失败");
+    await throwIfNotOk(response, "涓婁紶澶辫触");
 
     return response.json();
   }
@@ -651,10 +791,10 @@ class API {
     return `${base}?v=${encodeURIComponent(String(cacheBust))}`;
   }
 
-  // ==================== Source 文件管理 ====================
+  // ==================== Source 鏂囦欢绠＄悊 ====================
 
   /**
-   * 获取 source 文件内容
+   * 鑾峰彇 source 鏂囦欢鍐呭
    */
   static async getSourceContent(
     projectName: string,
@@ -664,12 +804,12 @@ class API {
       `${API_BASE}/projects/${encodeURIComponent(projectName)}/source/${encodeURIComponent(filename)}`,
       withAuth()
     );
-    await throwIfNotOk(response, "获取文件内容失败");
+    await throwIfNotOk(response, "鑾峰彇鏂囦欢鍐呭澶辫触");
     return response.text();
   }
 
   /**
-   * 保存 source 文件（新建或更新）
+   * 淇濆瓨 source 鏂囦欢锛堟柊寤烘垨鏇存柊锛?
    */
   static async saveSourceFile(
     projectName: string,
@@ -684,12 +824,12 @@ class API {
         body: content,
       })
     );
-    await throwIfNotOk(response, "保存文件失败");
+    await throwIfNotOk(response, "淇濆瓨鏂囦欢澶辫触");
     return response.json();
   }
 
   /**
-   * 删除 source 文件
+   * 鍒犻櫎 source 鏂囦欢
    */
   static async deleteSourceFile(
     projectName: string,
@@ -701,14 +841,14 @@ class API {
         method: "DELETE",
       })
     );
-    await throwIfNotOk(response, "删除文件失败");
+    await throwIfNotOk(response, "鍒犻櫎鏂囦欢澶辫触");
     return response.json();
   }
 
-  // ==================== 草稿文件管理 ====================
+  // ==================== 鑽夌鏂囦欢绠＄悊 ====================
 
   /**
-   * 获取项目的所有草稿
+   * 鑾峰彇椤圭洰鐨勬墍鏈夎崏绋?
    */
   static async listDrafts(
     projectName: string
@@ -719,7 +859,7 @@ class API {
   }
 
   /**
-   * 获取草稿内容
+   * 鑾峰彇鑽夌鍐呭
    */
   static async getDraftContent(
     projectName: string,
@@ -730,12 +870,12 @@ class API {
       `${API_BASE}/projects/${encodeURIComponent(projectName)}/drafts/${episode}/step${stepNum}`,
       withAuth()
     );
-    await throwIfNotOk(response, "获取草稿内容失败");
+    await throwIfNotOk(response, "鑾峰彇鑽夌鍐呭澶辫触");
     return response.text();
   }
 
   /**
-   * 保存草稿内容
+   * 淇濆瓨鑽夌鍐呭
    */
   static async saveDraft(
     projectName: string,
@@ -751,12 +891,12 @@ class API {
         body: content,
       })
     );
-    await throwIfNotOk(response, "保存草稿失败");
+    await throwIfNotOk(response, "淇濆瓨鑽夌澶辫触");
     return response.json();
   }
 
   /**
-   * 删除草稿
+   * 鍒犻櫎鑽夌
    */
   static async deleteDraft(
     projectName: string,
@@ -769,10 +909,10 @@ class API {
     );
   }
 
-  // ==================== 项目概述管理 ====================
+  // ==================== 椤圭洰姒傝堪绠＄悊 ====================
 
   /**
-   * 使用 AI 生成项目概述
+   * 浣跨敤 AI 鐢熸垚椤圭洰姒傝堪
    */
   static async generateOverview(
     projectName: string
@@ -786,7 +926,7 @@ class API {
   }
 
   /**
-   * 更新项目概述（手动编辑）
+   * 鏇存柊椤圭洰姒傝堪锛堟墜鍔ㄧ紪杈戯級
    */
   static async updateOverview(
     projectName: string,
@@ -801,14 +941,14 @@ class API {
     );
   }
 
-  // ==================== 生成 API ====================
+  // ==================== 鐢熸垚 API ====================
 
   /**
-   * 生成分镜图
-   * @param projectName - 项目名称
-   * @param segmentId - 片段/场景 ID
-   * @param prompt - 图片生成 prompt（支持字符串或结构化对象）
-   * @param scriptFile - 剧本文件名
+   * 鐢熸垚鍒嗛暅鍥?
+   * @param projectName - 椤圭洰鍚嶇О
+   * @param segmentId - 鐗囨/鍦烘櫙 ID
+   * @param prompt - 鍥剧墖鐢熸垚 prompt锛堟敮鎸佸瓧绗︿覆鎴栫粨鏋勫寲瀵硅薄锛?
+   * @param scriptFile - 鍓ф湰鏂囦欢鍚?
    */
   static async generateStoryboard(
     projectName: string,
@@ -826,12 +966,12 @@ class API {
   }
 
   /**
-   * 生成视频
-   * @param projectName - 项目名称
-   * @param segmentId - 片段/场景 ID
-   * @param prompt - 视频生成 prompt（支持字符串或结构化对象）
-   * @param scriptFile - 剧本文件名
-   * @param durationSeconds - 时长（秒）
+   * 鐢熸垚瑙嗛
+   * @param projectName - 椤圭洰鍚嶇О
+   * @param segmentId - 鐗囨/鍦烘櫙 ID
+   * @param prompt - 瑙嗛鐢熸垚 prompt锛堟敮鎸佸瓧绗︿覆鎴栫粨鏋勫寲瀵硅薄锛?
+   * @param scriptFile - 鍓ф湰鏂囦欢鍚?
+   * @param durationSeconds - 鏃堕暱锛堢锛?
    */
   static async generateVideo(
     projectName: string,
@@ -854,10 +994,10 @@ class API {
   }
 
   /**
-   * 生成角色设计图
-   * @param projectName - 项目名称
-   * @param charName - 角色名称
-   * @param prompt - 角色描述 prompt
+   * 鐢熸垚瑙掕壊璁捐鍥?
+   * @param projectName - 椤圭洰鍚嶇О
+   * @param charName - 瑙掕壊鍚嶇О
+   * @param prompt - 瑙掕壊鎻忚堪 prompt
    */
   static async generateCharacter(
     projectName: string,
@@ -878,10 +1018,10 @@ class API {
   }
 
   /**
-   * 生成线索设计图
-   * @param projectName - 项目名称
-   * @param clueName - 线索名称
-   * @param prompt - 线索描述 prompt
+   * 鐢熸垚绾跨储璁捐鍥?
+   * @param projectName - 椤圭洰鍚嶇О
+   * @param clueName - 绾跨储鍚嶇О
+   * @param prompt - 绾跨储鎻忚堪 prompt
    */
   static async generateClue(
     projectName: string,
@@ -901,7 +1041,7 @@ class API {
     );
   }
 
-  // ==================== 任务队列 API ====================
+  // ==================== 浠诲姟闃熷垪 API ====================
 
   static async getTask(taskId: string): Promise<TaskItem> {
     return this.request(`/tasks/${encodeURIComponent(taskId)}`);
@@ -946,7 +1086,7 @@ class API {
     return this.request(`/tasks/stats${query ? "?" + query : ""}`);
   }
 
-  // ==================== 任务取消 API ====================
+  // ==================== 浠诲姟鍙栨秷 API ====================
 
   static async cancelPreview(
     taskId: string
@@ -996,7 +1136,7 @@ class API {
       try {
         return JSON.parse(event.data || "{}");
       } catch (err) {
-        console.error("解析 SSE 数据失败:", err, event.data);
+        console.error("瑙ｆ瀽 SSE 鏁版嵁澶辫触:", err, event.data);
         return null;
       }
     };
@@ -1040,7 +1180,7 @@ class API {
       try {
         return JSON.parse(event.data || "{}");
       } catch (err) {
-        console.error("解析项目事件 SSE 数据失败:", err, event.data);
+        console.error("瑙ｆ瀽椤圭洰浜嬩欢 SSE 鏁版嵁澶辫触:", err, event.data);
         return null;
       }
     };
@@ -1069,13 +1209,13 @@ class API {
     return source;
   }
 
-  // ==================== 版本管理 API ====================
+  // ==================== 鐗堟湰绠＄悊 API ====================
 
   /**
-   * 获取资源版本列表
-   * @param projectName - 项目名称
-   * @param resourceType - 资源类型 (storyboards, videos, characters, clues)
-   * @param resourceId - 资源 ID
+   * 鑾峰彇璧勬簮鐗堟湰鍒楄〃
+   * @param projectName - 椤圭洰鍚嶇О
+   * @param resourceType - 璧勬簮绫诲瀷 (storyboards, videos, characters, clues)
+   * @param resourceId - 璧勬簮 ID
    */
   static async getVersions(
     projectName: string,
@@ -1093,11 +1233,11 @@ class API {
   }
 
   /**
-   * 还原到指定版本
-   * @param projectName - 项目名称
-   * @param resourceType - 资源类型
-   * @param resourceId - 资源 ID
-   * @param version - 要还原的版本号
+   * 杩樺師鍒版寚瀹氱増鏈?
+   * @param projectName - 椤圭洰鍚嶇О
+   * @param resourceType - 璧勬簮绫诲瀷
+   * @param resourceId - 璧勬簮 ID
+   * @param version - 瑕佽繕鍘熺殑鐗堟湰鍙?
    */
   static async restoreVersion(
     projectName: string,
@@ -1113,13 +1253,13 @@ class API {
     );
   }
 
-  // ==================== 风格参考图 API ====================
+  // ==================== 椋庢牸鍙傝€冨浘 API ====================
 
   /**
-   * 上传风格参考图
-   * @param projectName - 项目名称
-   * @param file - 图片文件
-   * @returns 包含 style_image, style_description, url 的结果
+   * 涓婁紶椋庢牸鍙傝€冨浘
+   * @param projectName - 椤圭洰鍚嶇О
+   * @param file - 鍥剧墖鏂囦欢
+   * @returns 鍖呭惈 style_image, style_description, url 鐨勭粨鏋?
    */
   static async uploadStyleImage(
     projectName: string,
@@ -1141,14 +1281,14 @@ class API {
       })
     );
 
-    await throwIfNotOk(response, "上传失败");
+    await throwIfNotOk(response, "涓婁紶澶辫触");
 
     return response.json();
   }
 
   /**
-   * 删除风格参考图
-   * @param projectName - 项目名称
+   * 鍒犻櫎椋庢牸鍙傝€冨浘
+   * @param projectName - 椤圭洰鍚嶇О
    */
   static async deleteStyleImage(
     projectName: string
@@ -1162,9 +1302,9 @@ class API {
   }
 
   /**
-   * 更新风格描述
-   * @param projectName - 项目名称
-   * @param styleDescription - 风格描述
+   * 鏇存柊椋庢牸鎻忚堪
+   * @param projectName - 椤圭洰鍚嶇О
+   * @param styleDescription - 椋庢牸鎻忚堪
    */
   static async updateStyleDescription(
     projectName: string,
@@ -1179,7 +1319,7 @@ class API {
     );
   }
 
-  // ==================== 助手会话 API ====================
+  // ==================== 鍔╂墜浼氳瘽 API ====================
 
   /** Build the project-scoped assistant base path. */
   private static assistantBase(projectName: string): string {
@@ -1283,11 +1423,11 @@ class API {
     );
   }
 
-  // ==================== 费用统计 API ====================
+  // ==================== 璐圭敤缁熻 API ====================
 
   /**
-   * 获取统计摘要
-   * @param filters - 筛选条件
+   * 鑾峰彇缁熻鎽樿
+   * @param filters - 绛涢€夋潯浠?
    */
   static async getUsageStats(
     filters: UsageStatsFilters = {}
@@ -1302,8 +1442,8 @@ class API {
   }
 
   /**
-   * 获取调用记录列表
-   * @param filters - 筛选条件
+   * 鑾峰彇璋冪敤璁板綍鍒楄〃
+   * @param filters - 绛涢€夋潯浠?
    */
   static async getUsageCalls(
     filters: UsageCallsFilters = {}
@@ -1322,20 +1462,20 @@ class API {
   }
 
   /**
-   * 获取有调用记录的项目列表
+   * 鑾峰彇鏈夎皟鐢ㄨ褰曠殑椤圭洰鍒楄〃
    */
   static async getUsageProjects(): Promise<{ projects: string[] }> {
     return this.request("/usage/projects");
   }
 
-  // ==================== API Key 管理 API ====================
+  // ==================== API Key 绠＄悊 API ====================
 
-  /** 列出所有 API Key（不含完整 key）。 */
+  /** 鍒楀嚭鎵€鏈?API Key锛堜笉鍚畬鏁?key锛夈€?*/
   static async listApiKeys(): Promise<ApiKeyInfo[]> {
     return this.request("/api-keys");
   }
 
-  /** 创建新 API Key，返回含完整 key 的响应（仅此一次）。 */
+  /** 鍒涘缓鏂?API Key锛岃繑鍥炲惈瀹屾暣 key 鐨勫搷搴旓紙浠呮涓€娆★級銆?*/
   static async createApiKey(name: string, expiresDays?: number): Promise<CreateApiKeyResponse> {
     return this.request("/api-keys", {
       method: "POST",
@@ -1343,24 +1483,24 @@ class API {
     });
   }
 
-  /** 删除（吊销）指定 API Key。 */
+  /** 鍒犻櫎锛堝悐閿€锛夋寚瀹?API Key銆?*/
   static async deleteApiKey(keyId: number): Promise<void> {
     return this.request(`/api-keys/${keyId}`, { method: "DELETE" });
   }
 
-  // ==================== Provider 管理 API ====================
+  // ==================== Provider 绠＄悊 API ====================
 
-  /** 获取所有 provider 列表及状态。 */
+  /** 鑾峰彇鎵€鏈?provider 鍒楄〃鍙婄姸鎬併€?*/
   static async getProviders(): Promise<{ providers: ProviderInfo[] }> {
     return this.request("/providers");
   }
 
-  /** 获取指定 provider 的配置详情（含字段列表）。 */
+  /** 鑾峰彇鎸囧畾 provider 鐨勯厤缃鎯咃紙鍚瓧娈靛垪琛級銆?*/
   static async getProviderConfig(id: string): Promise<ProviderConfigDetail> {
     return this.request(`/providers/${encodeURIComponent(id)}/config`);
   }
 
-  /** 更新指定 provider 的配置字段。 */
+  /** 鏇存柊鎸囧畾 provider 鐨勯厤缃瓧娈点€?*/
   static async patchProviderConfig(
     id: string,
     patch: Record<string, string | null>
@@ -1371,7 +1511,7 @@ class API {
     });
   }
 
-  /** 测试指定 provider 的连接。 */
+  /** 娴嬭瘯鎸囧畾 provider 鐨勮繛鎺ャ€?*/
   static async testProviderConnection(id: string, credentialId?: number): Promise<ProviderTestResult> {
     const params = credentialId != null ? `?credential_id=${credentialId}` : "";
     return this.request(`/providers/${encodeURIComponent(id)}/test${params}`, {
@@ -1379,7 +1519,7 @@ class API {
     });
   }
 
-  // ==================== Provider 凭证管理 API ====================
+  // ==================== Provider 鍑瘉绠＄悊 API ====================
 
   static async listCredentials(providerId: string): Promise<{ credentials: ProviderCredential[] }> {
     return this.request(`/providers/${encodeURIComponent(providerId)}/credentials`);
@@ -1427,11 +1567,11 @@ class API {
       `${API_BASE}/providers/gemini-vertex/credentials/upload?name=${encodeURIComponent(name)}`,
       withAuth({ method: "POST", body: formData }),
     );
-    await throwIfNotOk(response, "上传凭证失败");
+    await throwIfNotOk(response, "涓婁紶鍑瘉澶辫触");
     return response.json();
   }
 
-  // ==================== 自定义供应商 API ====================
+  // ==================== 鑷畾涔変緵搴斿晢 API ====================
 
   static async listCustomProviders(): Promise<{ providers: CustomProviderInfo[] }> {
     return this.request("/custom-providers");
@@ -1473,11 +1613,11 @@ class API {
     return this.request(`/custom-providers/${id}/test`, { method: "POST" });
   }
 
-  // ==================== 用量统计（按 provider 分组）API ====================
+  // ==================== 鐢ㄩ噺缁熻锛堟寜 provider 鍒嗙粍锛堿PI ====================
 
   /**
-   * 获取按 provider 分组的用量统计。
-   * @param params - 可选筛选：provider、start、end（ISO 日期字符串）
+   * 鑾峰彇鎸?provider 鍒嗙粍鐨勭敤閲忕粺璁°€?
+   * @param params - 鍙€夌瓫閫夛細provider銆乻tart銆乪nd锛圛SO 鏃ユ湡瀛楃涓诧級
    */
   static async getUsageStatsGrouped(
     params: { provider?: string; start?: string; end?: string } = {}
@@ -1490,24 +1630,24 @@ class API {
     return this.request(`/usage/stats?${searchParams.toString()}`);
   }
 
-  // ==================== 费用估算 API ====================
+  // ==================== 璐圭敤浼扮畻 API ====================
 
   /**
-   * 获取项目费用估算。
-   * @param projectName - 项目名称
+   * 鑾峰彇椤圭洰璐圭敤浼扮畻銆?
+   * @param projectName - 椤圭洰鍚嶇О
    */
   static async getCostEstimate(projectName: string): Promise<CostEstimateResponse> {
     return this.request(`/projects/${encodeURIComponent(projectName)}/cost-estimate`);
   }
 
-  // ==================== Grid 图生视频 API ====================
+  // ==================== Grid 鍥剧敓瑙嗛 API ====================
 
   /**
-   * 生成 Grid 图像（多场景网格）
-   * @param projectName - 项目名称
-   * @param episode - 剧集编号
-   * @param scriptFile - 剧本文件名
-   * @param sceneIds - 可选，指定场景 ID 列表
+   * 鐢熸垚 Grid 鍥惧儚锛堝鍦烘櫙缃戞牸锛?
+   * @param projectName - 椤圭洰鍚嶇О
+   * @param episode - 鍓ч泦缂栧彿
+   * @param scriptFile - 鍓ф湰鏂囦欢鍚?
+   * @param sceneIds - 鍙€夛紝鎸囧畾鍦烘櫙 ID 鍒楄〃
    */
   static async generateGrid(
     projectName: string,
@@ -1522,16 +1662,16 @@ class API {
   }
 
   /**
-   * 列出项目所有 Grid 记录
-   * @param projectName - 项目名称
+   * 鍒楀嚭椤圭洰鎵€鏈?Grid 璁板綍
+   * @param projectName - 椤圭洰鍚嶇О
    */
   static async listGrids(projectName: string): Promise<GridGeneration[]> {
     return this.request(`/projects/${encodeURIComponent(projectName)}/grids`);
   }
 
   /**
-   * 获取单个 Grid 详情
-   * @param projectName - 项目名称
+   * 鑾峰彇鍗曚釜 Grid 璇︽儏
+   * @param projectName - 椤圭洰鍚嶇О
    * @param gridId - Grid ID
    */
   static async getGrid(projectName: string, gridId: string): Promise<GridGeneration> {
@@ -1539,8 +1679,8 @@ class API {
   }
 
   /**
-   * 重新生成 Grid 图像
-   * @param projectName - 项目名称
+   * 閲嶆柊鐢熸垚 Grid 鍥惧儚
+   * @param projectName - 椤圭洰鍚嶇О
    * @param gridId - Grid ID
    */
   static async regenerateGrid(
@@ -1555,3 +1695,4 @@ class API {
 }
 
 export { API };
+

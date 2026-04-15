@@ -7,6 +7,7 @@ import { API } from "@/api";
 import { useProjectsStore } from "@/stores/projects-store";
 import { useAppStore } from "@/stores/app-store";
 import { useConfigStatusStore } from "@/stores/config-status-store";
+import { useAuthStore } from "@/stores/auth-store";
 import { ArchiveDiagnosticsDialog } from "@/components/shared/ArchiveDiagnosticsDialog";
 import { Popover } from "@/components/ui/Popover";
 import { ProgressBar } from "@/components/ui/ProgressBar";
@@ -38,7 +39,7 @@ function usePhaseLabels() {
 // ---------------------------------------------------------------------------
 
 function ProjectCard({ project, onDelete }: { project: ProjectSummary; onDelete: () => void }) {
-  const { t } = useTranslation(["common", "dashboard"]);
+  const { t } = useTranslation(["common", "dashboard", "auth"]);
   const [, navigate] = useLocation();
   const status = project.status;
   const hasStatus = status && "current_phase" in status;
@@ -173,6 +174,8 @@ export function ProjectsPage() {
   const [deleteLoading, setDeleteLoading] = useState(false);
   const importInputRef = useRef<HTMLInputElement>(null);
   const isConfigComplete = useConfigStatusStore((s) => s.isComplete);
+  const user = useAuthStore((s) => s.user);
+  const logout = useAuthStore((s) => s.logout);
 
   const fetchProjects = useCallback(async () => {
     setProjectsLoading(true);
@@ -301,6 +304,14 @@ export function ProjectsPage() {
             <div className="ml-1 flex items-center gap-1 border-l border-gray-800 pl-3">
               <button
                 type="button"
+                onClick={() => navigate("/app/account")}
+                className="rounded-md px-2.5 py-1.5 text-sm text-gray-300 transition-colors hover:bg-gray-800 hover:text-white"
+                title={user?.display_name || user?.username || t("auth:account_settings")}
+              >
+                {user?.display_name || user?.username || t("auth:account_settings")}
+              </button>
+              <button
+                type="button"
                 onClick={() => setShowOpenClaw(true)}
                 className="rounded-md px-2.5 py-1.5 text-sm text-gray-400 transition-colors hover:bg-gray-800 hover:text-gray-200"
                 title="OpenClaw 集成"
@@ -314,11 +325,21 @@ export function ProjectsPage() {
                 className="relative rounded-md p-1.5 text-gray-400 transition-colors hover:bg-gray-800 hover:text-gray-200"
                 title={t("settings")}
                 aria-label={t("settings")}
+                >
+                  <Settings className="h-4 w-4" />
+                  {!isConfigComplete && (
+                    <span className="absolute right-0.5 top-0.5 h-2 w-2 rounded-full bg-rose-500" aria-label={t("config_incomplete")} />
+                  )}
+                </button>
+              <button
+                type="button"
+                onClick={() => {
+                  logout();
+                  navigate("/login");
+                }}
+                className="rounded-md px-2.5 py-1.5 text-sm text-rose-200 transition-colors hover:bg-rose-500/10 hover:text-rose-100"
               >
-                <Settings className="h-4 w-4" />
-                {!isConfigComplete && (
-                  <span className="absolute right-0.5 top-0.5 h-2 w-2 rounded-full bg-rose-500" aria-label={t("config_incomplete")} />
-                )}
+                {t("auth:logout")}
               </button>
             </div>
           </div>

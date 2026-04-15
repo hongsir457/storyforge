@@ -1,41 +1,52 @@
 import { create } from "zustand";
-import { getToken, setToken as saveToken, clearToken } from "@/utils/auth";
+import { API, type AuthUser } from "@/api";
+import { clearToken, getToken, setToken as saveToken } from "@/utils/auth";
 
 interface AuthState {
   token: string | null;
-  username: string | null;
+  user: AuthUser | null;
   isAuthenticated: boolean;
   isLoading: boolean;
-  initialize: () => void;
-  login: (token: string, username: string) => void;
+  initialize: () => Promise<void>;
+  login: (token: string, user: AuthUser) => void;
+  updateUser: (user: AuthUser) => void;
   logout: () => void;
-  setLoading: (loading: boolean) => void;
 }
 
 export const useAuthStore = create<AuthState>((set) => ({
   token: null,
-  username: null,
+  user: null,
   isAuthenticated: false,
   isLoading: true,
 
-  initialize: () => {
+  initialize: async () => {
     const token = getToken();
-    if (token) {
-      set({ token, isAuthenticated: true, isLoading: false });
-    } else {
-      set({ isLoading: false });
+    if (!token) {
+      set({ token: null, user: null, isAuthenticated: false, isLoading: false });
+      return;
+    }
+
+    set({ token, isLoading: true });
+    try {
+      const user = await API.getMe();
+      set({ token, user, isAuthenticated: true, isLoading: false });
+    } catch {
+      clearToken();
+      set({ token: null, user: null, isAuthenticated: false, isLoading: false });
     }
   },
 
-  login: (token, username) => {
+  login: (token, user) => {
     saveToken(token);
-    set({ token, username, isAuthenticated: true, isLoading: false });
+    set({ token, user, isAuthenticated: true, isLoading: false });
+  },
+
+  updateUser: (user) => {
+    set({ user });
   },
 
   logout: () => {
     clearToken();
-    set({ token: null, username: null, isAuthenticated: false });
+    set({ token: null, user: null, isAuthenticated: false, isLoading: false });
   },
-
-  setLoading: (isLoading) => set({ isLoading }),
 }));

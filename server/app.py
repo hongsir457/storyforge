@@ -22,7 +22,7 @@ from lib import PROJECT_ROOT
 from lib.db import async_session_factory, close_db, init_db
 from lib.generation_worker import GenerationWorker
 from lib.logging_config import setup_logging
-from server.auth import ensure_auth_password
+from server.auth import ensure_auth_password, ensure_bootstrap_admin
 from server.routers import (
     agent_chat,
     api_keys,
@@ -62,6 +62,7 @@ async def lifespan(app: FastAPI):
 
     # Run Alembic migrations (auto-creates tables on first start)
     await init_db()
+    await ensure_bootstrap_admin()
 
     # Migrate legacy .system_config.json → DB (no-op if file doesn't exist or already migrated)
     try:

@@ -1,66 +1,76 @@
-# Sealos Deploy
+﻿# Sealos Deploy
 
-Storyforge should run in its own Sealos workspace or namespace, not mixed into another app's user namespace.
+Storyforge now deploys as four workloads:
 
-## 1. Create the target workspace
+- `storyforge-frontend`
+- `storyforge-backend`
+- `storyforge-postgres`
+- `storyforge-redis`
 
-Create a dedicated Sealos workspace or namespace first. The standalone manifest assumes the target namespace is named `storyforge`.
+The public URL stays `https://bjmmuazhczom.cloud.sealos.io`.
 
-If your Sealos account only has access to a single user namespace, create the new workspace in the Sealos Cloud UI first, then grant your current account access before applying any Kubernetes resources.
+## 1. Target namespace
+
+The checked-in manifest is wired to the current Sealos workspace namespace: `ns-qkcc8vj1`.
 
 ## 2. Create the runtime secret
 
 ```bash
 kubectl create secret generic storyforge-env \
-  --namespace storyforge \
+  --namespace ns-qkcc8vj1 \
+  --from-literal=POSTGRES_PASSWORD='<postgres-password>' \
   --from-literal=AUTH_USERNAME=admin \
-  --from-literal=AUTH_PASSWORD='<your-login-password>' \
-  --from-literal=AUTH_TOKEN_SECRET='<generate-a-long-random-secret>' \
+  --from-literal=AUTH_PASSWORD='<bootstrap-admin-password>' \
+  --from-literal=AUTH_EMAIL='admin@storyforge.local' \
+  --from-literal=AUTH_TOKEN_SECRET='<long-random-secret>' \
+  --from-literal=SMTP_HOST='' \
+  --from-literal=SMTP_PORT='587' \
+  --from-literal=SMTP_USERNAME='' \
+  --from-literal=SMTP_PASSWORD='' \
+  --from-literal=SMTP_FROM_EMAIL='' \
+  --from-literal=SMTP_FROM_NAME='Storyforge' \
   --dry-run=client -o yaml | kubectl apply -f -
 ```
 
-## 3. Apply the standalone workload
+If you want registration and forgot-password to work before SMTP is ready, add:
+
+```bash
+--from-literal=AUTH_EMAIL_DEBUG='true'
+```
+
+That mode logs verification and reset codes in the backend container logs.
+
+## 3. Apply the split-stack manifest
 
 ```bash
 kubectl apply -f deploy/sealos/storyforge.yaml
-kubectl rollout status deployment/storyforge -n storyforge
+kubectl rollout status statefulset/storyforge-postgres -n ns-qkcc8vj1
+kubectl rollout status deployment/storyforge-redis -n ns-qkcc8vj1
+kubectl rollout status deployment/storyforge-backend -n ns-qkcc8vj1
+kubectl rollout status deployment/storyforge-frontend -n ns-qkcc8vj1
 ```
 
-This manifest now includes a Sealos `App` resource too, so Storyforge appears as its own app entry in the Sealos workspace UI.
+## 4. Migrate SQLite data into PostgreSQL
 
-## 4. Migrate data from the shared namespace
+If you are upgrading from the old single-pod SQLite deployment, copy the old `/app/projects` volume first, then run:
 
-If you are moving an existing deployment out of a shared namespace, use the migration helper:
-
-```powershell
-powershell -ExecutionPolicy Bypass -File scripts/migrate_storyforge_workspace.ps1 `
-  -TargetNamespace storyforge
+```bash
+kubectl exec -n ns-qkcc8vj1 deploy/storyforge-backend -- \
+  python scripts/migrate_sqlite_to_postgres.py \
+    --source-sqlite /app/projects/.arcreel.db \
+    --target-database-url "postgresql+asyncpg://storyforge:<postgres-password>@storyforge-postgres:5432/storyforge"
 ```
 
-This script:
-
-- freezes the source deployment to stop SQLite writes
-- copies `/app/projects` into the new PVC, including hidden files like `.arcreel.db` and `.novel_workbench`
-- copies the runtime secret
-- applies the standalone Storyforge manifest in the target namespace with the target deployment initially scaled to `0`
-- restores data before the new deployment starts
-- waits for the new deployment to pass an internal health check
-- cuts ingress only after the target deployment is healthy
-
-When you are ready to remove the old shared deployment too:
-
-```powershell
-powershell -ExecutionPolicy Bypass -File scripts/migrate_storyforge_workspace.ps1 `
-  -TargetNamespace storyforge `
-  -DeleteSourceAfterCutover
-```
+The target PostgreSQL schema must already be on the latest Alembic revision before running the copy.
 
 ## 5. Verify
 
 ```bash
-kubectl get pods -n storyforge
-kubectl get ingress -n storyforge
+kubectl get pods -n ns-qkcc8vj1
+kubectl get ingress -n ns-qkcc8vj1
 curl -I https://bjmmuazhczom.cloud.sealos.io
+curl https://bjmmuazhczom.cloud.sealos.io/health
 ```
 
-The default public URL in this manifest is `https://bjmmuazhczom.cloud.sealos.io`.
+The default Sealos `App` resource in the manifest points at `storyforge-frontend:80`, so Storyforge appears as its own app entry in the Sealos workspace UI.
+

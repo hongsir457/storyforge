@@ -1,34 +1,45 @@
 services:
   postgres:
-    image: postgres:18-alpine
+    image: postgres:16-alpine
     environment:
-      POSTGRES_USER: arcreel
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?请在 .env 中设置 POSTGRES_PASSWORD}
-      POSTGRES_DB: arcreel
+      POSTGRES_USER: storyforge
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in deploy/production/.env}
+      POSTGRES_DB: storyforge
     volumes:
-      - ./pgdata:/var/lib/postgresql
+      - ./pgdata:/var/lib/postgresql/data
     restart: unless-stopped
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U arcreel"]
+      test: ["CMD-SHELL", "pg_isready -U storyforge -d storyforge"]
       interval: 10s
       timeout: 5s
       retries: 5
 
-  storyforge:
-    build: ../..
-    image: storyforge-local:latest
-    ports:
-      - "1241:1241"
+  redis:
+    image: redis:7-alpine
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes:
+      - ./redisdata:/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  storyforge-backend:
+    image: ghcr.io/hongsir457/storyforge-backend:main
     env_file: .env
     environment:
-      DATABASE_URL: postgresql+asyncpg://arcreel:${POSTGRES_PASSWORD}@postgres:5432/arcreel
+      DATABASE_URL: postgresql+asyncpg://storyforge:${POSTGRES_PASSWORD}@postgres:5432/storyforge
+      REDIS_URL: redis://redis:6379/0
     volumes:
-      - ./.env:/app/.env
       - ./projects:/app/projects
       - ./vertex_keys:/app/vertex_keys
       - ./claude_data:/root/.claude
     depends_on:
       postgres:
+        condition: service_healthy
+      redis:
         condition: service_healthy
     restart: unless-stopped
     healthcheck:
@@ -36,3 +47,12 @@ services:
       interval: 30s
       timeout: 5s
       retries: 3
+
+  storyforge-frontend:
+    image: ghcr.io/hongsir457/storyforge-frontend:main
+    ports:
+      - "1241:80"
+    depends_on:
+      storyforge-backend:
+        condition: service_healthy
+    restart: unless-stopped

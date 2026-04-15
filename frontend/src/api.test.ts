@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+﻿import { beforeEach, describe, expect, it, vi } from "vitest";
 import { API, type TaskStreamOptions } from "@/api";
 import type { TaskItem } from "@/types";
 
@@ -144,7 +144,7 @@ describe("API", () => {
       const location = { href: "/app" };
       vi.stubGlobal("location", location);
 
-      await expect(API.request("/projects")).rejects.toThrow("认证已过期，请重新登录");
+      await expect(API.request("/projects")).rejects.toThrow("Authentication expired, please log in again");
 
       expect(clearTokenMock).toHaveBeenCalledTimes(1);
       expect(location.href).toBe("/login");
@@ -270,7 +270,7 @@ describe("API", () => {
 
       await expect(
         API.updateProject("demo", { content_mode: "drama" } as never),
-      ).rejects.toThrow("项目创建后不支持修改 content_mode");
+      ).rejects.toThrow("Project mode cannot be changed after creation");
       expect(requestSpy).not.toHaveBeenCalled();
     });
 
@@ -395,13 +395,13 @@ describe("API", () => {
         mockResponse({
           ok: false,
           statusText: "Bad Request",
-          jsonData: { detail: "上传失败" },
+          jsonData: { detail: "涓婁紶澶辫触" },
         }),
       );
       vi.stubGlobal("fetch", fetchMock);
       const file = new File(["hello"], "demo.txt", { type: "text/plain" });
 
-      await expect(API.uploadFile("demo", "source", file)).rejects.toThrow("上传失败");
+      await expect(API.uploadFile("demo", "source", file)).rejects.toThrow("涓婁紶澶辫触");
     });
 
     it("handles source and draft text APIs", async () => {
@@ -515,19 +515,19 @@ describe("API", () => {
             ok: false,
             statusText: "Bad Request",
             jsonData: {
-              detail: "导入包校验失败",
-              errors: ["缺少 project.json", "缺少 scripts/episode_1.json"],
-              warnings: ["发现未识别的附加文件/目录: extra"],
+              detail: "Import validation failed",
+              errors: ["缂哄皯 project.json", "缂哄皯 scripts/episode_1.json"],
+              warnings: ["鍙戠幇鏈瘑鍒殑闄勫姞鏂囦欢/鐩綍: extra"],
               diagnostics: {
                 blocking: [
-                  { code: "validation_error", message: "缺少 project.json" },
-                  { code: "validation_error", message: "缺少 scripts/episode_1.json" },
+                  { code: "validation_error", message: "缂哄皯 project.json" },
+                  { code: "validation_error", message: "缂哄皯 scripts/episode_1.json" },
                 ],
                 auto_fixable: [
-                  { code: "missing_clues_field", message: "segments[0]: 补全缺失字段 clues_in_segment" },
+                  { code: "missing_clues_field", message: "segments[0]: 琛ュ叏缂哄け瀛楁 clues_in_segment" },
                 ],
                 warnings: [
-                  { code: "validation_warning", message: "发现未识别的附加文件/目录: extra" },
+                  { code: "validation_warning", message: "鍙戠幇鏈瘑鍒殑闄勫姞鏂囦欢/鐩綍: extra" },
                 ],
               },
             },
@@ -540,20 +540,20 @@ describe("API", () => {
       expect(result.project_name).toBe("demo");
 
       await expect(API.importProject(file)).rejects.toMatchObject({
-        message: "导入包校验失败",
-        detail: "导入包校验失败",
-        errors: ["缺少 project.json", "缺少 scripts/episode_1.json"],
-        warnings: ["发现未识别的附加文件/目录: extra"],
+        message: "Import validation failed",
+        detail: "Import validation failed",
+        errors: ["缂哄皯 project.json", "缂哄皯 scripts/episode_1.json"],
+        warnings: ["鍙戠幇鏈瘑鍒殑闄勫姞鏂囦欢/鐩綍: extra"],
         diagnostics: {
           blocking: [
-            { code: "validation_error", message: "缺少 project.json" },
-            { code: "validation_error", message: "缺少 scripts/episode_1.json" },
+            { code: "validation_error", message: "缂哄皯 project.json" },
+            { code: "validation_error", message: "缂哄皯 scripts/episode_1.json" },
           ],
           auto_fixable: [
-            { code: "missing_clues_field", message: "segments[0]: 补全缺失字段 clues_in_segment" },
+            { code: "missing_clues_field", message: "segments[0]: 琛ュ叏缂哄け瀛楁 clues_in_segment" },
           ],
           warnings: [
-            { code: "validation_warning", message: "发现未识别的附加文件/目录: extra" },
+            { code: "validation_warning", message: "鍙戠幇鏈瘑鍒殑闄勫姞鏂囦欢/鐩綍: extra" },
           ],
         },
       });
@@ -570,8 +570,8 @@ describe("API", () => {
           status: 409,
           statusText: "Conflict",
           jsonData: {
-            detail: "检测到项目编号冲突",
-            errors: ["项目编号 'demo' 已存在"],
+            detail: "Project identifier conflict detected",
+            errors: ["Project id 'demo' already exists"],
             warnings: [],
             conflict_project_name: "demo",
             diagnostics: {
@@ -587,7 +587,7 @@ describe("API", () => {
       await expect(
         API.importProject(new File(["zip"], "demo.zip", { type: "application/zip" }))
       ).rejects.toMatchObject({
-        message: "检测到项目编号冲突",
+        message: "Project identifier conflict detected",
         status: 409,
         conflict_project_name: "demo",
       });
@@ -608,7 +608,7 @@ describe("API", () => {
 
       await expect(
         API.importProject(new File(["zip"], "demo.zip", { type: "application/zip" }))
-      ).rejects.toThrow("认证已过期，请重新登录");
+      ).rejects.toThrow("Authentication expired, please log in again");
 
       expect(clearTokenMock).toHaveBeenCalledTimes(1);
       expect(location.href).toBe("/login");

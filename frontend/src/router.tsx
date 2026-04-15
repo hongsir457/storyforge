@@ -1,32 +1,31 @@
-// router.tsx — Route definitions for the studio layout
-
 import { useEffect } from "react";
-import { Route, Switch, Redirect, useParams } from "wouter";
+import { Redirect, Route, Switch, useParams } from "wouter";
 import { StudioLayout } from "@/components/layout";
 import { StudioCanvasRouter } from "@/components/canvas/StudioCanvasRouter";
 import { ProjectsPage } from "@/components/pages/ProjectsPage";
 import { NovelWorkbenchPage } from "@/components/pages/NovelWorkbenchPage";
 import { SystemConfigPage } from "@/components/pages/SystemConfigPage";
 import { ProjectSettingsPage } from "@/components/pages/ProjectSettingsPage";
-import { LoginPage } from "@/pages/LoginPage";
-import { NotFoundPage } from "@/pages/NotFoundPage";
 import { ToastOverlay } from "@/components/layout/ToastOverlay";
 import { API } from "@/api";
 import { useProjectsStore } from "@/stores/projects-store";
 import { useAssistantStore } from "@/stores/assistant-store";
 import { useAuthStore } from "@/stores/auth-store";
-
-// ---------------------------------------------------------------------------
-// AuthGuard — redirects to /login when not authenticated
-// ---------------------------------------------------------------------------
+import { LoginPage } from "@/pages/LoginPage";
+import { RegisterPage } from "@/pages/RegisterPage";
+import { VerifyEmailPage } from "@/pages/VerifyEmailPage";
+import { ForgotPasswordPage } from "@/pages/ForgotPasswordPage";
+import { HomePage } from "@/pages/HomePage";
+import { AccountPage } from "@/pages/AccountPage";
+import { NotFoundPage } from "@/pages/NotFoundPage";
 
 function AuthGuard({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, isLoading } = useAuthStore();
 
   if (isLoading) {
     return (
-      <div className="flex h-screen items-center justify-center bg-gray-950 text-gray-500">
-        加载中...
+      <div className="flex h-screen items-center justify-center bg-gray-950 text-gray-400">
+        Loading...
       </div>
     );
   }
@@ -38,9 +37,23 @@ function AuthGuard({ children }: { children: React.ReactNode }) {
   return <>{children}</>;
 }
 
-// ---------------------------------------------------------------------------
-// StudioWorkspace — loads project data and renders three-column layout
-// ---------------------------------------------------------------------------
+function GuestGuard({ children }: { children: React.ReactNode }) {
+  const { isAuthenticated, isLoading } = useAuthStore();
+
+  if (isLoading) {
+    return (
+      <div className="flex h-screen items-center justify-center bg-gray-950 text-gray-400">
+        Loading...
+      </div>
+    );
+  }
+
+  if (isAuthenticated) {
+    return <Redirect to="/app/projects" />;
+  }
+
+  return <>{children}</>;
+}
 
 function StudioWorkspace() {
   const params = useParams<{ projectName: string }>();
@@ -51,7 +64,6 @@ function StudioWorkspace() {
     if (!projectName) return;
     let cancelled = false;
 
-    // 清空上一个项目的 assistant 状态，确保会话隔离
     const assistantState = useAssistantStore.getState();
     assistantState.setSessions([]);
     assistantState.setCurrentSessionId(null);
@@ -68,7 +80,6 @@ function StudioWorkspace() {
         }
       })
       .catch(() => {
-        // Still set the project name so the UI shows something
         if (!cancelled) {
           setCurrentProject(projectName, null);
         }
@@ -90,28 +101,44 @@ function StudioWorkspace() {
   );
 }
 
-// ---------------------------------------------------------------------------
-// Top-level route tree
-// ---------------------------------------------------------------------------
-
 export function AppRoutes() {
   return (
     <>
       <Switch>
-        {/* Login page */}
-        <Route path="/login" component={LoginPage} />
-
-        {/* Root redirects to projects list */}
         <Route path="/">
-          <Redirect to="/app/projects" />
+          <HomePage />
         </Route>
 
-        {/* /app and /app/ also redirect to projects list */}
+        <Route path="/login">
+          <GuestGuard>
+            <LoginPage />
+          </GuestGuard>
+        </Route>
+
+        <Route path="/register">
+          <GuestGuard>
+            <RegisterPage />
+          </GuestGuard>
+        </Route>
+
+        <Route path="/verify-email">
+          <GuestGuard>
+            <VerifyEmailPage />
+          </GuestGuard>
+        </Route>
+
+        <Route path="/forgot-password">
+          <GuestGuard>
+            <ForgotPasswordPage />
+          </GuestGuard>
+        </Route>
+
         <Route path="/app">
-          <Redirect to="/app/projects" />
+          <AuthGuard>
+            <Redirect to="/app/projects" />
+          </AuthGuard>
         </Route>
 
-        {/* Projects list */}
         <Route path="/app/projects">
           <AuthGuard>
             <ProjectsPage />
@@ -124,28 +151,30 @@ export function AppRoutes() {
           </AuthGuard>
         </Route>
 
-        {/* System settings */}
         <Route path="/app/settings">
           <AuthGuard>
             <SystemConfigPage />
           </AuthGuard>
         </Route>
 
-        {/* Project settings — full-screen, must be before the nested workspace route */}
+        <Route path="/app/account">
+          <AuthGuard>
+            <AccountPage />
+          </AuthGuard>
+        </Route>
+
         <Route path="/app/projects/:projectName/settings">
           <AuthGuard>
             <ProjectSettingsPage />
           </AuthGuard>
         </Route>
 
-        {/* Studio workspace (three-column layout) */}
         <Route path="/app/projects/:projectName" nest>
           <AuthGuard>
             <StudioWorkspace />
           </AuthGuard>
         </Route>
 
-        {/* 404 */}
         <Route>
           <NotFoundPage />
         </Route>

@@ -43,9 +43,9 @@ describe("AppRoutes", () => {
     vi.restoreAllMocks();
   });
 
-  it("redirects root path to /app/projects", async () => {
+  it("renders the public home page at root", async () => {
     renderAt("/");
-    expect(await screen.findByTestId("projects-page")).toBeInTheDocument();
+    expect(await screen.findByText("把长篇故事做成可复用的视觉 IP 生产线。")).toBeInTheDocument();
   });
 
   it("redirects /app to /app/projects", async () => {

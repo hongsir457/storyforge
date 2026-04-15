@@ -13,7 +13,7 @@ import "./css/app.css";
 import "./css/studio.css";
 
 // 从 localStorage 恢复登录状态
-useAuthStore.getState().initialize();
+void useAuthStore.getState().initialize();
 
 // ---------------------------------------------------------------------------
 // 全局滚动条 auto-hide：滚动时渐显、停止 1.2s 后渐隐

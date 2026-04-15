@@ -1,12 +1,13 @@
-
 import { useState, type FormEvent } from "react";
-import { useLocation } from "wouter";
+import { Link, useLocation } from "wouter";
 import { useTranslation } from "react-i18next";
+import { API } from "@/api";
+import { PublicShell } from "@/components/auth/PublicShell";
 import { useAuthStore } from "@/stores/auth-store";
 
 export function LoginPage() {
-  const { t, i18n } = useTranslation(["common", "auth", "dashboard"]);
-  const [username, setUsername] = useState("");
+  const { t } = useTranslation(["auth", "dashboard"]);
+  const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -19,26 +20,8 @@ export function LoginPage() {
     setLoading(true);
 
     try {
-      const body = new URLSearchParams({
-        username,
-        password,
-        grant_type: "password",
-      });
-      const resp = await fetch("/api/v1/auth/token", {
-        method: "POST",
-        headers: {
-          "Accept-Language": i18n.language || "zh",
-        },
-        body,
-      });
-
-      if (!resp.ok) {
-        const data = await resp.json().catch(() => ({}));
-        throw new Error(data.detail || t("auth:login_failed"));
-      }
-
-      const data = await resp.json();
-      login(data.access_token, username);
+      const data = await API.login(identifier, password);
+      login(data.access_token, data.user);
       setLocation("/app/projects");
     } catch (err) {
       setError(err instanceof Error ? err.message : t("auth:login_failed"));
@@ -48,53 +31,76 @@ export function LoginPage() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gray-950">
-      <div className="w-full max-w-sm rounded-xl border border-gray-800 bg-gray-900 p-8 shadow-2xl">
-        <div className="mb-6 text-center">
-          <h1 className="flex items-center justify-center gap-2 text-xl font-semibold text-gray-100">
-            <img src="/android-chrome-192x192.png" alt={t("dashboard:app_title")} className="h-7 w-7" />
-            <span>{t("dashboard:app_title")}</span>
-          </h1>
-          <p className="mt-2 text-sm text-gray-500">{t("dashboard:app_subtitle")}</p>
-        </div>
-
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label className="mb-1 block text-sm text-gray-400">{t("auth:username")}</label>
-            <input
-              type="text"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              className="w-full rounded-lg border border-gray-700 bg-gray-800 px-3 py-2 text-gray-100 outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
-              autoFocus
-              required
-            />
-          </div>
-
-          <div>
-            <label className="mb-1 block text-sm text-gray-400">{t("auth:password")}</label>
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="w-full rounded-lg border border-gray-700 bg-gray-800 px-3 py-2 text-gray-100 outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
-              required
-            />
-          </div>
-
-          {error && (
-            <p className="text-sm text-red-400">{error}</p>
-          )}
-
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full rounded-lg bg-indigo-600 py-2 text-sm font-medium text-white transition hover:bg-indigo-500 disabled:opacity-50"
-          >
-            {loading ? t("auth:logging_in") : t("auth:login")}
-          </button>
-        </form>
+    <PublicShell
+      eyebrow="Storyforge"
+      title={t("auth:home_hero_title")}
+      description={t("auth:home_hero_body")}
+    >
+      <div className="mb-6">
+        <h2 className="text-2xl font-semibold text-white">{t("auth:login")}</h2>
+        <p className="mt-2 text-sm text-slate-400">{t("dashboard:app_subtitle")}</p>
       </div>
-    </div>
+
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <Field
+          label={t("auth:email_or_username")}
+          value={identifier}
+          onChange={setIdentifier}
+          autoFocus
+          type="text"
+        />
+        <Field label={t("auth:password")} value={password} onChange={setPassword} type="password" />
+
+        {error && <p className="rounded-xl border border-rose-400/30 bg-rose-500/10 px-3 py-2 text-sm text-rose-200">{error}</p>}
+
+        <button
+          type="submit"
+          disabled={loading}
+          className="w-full rounded-xl bg-sky-500 px-4 py-3 text-sm font-semibold text-slate-950 transition hover:bg-sky-400 disabled:opacity-60"
+        >
+          {loading ? t("auth:logging_in") : t("auth:login")}
+        </button>
+      </form>
+
+      <div className="mt-6 flex items-center justify-between text-sm text-slate-400">
+        <span>{t("auth:no_account")}</span>
+        <Link href="/register" className="font-medium text-sky-300 transition hover:text-sky-200">
+          {t("auth:go_to_register")}
+        </Link>
+      </div>
+      <div className="mt-3 text-right text-sm">
+        <Link href="/forgot-password" className="text-slate-300 transition hover:text-white">
+          {t("auth:forgot_password")}
+        </Link>
+      </div>
+    </PublicShell>
+  );
+}
+
+function Field({
+  label,
+  value,
+  onChange,
+  type,
+  autoFocus = false,
+}: {
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+  type: string;
+  autoFocus?: boolean;
+}) {
+  return (
+    <label className="block">
+      <span className="mb-2 block text-sm text-slate-300">{label}</span>
+      <input
+        type={type}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white outline-none transition focus:border-sky-400/60 focus:bg-white/8"
+        autoFocus={autoFocus}
+        required
+      />
+    </label>
   );
 }

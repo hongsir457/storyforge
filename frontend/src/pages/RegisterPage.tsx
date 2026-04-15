@@ -5,12 +5,13 @@ import { API } from "@/api";
 import { PublicShell } from "@/components/auth/PublicShell";
 
 export function RegisterPage() {
-  const { t } = useTranslation("auth");
+  const { t } = useTranslation(["auth", "dashboard"]);
   const [form, setForm] = useState({
     username: "",
     email: "",
     display_name: "",
     password: "",
+    confirm_password: "",
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -24,7 +25,16 @@ export function RegisterPage() {
     setNotice("");
 
     try {
-      const result = await API.register(form);
+      if (form.password !== form.confirm_password) {
+        throw new Error(t("auth:passwords_do_not_match"));
+      }
+
+      const result = await API.register({
+        username: form.username,
+        email: form.email,
+        display_name: form.display_name,
+        password: form.password,
+      });
       setNotice(result.email_delivery === "unavailable" ? t("email_delivery_unavailable") : t("registration_success"));
       setLocation(
         `/verify-email?email=${encodeURIComponent(result.email)}&delivery=${encodeURIComponent(result.email_delivery)}`,
@@ -38,7 +48,7 @@ export function RegisterPage() {
 
   return (
     <PublicShell
-      eyebrow="Create account"
+      eyebrow={t("dashboard:app_title")}
       title={t("create_account")}
       description={t("home_hero_body")}
     >
@@ -47,6 +57,7 @@ export function RegisterPage() {
         <Field label={t("email")} value={form.email} onChange={(value) => setForm((curr) => ({ ...curr, email: value }))} />
         <Field label={t("display_name")} value={form.display_name} onChange={(value) => setForm((curr) => ({ ...curr, display_name: value }))} />
         <Field label={t("password")} value={form.password} onChange={(value) => setForm((curr) => ({ ...curr, password: value }))} type="password" />
+        <Field label={t("confirm_password")} value={form.confirm_password} onChange={(value) => setForm((curr) => ({ ...curr, confirm_password: value }))} type="password" />
 
         {error && <p className="rounded-xl border border-rose-400/30 bg-rose-500/10 px-3 py-2 text-sm text-rose-200">{error}</p>}
         {notice && <p className="rounded-xl border border-amber-400/30 bg-amber-500/10 px-3 py-2 text-sm text-amber-100">{notice}</p>}

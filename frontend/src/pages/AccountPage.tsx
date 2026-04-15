@@ -5,7 +5,7 @@ import { API } from "@/api";
 import { useAuthStore } from "@/stores/auth-store";
 
 export function AccountPage() {
-  const { t } = useTranslation("auth");
+  const { t } = useTranslation(["auth", "dashboard"]);
   const [, setLocation] = useLocation();
   const user = useAuthStore((s) => s.user);
   const updateUser = useAuthStore((s) => s.updateUser);
@@ -14,11 +14,14 @@ export function AccountPage() {
   const [displayName, setDisplayName] = useState("");
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [profileNotice, setProfileNotice] = useState("");
   const [passwordNotice, setPasswordNotice] = useState("");
+  const [verificationNotice, setVerificationNotice] = useState("");
   const [error, setError] = useState("");
   const [savingProfile, setSavingProfile] = useState(false);
   const [savingPassword, setSavingPassword] = useState(false);
+  const [sendingVerification, setSendingVerification] = useState(false);
 
   useEffect(() => {
     setDisplayName(user?.display_name ?? "");
@@ -46,9 +49,13 @@ export function AccountPage() {
     setError("");
     setPasswordNotice("");
     try {
+      if (newPassword !== confirmPassword) {
+        throw new Error(t("auth:passwords_do_not_match"));
+      }
       const result = await API.changePassword(currentPassword, newPassword);
       setCurrentPassword("");
       setNewPassword("");
+      setConfirmPassword("");
       setPasswordNotice(result.message || t("password_changed_success"));
     } catch (err) {
       setError(err instanceof Error ? err.message : t("login_failed"));
@@ -57,13 +64,31 @@ export function AccountPage() {
     }
   };
 
+  const resendVerification = async () => {
+    if (!user?.email) {
+      return;
+    }
+    setSendingVerification(true);
+    setError("");
+    setVerificationNotice("");
+    try {
+      const result = await API.requestEmailVerification(user.email);
+      setVerificationNotice(result.message || t("verification_email_sent"));
+    } catch (err) {
+      setError(err instanceof Error ? err.message : t("login_failed"));
+    } finally {
+      setSendingVerification(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gray-950 px-6 py-10 text-gray-100">
       <div className="mx-auto max-w-4xl space-y-8">
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div>
-            <p className="text-sm uppercase tracking-[0.24em] text-sky-300/70">Storyforge</p>
+            <p className="text-sm tracking-[0.22em] text-sky-300/70">{t("dashboard:app_title")}</p>
             <h1 className="mt-2 text-3xl font-semibold">{t("account_settings")}</h1>
+            <p className="mt-2 text-sm text-slate-400">{t("dashboard:app_subtitle")}</p>
           </div>
           <div className="flex gap-3">
             <button
@@ -100,6 +125,40 @@ export function AccountPage() {
                 <div className="text-xs uppercase tracking-[0.22em] text-slate-500">{t("email")}</div>
                 <div className="mt-2 rounded-xl border border-white/10 bg-slate-950/50 px-4 py-3">{user?.email}</div>
               </div>
+              <div className="rounded-2xl border border-white/10 bg-slate-950/35 p-4">
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <div>
+                    <div className="text-xs uppercase tracking-[0.22em] text-slate-500">{t("email_verification_status")}</div>
+                    <div
+                      className={`mt-2 inline-flex rounded-full px-3 py-1 text-xs font-medium ${
+                        user?.is_email_verified
+                          ? "bg-emerald-500/10 text-emerald-200"
+                          : "bg-amber-500/10 text-amber-100"
+                      }`}
+                    >
+                      {user?.is_email_verified ? t("verified") : t("unverified")}
+                    </div>
+                  </div>
+                  {!user?.is_email_verified && user?.email && (
+                    <button
+                      type="button"
+                      onClick={() => void resendVerification()}
+                      disabled={sendingVerification}
+                      className="rounded-xl border border-amber-400/30 bg-amber-500/10 px-4 py-2 text-sm text-amber-100 transition hover:bg-amber-500/15 disabled:opacity-60"
+                    >
+                      {sendingVerification ? t("sending_code") : t("resend_verification_code")}
+                    </button>
+                  )}
+                </div>
+                {!user?.is_email_verified && (
+                  <p className="mt-3 text-sm text-slate-300">{t("verification_required_notice")}</p>
+                )}
+                {verificationNotice && (
+                  <p className="mt-3 rounded-xl border border-emerald-400/30 bg-emerald-500/10 px-3 py-2 text-sm text-emerald-100">
+                    {verificationNotice}
+                  </p>
+                )}
+              </div>
             </div>
 
             <form onSubmit={saveProfile} className="mt-5 space-y-4">
@@ -129,6 +188,7 @@ export function AccountPage() {
             <form onSubmit={savePassword} className="mt-5 space-y-4">
               <PasswordField label={t("current_password")} value={currentPassword} onChange={setCurrentPassword} />
               <PasswordField label={t("new_password")} value={newPassword} onChange={setNewPassword} />
+              <PasswordField label={t("confirm_password")} value={confirmPassword} onChange={setConfirmPassword} />
               {passwordNotice && <p className="rounded-xl border border-emerald-400/30 bg-emerald-500/10 px-3 py-2 text-sm text-emerald-100">{passwordNotice}</p>}
               <button
                 type="submit"

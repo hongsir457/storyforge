@@ -10,6 +10,7 @@ export function LoginPage() {
   const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [verificationEmail, setVerificationEmail] = useState("");
   const [loading, setLoading] = useState(false);
   const [, setLocation] = useLocation();
   const login = useAuthStore((s) => s.login);
@@ -17,6 +18,7 @@ export function LoginPage() {
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setError("");
+    setVerificationEmail("");
     setLoading(true);
 
     try {
@@ -24,7 +26,12 @@ export function LoginPage() {
       login(data.access_token, data.user);
       setLocation("/app/projects");
     } catch (err) {
-      setError(err instanceof Error ? err.message : t("auth:login_failed"));
+      const message = err instanceof Error ? err.message : t("auth:login_failed");
+      setError(message);
+      const normalized = identifier.trim().toLowerCase();
+      setVerificationEmail(
+        message.toLowerCase().includes("verify your email") && normalized.includes("@") ? normalized : "",
+      );
     } finally {
       setLoading(false);
     }
@@ -32,7 +39,7 @@ export function LoginPage() {
 
   return (
     <PublicShell
-      eyebrow="Storyforge"
+      eyebrow={t("dashboard:app_title")}
       title={t("auth:home_hero_title")}
       description={t("auth:home_hero_body")}
     >
@@ -52,6 +59,14 @@ export function LoginPage() {
         <Field label={t("auth:password")} value={password} onChange={setPassword} type="password" />
 
         {error && <p className="rounded-xl border border-rose-400/30 bg-rose-500/10 px-3 py-2 text-sm text-rose-200">{error}</p>}
+        {verificationEmail && (
+          <Link
+            href={`/verify-email?email=${encodeURIComponent(verificationEmail)}`}
+            className="block rounded-xl border border-amber-400/30 bg-amber-500/10 px-3 py-2 text-sm text-amber-100 transition hover:bg-amber-500/15"
+          >
+            {t("auth:verify_email_now")}
+          </Link>
+        )}
 
         <button
           type="submit"

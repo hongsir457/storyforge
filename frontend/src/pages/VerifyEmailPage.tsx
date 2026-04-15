@@ -6,7 +6,7 @@ import { PublicShell } from "@/components/auth/PublicShell";
 import { useAuthStore } from "@/stores/auth-store";
 
 export function VerifyEmailPage() {
-  const { t } = useTranslation("auth");
+  const { t } = useTranslation(["auth", "dashboard"]);
   const [, setLocation] = useLocation();
   const login = useAuthStore((s) => s.login);
   const initialEmail = useMemo(() => {
@@ -59,7 +59,7 @@ export function VerifyEmailPage() {
 
   return (
     <PublicShell
-      eyebrow="Verify email"
+      eyebrow={t("dashboard:app_title")}
       title={t("verify_email")}
       description={t("verification_hint", { email: email || "your email" })}
     >

@@ -5,7 +5,7 @@ import { API } from "@/api";
 import { PublicShell } from "@/components/auth/PublicShell";
 
 export function ForgotPasswordPage() {
-  const { t } = useTranslation("auth");
+  const { t } = useTranslation(["auth", "dashboard"]);
   const [, setLocation] = useLocation();
   const initialEmail = useMemo(() => {
     const params = new URLSearchParams(globalThis.location.search);
@@ -15,6 +15,7 @@ export function ForgotPasswordPage() {
   const [email, setEmail] = useState(initialEmail);
   const [code, setCode] = useState("");
   const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [step, setStep] = useState<"request" | "reset">("request");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -42,6 +43,9 @@ export function ForgotPasswordPage() {
     setError("");
     setNotice("");
     try {
+      if (newPassword !== confirmPassword) {
+        throw new Error(t("auth:passwords_do_not_match"));
+      }
       const result = await API.resetPassword(email, code, newPassword);
       setNotice(result.message || t("reset_password_success"));
       setTimeout(() => setLocation("/login"), 800);
@@ -54,7 +58,7 @@ export function ForgotPasswordPage() {
 
   return (
     <PublicShell
-      eyebrow="Password recovery"
+      eyebrow={t("dashboard:app_title")}
       title={t("forgot_password")}
       description={t("forgot_password_hint")}
     >
@@ -76,6 +80,7 @@ export function ForgotPasswordPage() {
           <Field label={t("email")} value={email} onChange={setEmail} />
           <Field label={t("verification_code")} value={code} onChange={setCode} />
           <Field label={t("new_password")} value={newPassword} onChange={setNewPassword} type="password" />
+          <Field label={t("confirm_password")} value={confirmPassword} onChange={setConfirmPassword} type="password" />
           {error && <Notice tone="error">{error}</Notice>}
           {notice && <Notice tone="success">{notice}</Notice>}
           <button

@@ -17,7 +17,6 @@ from lib.db.repositories.user_repository import UserRepository
 from lib.i18n import Translator
 from server.auth import (
     CurrentUser,
-    check_credentials,
     create_token,
     hash_password,
     verify_password,
@@ -206,28 +205,6 @@ async def login_for_access_token(
     _t: Translator,
 ):
     identifier = form_data.username.strip()
-
-    if check_credentials(identifier, form_data.password):
-        bootstrap_email = (form_data.username.strip().lower() + "@storyforge.local")
-        user = AuthenticatedUserResponse(
-            id=DEFAULT_USER_ID,
-            username=identifier,
-            email=bootstrap_email,
-            display_name=identifier,
-            role="admin",
-            is_active=True,
-            is_email_verified=True,
-        )
-        token = create_token(
-            identifier,
-            user_id=user.id,
-            role=user.role,
-            email=user.email,
-            display_name=user.display_name,
-            email_verified=user.is_email_verified,
-        )
-        return TokenResponse(access_token=token, token_type="bearer", user=user)
-
     user = await _authenticate_managed_user(identifier, form_data.password, _t)
     token = create_token(
         user.username,

@@ -20,7 +20,7 @@ export function PublicShell({ eyebrow, title, description, children, aside }: Pu
           <img src="/android-chrome-192x192.png" alt={t("dashboard:app_title")} className="h-10 w-10 rounded-xl" />
           <div>
             <div className="text-lg font-semibold tracking-wide text-slate-50">{t("dashboard:app_title")}</div>
-            <div className="text-xs uppercase tracking-[0.28em] text-sky-200/70">AI novel&video studio</div>
+            <div className="text-xs tracking-[0.18em] text-sky-200/70">{t("dashboard:app_subtitle")}</div>
           </div>
         </Link>
         <Link href="/" className="text-sm text-slate-300 transition hover:text-white">

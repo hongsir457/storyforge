@@ -3,10 +3,10 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { Router } from "wouter";
 import { memoryLocation } from "wouter/memory-location";
 import { API } from "@/api";
+import { AppRoutes } from "@/router";
 import { useAssistantStore } from "@/stores/assistant-store";
 import { useAuthStore } from "@/stores/auth-store";
 import { useProjectsStore } from "@/stores/projects-store";
-import { AppRoutes } from "@/router";
 
 vi.mock("@/components/layout", () => ({
   StudioLayout: ({ children }: { children: React.ReactNode }) => (
@@ -45,7 +45,7 @@ describe("AppRoutes", () => {
 
   it("renders the public home page at root", async () => {
     renderAt("/");
-    expect(await screen.findByText("把长篇故事做成可复用的视觉 IP 生产线。")).toBeInTheDocument();
+    expect(await screen.findByText("把长篇故事做成可复用的视觉 IP。")).toBeInTheDocument();
   });
 
   it("redirects /app to /app/projects", async () => {

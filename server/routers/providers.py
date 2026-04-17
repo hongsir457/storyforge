@@ -616,9 +616,7 @@ def _test_openrouter(config: dict[str, str], _t: Callable[..., str]) -> Connecti
     )
     models = client.models.list()
     available = sorted(
-        m.id
-        for m in models.data
-        if any(m.id.lower().startswith(prefix) for prefix in _OPENROUTER_MODEL_PREFIXES)
+        m.id for m in models.data if any(m.id.lower().startswith(prefix) for prefix in _OPENROUTER_MODEL_PREFIXES)
     )
     return ConnectionTestResponse(
         success=True,

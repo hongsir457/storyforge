@@ -13,14 +13,14 @@ import re
 from datetime import datetime
 from pathlib import Path
 
-from anthropic_compat import build_headers, messages_url
+from anthropic_compat import generate_text
 from dotenv import load_dotenv
 
 BASE_DIR = Path(__file__).parent
 load_dotenv(BASE_DIR / ".env")
 
-JUDGE_MODEL = os.environ.get("AUTONOVEL_JUDGE_MODEL", "claude-opus-4-6")
-API_BASE = os.environ.get("AUTONOVEL_API_BASE_URL", "https://api.anthropic.com")
+JUDGE_MODEL = os.environ.get("AUTONOVEL_JUDGE_MODEL", "gemini-3-flash-preview")
+API_BASE = os.environ.get("AUTONOVEL_API_BASE_URL", "https://generativelanguage.googleapis.com")
 
 READERS = {
     "editor": {
@@ -112,10 +112,7 @@ Respond with JSON:
 
 
 def call_reader(reader_key, arc_summary):
-    import httpx
-
     reader = READERS[reader_key]
-    headers = build_headers()
     payload = {
         "model": JUDGE_MODEL,
         "max_tokens": 4000,
@@ -123,9 +120,7 @@ def call_reader(reader_key, arc_summary):
         "system": reader["system"],
         "messages": [{"role": "user", "content": READER_PROMPT.format(arc_summary=arc_summary)}],
     }
-    resp = httpx.post(messages_url(API_BASE), headers=headers, json=payload, timeout=300)
-    resp.raise_for_status()
-    raw = resp.json()["content"][0]["text"]
+    raw = generate_text(payload, timeout=300, base_url=API_BASE)
 
     # Parse JSON
     raw = raw.strip()

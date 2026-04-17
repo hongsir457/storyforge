@@ -13,6 +13,12 @@ from lib.db.repositories.credential_repository import CredentialRepository
 _DEFAULT_VIDEO_BACKEND = "gemini-aistudio/veo-3.1-lite-generate-preview"
 _DEFAULT_IMAGE_BACKEND = "gemini-aistudio/gemini-3.1-flash-image-preview"
 _DEFAULT_TEXT_BACKEND = "gemini-aistudio/gemini-3-flash-preview"
+_NOVEL_WORKBENCH_DEFAULTS: dict[str, str] = {
+    "AUTONOVEL_WRITER_MODEL": "gemini-3.1-pro-preview",
+    "AUTONOVEL_JUDGE_MODEL": "gemini-3-flash-preview",
+    "AUTONOVEL_REVIEW_MODEL": "gemini-3.1-pro-preview",
+    "AUTONOVEL_API_BASE_URL": "https://generativelanguage.googleapis.com",
+}
 
 # DB setting key → environment variable name
 _ANTHROPIC_ENV_MAP: dict[str, str] = {
@@ -135,6 +141,66 @@ class ConfigService:
 
     async def set_setting(self, key: str, value: str) -> None:
         await self._setting_repo.set(key, value)
+
+    async def build_novel_workbench_runtime_env(self) -> dict[str, str]:
+        """Resolve the runtime env snapshot used by Novel Workbench.
+
+        The workbench runs autonovel in an isolated workspace. It should read
+        the active Gemini provider credential from the DB directly instead of
+        relying on uvicorn process env having been pre-synced.
+        """
+
+        all_settings = await self.get_all_settings()
+        gemini_cfg = await self.get_provider_config("gemini-aistudio")
+        cred_repo = CredentialRepository(self._provider_repo.session)
+        active_credential = await cred_repo.get_active("gemini-aistudio")
+        if active_credential:
+            active_credential.overlay_config(gemini_cfg)
+
+        script_backend = all_settings.get("text_backend_script", "").strip()
+        writer_model_from_backend = ""
+        if "/" in script_backend:
+            provider_id, model_id = script_backend.split("/", 1)
+            if provider_id in {"gemini-aistudio", "gemini-vertex"}:
+                writer_model_from_backend = model_id.strip()
+
+        api_key = (
+            all_settings.get("gemini_api_key", "").strip()
+            or gemini_cfg.get("api_key", "").strip()
+            or os.environ.get("GEMINI_API_KEY", "").strip()
+            or os.environ.get("GOOGLE_API_KEY", "").strip()
+        )
+        api_base_url = (
+            all_settings.get("gemini_base_url", "").strip()
+            or gemini_cfg.get("base_url", "").strip()
+            or os.environ.get("AUTONOVEL_API_BASE_URL", "").strip()
+            or os.environ.get("GEMINI_BASE_URL", "").strip()
+            or _NOVEL_WORKBENCH_DEFAULTS["AUTONOVEL_API_BASE_URL"]
+        )
+
+        writer_model = (
+            all_settings.get("autonovel_writer_model", "").strip()
+            or writer_model_from_backend
+            or _NOVEL_WORKBENCH_DEFAULTS["AUTONOVEL_WRITER_MODEL"]
+        )
+        review_model = (
+            all_settings.get("autonovel_review_model", "").strip()
+            or writer_model_from_backend
+            or _NOVEL_WORKBENCH_DEFAULTS["AUTONOVEL_REVIEW_MODEL"]
+        )
+        judge_model = (
+            all_settings.get("autonovel_judge_model", "").strip() or _NOVEL_WORKBENCH_DEFAULTS["AUTONOVEL_JUDGE_MODEL"]
+        )
+
+        return {
+            "GEMINI_API_KEY": api_key,
+            "AUTONOVEL_WRITER_MODEL": writer_model,
+            "AUTONOVEL_JUDGE_MODEL": judge_model,
+            "AUTONOVEL_REVIEW_MODEL": review_model,
+            "AUTONOVEL_API_BASE_URL": api_base_url,
+            "FAL_KEY": os.environ.get("FAL_KEY", "").strip(),
+            "ELEVENLABS_API_KEY": os.environ.get("ELEVENLABS_API_KEY", "").strip(),
+        }
 
     async def get_default_video_backend(self) -> tuple[str, str]:
         raw = await self._setting_repo.get("default_video_backend", _DEFAULT_VIDEO_BACKEND)

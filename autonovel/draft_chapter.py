@@ -9,21 +9,18 @@ import re
 import sys
 from pathlib import Path
 
-from anthropic_compat import build_headers, messages_url
+from anthropic_compat import generate_text
 from dotenv import load_dotenv
 
 BASE_DIR = Path(__file__).parent
 load_dotenv(BASE_DIR / ".env")
 
-WRITER_MODEL = os.environ.get("AUTONOVEL_WRITER_MODEL", "claude-sonnet-4-6")
-API_BASE = os.environ.get("AUTONOVEL_API_BASE_URL", "https://api.anthropic.com")
+WRITER_MODEL = os.environ.get("AUTONOVEL_WRITER_MODEL", "gemini-3.1-pro-preview")
+API_BASE = os.environ.get("AUTONOVEL_API_BASE_URL", "https://generativelanguage.googleapis.com")
 CHAPTERS_DIR = BASE_DIR / "chapters"
 
 
 def call_writer(prompt, max_tokens=16000):
-    import httpx
-
-    headers = build_headers(beta="context-1m-2025-08-07")
     payload = {
         "model": WRITER_MODEL,
         "max_tokens": max_tokens,
@@ -39,9 +36,7 @@ def call_writer(prompt, max_tokens=16000):
         ),
         "messages": [{"role": "user", "content": prompt}],
     }
-    resp = httpx.post(messages_url(API_BASE), headers=headers, json=payload, timeout=600)
-    resp.raise_for_status()
-    return resp.json()["content"][0]["text"]
+    return generate_text(payload, timeout=600, base_url=API_BASE)
 
 
 def load_file(path):

@@ -15,21 +15,18 @@ import sys
 from datetime import datetime
 from pathlib import Path
 
-from anthropic_compat import build_headers, messages_url
+from anthropic_compat import generate_text
 from dotenv import load_dotenv
 
 BASE_DIR = Path(__file__).parent
 load_dotenv(BASE_DIR / ".env")
 
-JUDGE_MODEL = os.environ.get("AUTONOVEL_JUDGE_MODEL", "claude-opus-4-6")
-API_BASE = os.environ.get("AUTONOVEL_API_BASE_URL", "https://api.anthropic.com")
+JUDGE_MODEL = os.environ.get("AUTONOVEL_JUDGE_MODEL", "gemini-3-flash-preview")
+API_BASE = os.environ.get("AUTONOVEL_API_BASE_URL", "https://generativelanguage.googleapis.com")
 CHAPTERS_DIR = BASE_DIR / "chapters"
 
 
 def call_judge(prompt, max_tokens=4000):
-    import httpx
-
-    headers = build_headers()
     payload = {
         "model": JUDGE_MODEL,
         "max_tokens": max_tokens,
@@ -42,9 +39,7 @@ def call_judge(prompt, max_tokens=4000):
         ),
         "messages": [{"role": "user", "content": prompt}],
     }
-    resp = httpx.post(messages_url(API_BASE), headers=headers, json=payload, timeout=300)
-    resp.raise_for_status()
-    return resp.json()["content"][0]["text"]
+    return generate_text(payload, timeout=300, base_url=API_BASE)
 
 
 def parse_json(text):

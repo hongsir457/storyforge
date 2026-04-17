@@ -25,18 +25,14 @@ from pathlib import Path
 BASE_DIR = Path(__file__).parent
 
 # Load .env file if present
-from anthropic_compat import build_headers, messages_url
+from anthropic_compat import generate_text
 from dotenv import load_dotenv
 
 load_dotenv(BASE_DIR / ".env")
 
-# Judge uses Opus 4.6 (harsh, critical). Writer uses Sonnet 4.6 (fast, long context).
-# Intentionally different to avoid self-congratulation.
-JUDGE_MODEL = os.environ.get("AUTONOVEL_JUDGE_MODEL", "claude-opus-4-6")
-API_BASE_URL = os.environ.get("AUTONOVEL_API_BASE_URL", "https://api.anthropic.com")
-
-# Beta header to unlock 1M context window on both Opus 4.6 and Sonnet 4.6
-ANTHROPIC_BETA = "context-1m-2025-08-07"
+# Judge uses Gemini Flash by default to keep evaluation cheaper than drafting.
+JUDGE_MODEL = os.environ.get("AUTONOVEL_JUDGE_MODEL", "gemini-3-flash-preview")
+API_BASE_URL = os.environ.get("AUTONOVEL_API_BASE_URL", "https://generativelanguage.googleapis.com")
 CHAPTERS_DIR = BASE_DIR / "chapters"
 EVAL_LOG_DIR = BASE_DIR / "eval_logs"
 EVAL_LOG_DIR.mkdir(exist_ok=True)
@@ -313,10 +309,7 @@ def load_all_chapters():
 
 
 def call_judge(prompt, max_tokens=2000):
-    """Call the Anthropic judge LLM and return its response text."""
-    import httpx
-
-    headers = build_headers(beta=ANTHROPIC_BETA)
+    """Call the Gemini judge LLM and return its response text."""
     payload = {
         "model": JUDGE_MODEL,
         "max_tokens": max_tokens,
@@ -328,15 +321,7 @@ def call_judge(prompt, max_tokens=2000):
             {"role": "user", "content": prompt},
         ],
     }
-
-    resp = httpx.post(
-        messages_url(API_BASE_URL),
-        headers=headers,
-        json=payload,
-        timeout=180,
-    )
-    resp.raise_for_status()
-    return resp.json()["content"][0]["text"]
+    return generate_text(payload, timeout=180, base_url=API_BASE_URL)
 
 
 def parse_json_response(text):

@@ -637,18 +637,18 @@ def run_revision(state: dict, max_cycles: int = MAX_REVISION_CYCLES) -> dict:
         prev_score = novel_score
 
     # =========================================================
-    # PHASE 3b: OPUS REVIEW LOOP (deep, prose-level refinement)
+    # PHASE 3b: DEEP REVIEW LOOP (deep, prose-level refinement)
     # =========================================================
     review_py = BASE_DIR / "review.py"
     if review_py.exists():
-        banner("PHASE 3b: OPUS REVIEW LOOP", "=")
+        banner("PHASE 3b: DEEP REVIEW LOOP", "=")
 
         max_review_rounds = 4
         for rnd in range(1, max_review_rounds + 1):
-            banner(f"Opus Review Round {rnd}/{max_review_rounds}", "-")
+            banner(f"Deep Review Round {rnd}/{max_review_rounds}", "-")
 
             # Step 1: Generate the review
-            step("Sending manuscript to Opus for review...")
+            step("Sending manuscript to reviewer model...")
             uv_run("review.py --output reviews.md", timeout=900)
 
             # Step 2: Parse the review
@@ -692,7 +692,7 @@ def run_revision(state: dict, max_cycles: int = MAX_REVISION_CYCLES) -> dict:
                         ch_num = int(ch_match.group(1))
                         step(f"Revising Ch {ch_num} from review brief...")
                         uv_run(f"gen_revision.py {ch_num} {brief}", timeout=600)
-                        git_add_commit(f"review round {rnd}: revise ch{ch_num:02d} from Opus feedback")
+                        git_add_commit(f"review round {rnd}: revise ch{ch_num:02d} from reviewer feedback")
 
             # Step 5: Mechanical fixes from review
             # Run slop pass on any mentioned patterns
@@ -704,7 +704,7 @@ def run_revision(state: dict, max_cycles: int = MAX_REVISION_CYCLES) -> dict:
 
             step(f"Review round {rnd} complete.")
 
-        banner("OPUS REVIEW LOOP COMPLETE")
+        banner("DEEP REVIEW LOOP COMPLETE")
 
     state["phase"] = "export"
     state["current_focus"] = "export"

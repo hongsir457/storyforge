@@ -2,7 +2,7 @@
 """
 Parse novel chapters into speaker-attributed audiobook scripts.
 
-For each chapter, uses Claude to:
+For each chapter, uses Gemini to:
   - Identify every dialogue line and its speaker
   - Tag narration as NARRATOR
   - Add [audio tags] for emotional delivery based on context
@@ -19,14 +19,14 @@ import re
 import sys
 from pathlib import Path
 
-from anthropic_compat import build_headers, messages_url
+from anthropic_compat import generate_text
 from dotenv import load_dotenv
 
 BASE_DIR = Path(__file__).parent
 load_dotenv(BASE_DIR / ".env", override=True)
 
-WRITER_MODEL = os.environ.get("AUTONOVEL_WRITER_MODEL", "claude-sonnet-4-6")
-API_BASE = os.environ.get("AUTONOVEL_API_BASE_URL", "https://api.anthropic.com")
+WRITER_MODEL = os.environ.get("AUTONOVEL_WRITER_MODEL", "gemini-3.1-pro-preview")
+API_BASE = os.environ.get("AUTONOVEL_API_BASE_URL", "https://generativelanguage.googleapis.com")
 
 CHAPTERS_DIR = BASE_DIR / "chapters"
 AUDIO_DIR = BASE_DIR / "audiobook"
@@ -67,22 +67,17 @@ Rules:
 """
 
 
-def call_claude(prompt, max_tokens=8000):
-    import httpx
-
-    resp = httpx.post(
-        messages_url(API_BASE),
-        headers=build_headers(beta="context-1m-2025-08-07"),
-        json={
+def call_writer(prompt, max_tokens=8000):
+    return generate_text(
+        {
             "model": WRITER_MODEL,
             "max_tokens": max_tokens,
             "temperature": 0.1,
             "messages": [{"role": "user", "content": prompt}],
         },
         timeout=300,
+        base_url=API_BASE,
     )
-    resp.raise_for_status()
-    return resp.json()["content"][0]["text"]
 
 
 def parse_chapter(ch_num):
@@ -126,7 +121,7 @@ CHAPTER {ch_num}: "{title}" ({wc} words)
 Output the JSON array only. No other text."""
 
     print(f"  Ch {ch_num}: parsing '{title}' ({wc}w)...", end="", flush=True)
-    result = call_claude(prompt)
+    result = call_writer(prompt)
 
     # Extract JSON from response
     result = result.strip()

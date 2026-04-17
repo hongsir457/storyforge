@@ -13,21 +13,17 @@ import os
 import sys
 from pathlib import Path
 
-from anthropic_compat import auth_error_message, build_headers, has_auth_config, messages_url
+from anthropic_compat import auth_error_message, generate_text, has_auth_config
 from dotenv import load_dotenv
 
 BASE_DIR = Path(__file__).parent
 load_dotenv(BASE_DIR / ".env")
 
-WRITER_MODEL = os.environ.get("AUTONOVEL_WRITER_MODEL", "claude-sonnet-4-6-20250217")
-API_BASE_URL = os.environ.get("AUTONOVEL_API_BASE_URL", "https://api.anthropic.com")
-ANTHROPIC_BETA = "context-1m-2025-08-07"
+WRITER_MODEL = os.environ.get("AUTONOVEL_WRITER_MODEL", "gemini-3.1-pro-preview")
+API_BASE_URL = os.environ.get("AUTONOVEL_API_BASE_URL", "https://generativelanguage.googleapis.com")
 
 
 def call_writer(prompt, max_tokens=4000):
-    import httpx
-
-    headers = build_headers(beta=ANTHROPIC_BETA)
     payload = {
         "model": WRITER_MODEL,
         "max_tokens": max_tokens,
@@ -42,14 +38,7 @@ def call_writer(prompt, max_tokens=4000):
         ),
         "messages": [{"role": "user", "content": prompt}],
     }
-    resp = httpx.post(
-        messages_url(API_BASE_URL),
-        headers=headers,
-        json=payload,
-        timeout=120,
-    )
-    resp.raise_for_status()
-    return resp.json()["content"][0]["text"]
+    return generate_text(payload, timeout=120, base_url=API_BASE_URL)
 
 
 GENERATE_PROMPT = """Generate {count} fantasy novel seed concepts. Each should be

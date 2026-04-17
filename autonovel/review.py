@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """
-Deep manuscript review via Opus.
+Deep manuscript review via Gemini.
 
-Sends the full novel to Claude Opus for dual-persona review:
+Sends the full novel to Gemini for dual-persona review:
   1. Literary critic (newspaper book review style)
   2. Professor of fiction (specific, actionable craft suggestions)
 
@@ -20,15 +20,15 @@ import sys
 from datetime import datetime
 from pathlib import Path
 
-from anthropic_compat import auth_error_message, build_headers, has_auth_config, messages_url
+from anthropic_compat import auth_error_message, generate_text, has_auth_config
 from dotenv import load_dotenv
 
 BASE_DIR = Path(__file__).parent
 load_dotenv(BASE_DIR / ".env", override=True)
 
-# Use Opus for reviews — it's the best at literary analysis
-REVIEW_MODEL = os.environ.get("AUTONOVEL_REVIEW_MODEL", "claude-opus-4-6")
-API_BASE = os.environ.get("AUTONOVEL_API_BASE_URL", "https://api.anthropic.com")
+# Use the configured Gemini review model for prose-level analysis.
+REVIEW_MODEL = os.environ.get("AUTONOVEL_REVIEW_MODEL", "gemini-3.1-pro-preview")
+API_BASE = os.environ.get("AUTONOVEL_API_BASE_URL", "https://generativelanguage.googleapis.com")
 
 CHAPTERS_DIR = BASE_DIR / "chapters"
 LOGS_DIR = BASE_DIR / "edit_logs"
@@ -38,11 +38,8 @@ REVIEW_PROMPT = """Read the below novel, "{title}". Review it first as a literar
 {manuscript}"""
 
 
-def call_opus(prompt, max_tokens=8000):
-    """Call Opus with the full manuscript."""
-    import httpx
-
-    headers = build_headers(beta="context-1m-2025-08-07")
+def call_reviewer(prompt, max_tokens=8000):
+    """Call the review model with the full manuscript."""
     payload = {
         "model": REVIEW_MODEL,
         "max_tokens": max_tokens,
@@ -50,14 +47,7 @@ def call_opus(prompt, max_tokens=8000):
         "messages": [{"role": "user", "content": prompt}],
     }
     print(f"Sending to {REVIEW_MODEL} ({len(prompt):,} chars)...", file=sys.stderr)
-    resp = httpx.post(
-        messages_url(API_BASE),
-        headers=headers,
-        json=payload,
-        timeout=600,
-    )
-    resp.raise_for_status()
-    return resp.json()["content"][0]["text"]
+    return generate_text(payload, timeout=600, base_url=API_BASE)
 
 
 def get_title():
@@ -225,7 +215,7 @@ def cmd_review(args):
 
     prompt = REVIEW_PROMPT.format(title=title, manuscript=manuscript)
 
-    review_text = call_opus(prompt)
+    review_text = call_reviewer(prompt)
 
     # Save raw review
     LOGS_DIR.mkdir(exist_ok=True)
@@ -286,7 +276,7 @@ def cmd_parse(args):
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Deep manuscript review via Opus")
+    parser = argparse.ArgumentParser(description="Deep manuscript review via Gemini")
     parser.add_argument("--output", "-o", default=None, help="Save human-readable review to file")
     parser.add_argument("--parse", action="store_true", help="Parse most recent review")
 

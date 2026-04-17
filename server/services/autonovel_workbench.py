@@ -8,6 +8,7 @@ import subprocess
 import sys
 import textwrap
 import uuid
+from collections.abc import Mapping
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
@@ -21,11 +22,10 @@ class NovelWorkbenchError(RuntimeError):
 
 
 class NovelWorkbenchService:
-    OPENROUTER_ANTHROPIC_BASE_URL = "https://openrouter.ai/api"
     ACTIVE_STATUSES = {"queued", "running"}
     TERMINAL_STATUSES = {"succeeded", "failed", "cancelled"}
     PREVIEW_LIMIT_BYTES = 120_000
-    AUTH_STATUS_KEY = "ANTHROPIC_API_KEY_OR_AUTH_TOKEN"
+    AUTH_STATUS_KEY = "GEMINI_API_KEY"
     REQUIRED_RUNTIME_ENV = (
         "AUTONOVEL_WRITER_MODEL",
         "AUTONOVEL_JUDGE_MODEL",
@@ -33,8 +33,7 @@ class NovelWorkbenchService:
         "AUTONOVEL_API_BASE_URL",
     )
     RUNTIME_ENV_FILE_KEYS = (
-        "ANTHROPIC_API_KEY",
-        "ANTHROPIC_AUTH_TOKEN",
+        "GEMINI_API_KEY",
         "AUTONOVEL_WRITER_MODEL",
         "AUTONOVEL_JUDGE_MODEL",
         "AUTONOVEL_REVIEW_MODEL",
@@ -42,10 +41,10 @@ class NovelWorkbenchService:
     )
     OPTIONAL_RUNTIME_ENV = ("FAL_KEY", "ELEVENLABS_API_KEY")
     RUNTIME_ENV_DEFAULTS = {
-        "AUTONOVEL_WRITER_MODEL": "claude-sonnet-4-6",
-        "AUTONOVEL_JUDGE_MODEL": "claude-sonnet-4-6",
-        "AUTONOVEL_REVIEW_MODEL": "claude-opus-4-6",
-        "AUTONOVEL_API_BASE_URL": "https://api.anthropic.com",
+        "AUTONOVEL_WRITER_MODEL": "gemini-3.1-pro-preview",
+        "AUTONOVEL_JUDGE_MODEL": "gemini-3-flash-preview",
+        "AUTONOVEL_REVIEW_MODEL": "gemini-3.1-pro-preview",
+        "AUTONOVEL_API_BASE_URL": "https://generativelanguage.googleapis.com",
     }
     GENERATED_OUTPUT_NAMES = (
         "chapters",
@@ -111,6 +110,7 @@ class NovelWorkbenchService:
         self._jobs: dict[str, dict[str, Any]] = {}
         self._tasks: dict[str, asyncio.Task[None]] = {}
         self._processes: dict[str, asyncio.subprocess.Process] = {}
+        self._runtime_env_overrides: dict[str, dict[str, str]] = {}
         self._lock = asyncio.Lock()
 
     async def startup(self) -> None:
@@ -140,13 +140,13 @@ class NovelWorkbenchService:
         if tasks:
             await asyncio.gather(*tasks, return_exceptions=True)
 
-    def status_snapshot(self) -> dict[str, Any]:
-        env_status = self._runtime_env_status()
+    def status_snapshot(self, runtime_env: Mapping[str, str] | None = None) -> dict[str, Any]:
+        env_status = self._runtime_env_status(runtime_env)
         requirements = {
             "workspace_root_exists": self.workspace_root.exists(),
             "autonovel_repo_exists": self.autonovel_source_dir.exists(),
             "importer_exists": self.importer_script.exists(),
-            "autonovel_env_exists": self._autonovel_env_ready(),
+            "autonovel_env_exists": self._autonovel_env_ready(runtime_env),
             "git_available": shutil.which("git") is not None,
             "uv_available": shutil.which("uv") is not None,
         }
@@ -156,7 +156,7 @@ class NovelWorkbenchService:
             "autonovel_source_dir": str(self.autonovel_source_dir),
             "importer_script": str(self.importer_script),
             "autonovel_env_source": str(self.autonovel_env_source),
-            "autonovel_env_mode": self._autonovel_env_mode(),
+            "autonovel_env_mode": self._autonovel_env_mode(runtime_env),
             "env_status": env_status,
             "requirements": requirements,
         }
@@ -180,6 +180,7 @@ class NovelWorkbenchService:
         style: str | None = None,
         aspect_ratio: str | None = None,
         default_duration: int | None = None,
+        runtime_env: Mapping[str, str] | None = None,
     ) -> dict[str, Any]:
         title = title.strip()
         seed_text = seed_text.strip()
@@ -238,6 +239,10 @@ class NovelWorkbenchService:
                 "finished_at": None,
             }
             self._jobs[job_id] = job
+            if runtime_env is not None:
+                self._runtime_env_overrides[job_id] = dict(runtime_env)
+            else:
+                self._runtime_env_overrides.pop(job_id, None)
             self._save_jobs_locked()
             self._tasks[job_id] = asyncio.create_task(self._run_job(job_id), name=f"novel-workbench-{job_id}")
             return self._job_view(job)
@@ -275,6 +280,7 @@ class NovelWorkbenchService:
 
             deleted_job = self._job_view(job)
             self._jobs.pop(job_id, None)
+            self._runtime_env_overrides.pop(job_id, None)
             self._save_jobs_locked()
 
         workspace_dir = Path(job["workspace_dir"])
@@ -469,7 +475,8 @@ class NovelWorkbenchService:
             await self._mark_job(
                 job_id, status="running", stage="preparing", started_at=self._now(), error_message=None
             )
-            self._assert_ready()
+            runtime_env = self._runtime_env_overrides.get(job_id)
+            self._assert_ready(runtime_env)
 
             job = await self._get_raw_job(job_id)
             if job is None:
@@ -477,13 +484,14 @@ class NovelWorkbenchService:
 
             workspace_dir = Path(job["workspace_dir"])
             log_path = Path(job["log_path"])
-            await self._prepare_workspace(job, workspace_dir)
+            await self._prepare_workspace(job, workspace_dir, runtime_env)
             await self._run_command(
                 job_id,
                 ["uv", "sync"],
                 cwd=workspace_dir,
                 log_path=log_path,
                 stage="syncing",
+                runtime_env=runtime_env,
             )
             await self._run_command(
                 job_id,
@@ -491,6 +499,7 @@ class NovelWorkbenchService:
                 cwd=workspace_dir,
                 log_path=log_path,
                 stage="pipeline",
+                runtime_env=runtime_env,
             )
             await self._run_command(
                 job_id,
@@ -515,6 +524,7 @@ class NovelWorkbenchService:
                 cwd=self.workspace_root,
                 log_path=log_path,
                 stage="importing",
+                runtime_env=runtime_env,
             )
             await self._mark_job(
                 job_id,
@@ -550,8 +560,14 @@ class NovelWorkbenchService:
         finally:
             self._processes.pop(job_id, None)
             self._tasks.pop(job_id, None)
+            self._runtime_env_overrides.pop(job_id, None)
 
-    async def _prepare_workspace(self, job: dict[str, Any], workspace_dir: Path) -> None:
+    async def _prepare_workspace(
+        self,
+        job: dict[str, Any],
+        workspace_dir: Path,
+        runtime_env: Mapping[str, str] | None = None,
+    ) -> None:
         if workspace_dir.exists():
             shutil.rmtree(workspace_dir, ignore_errors=True)
         workspace_dir.parent.mkdir(parents=True, exist_ok=True)
@@ -570,7 +586,7 @@ class NovelWorkbenchService:
                 ignore=shutil.ignore_patterns(".git", ".venv", "__pycache__", ".pytest_cache", ".env"),
             )
         self._reset_workspace_outputs(workspace_dir)
-        self._materialize_autonovel_env(workspace_dir)
+        self._materialize_autonovel_env(workspace_dir, runtime_env)
         (workspace_dir / "seed.txt").write_text(str(job["seed_text"]).strip() + "\n", encoding="utf-8")
         self._initialize_workspace_git_repo(workspace_dir)
 
@@ -582,12 +598,15 @@ class NovelWorkbenchService:
         cwd: Path,
         log_path: Path,
         stage: str,
+        runtime_env: Mapping[str, str] | None = None,
     ) -> None:
         await self._mark_job(job_id, stage=stage)
         env = os.environ.copy()
         env.setdefault("PYTHONUTF8", "1")
         env.setdefault("UV_LINK_MODE", "copy")
         env.pop("VIRTUAL_ENV", None)
+        if runtime_env:
+            env.update({key: str(value).strip() for key, value in runtime_env.items()})
 
         log_path.parent.mkdir(parents=True, exist_ok=True)
         with open(log_path, "a", encoding="utf-8") as log_handle:
@@ -616,24 +635,30 @@ class NovelWorkbenchService:
         if returncode != 0:
             raise NovelWorkbenchError(f"Command failed with exit code {returncode}: {' '.join(command)}")
 
-    def _assert_ready(self) -> None:
-        status = self.status_snapshot()
+    def _assert_ready(self, runtime_env: Mapping[str, str] | None = None) -> None:
+        status = self.status_snapshot(runtime_env)
         missing = [key for key, value in status["requirements"].items() if key != "all_ready" and not value]
         if missing:
             raise NovelWorkbenchError("Novel workbench is not ready: " + ", ".join(missing))
 
-    def _autonovel_env_ready(self) -> bool:
+    def _autonovel_env_ready(self, runtime_env: Mapping[str, str] | None = None) -> bool:
+        if runtime_env is not None:
+            return not self._runtime_env_status(runtime_env)["missing_required"]
         return self.autonovel_env_source.exists() or not self._runtime_env_status()["missing_required"]
 
-    def _autonovel_env_mode(self) -> str:
+    def _autonovel_env_mode(self, runtime_env: Mapping[str, str] | None = None) -> str:
+        if runtime_env is not None:
+            if self._autonovel_env_ready(runtime_env):
+                return "generated"
+            return "missing"
         if self.autonovel_env_source.exists():
             return "file"
         if self._autonovel_env_ready():
             return "generated"
         return "missing"
 
-    def _runtime_env_status(self) -> dict[str, Any]:
-        values = self._collect_runtime_env_values()
+    def _runtime_env_status(self, runtime_env: Mapping[str, str] | None = None) -> dict[str, Any]:
+        values = self._collect_runtime_env_values(runtime_env)
         required = {
             self.AUTH_STATUS_KEY: self._runtime_auth_ready(values),
             **{key: bool(values.get(key, "").strip()) for key in self.REQUIRED_RUNTIME_ENV},
@@ -646,57 +671,49 @@ class NovelWorkbenchService:
             "missing_optional": [key for key, ok in optional.items() if not ok],
         }
 
-    def _collect_runtime_env_values(self) -> dict[str, str]:
-        api_key = os.environ.get("ANTHROPIC_API_KEY", "").strip()
-        auth_token = os.environ.get("ANTHROPIC_AUTH_TOKEN", "").strip()
-        explicit_api_base_url = (
-            os.environ.get("AUTONOVEL_API_BASE_URL") or os.environ.get("ANTHROPIC_BASE_URL") or ""
+    def _collect_runtime_env_values(self, runtime_env: Mapping[str, str] | None = None) -> dict[str, str]:
+        api_key = (os.environ.get("GEMINI_API_KEY") or os.environ.get("GOOGLE_API_KEY") or "").strip()
+        api_base_url = (
+            os.environ.get("AUTONOVEL_API_BASE_URL")
+            or os.environ.get("GEMINI_BASE_URL")
+            or self.RUNTIME_ENV_DEFAULTS["AUTONOVEL_API_BASE_URL"]
         ).strip()
 
-        if explicit_api_base_url:
-            api_base_url = explicit_api_base_url
-        elif auth_token:
-            api_base_url = self.OPENROUTER_ANTHROPIC_BASE_URL
-        else:
-            api_base_url = self.RUNTIME_ENV_DEFAULTS["AUTONOVEL_API_BASE_URL"]
-
-        return {
-            "ANTHROPIC_API_KEY": api_key,
-            "ANTHROPIC_AUTH_TOKEN": auth_token,
+        values = {
+            "GEMINI_API_KEY": api_key,
             "AUTONOVEL_WRITER_MODEL": (
-                os.environ.get("AUTONOVEL_WRITER_MODEL")
-                or os.environ.get("ANTHROPIC_DEFAULT_SONNET_MODEL")
-                or os.environ.get("ANTHROPIC_MODEL")
-                or self.RUNTIME_ENV_DEFAULTS["AUTONOVEL_WRITER_MODEL"]
+                os.environ.get("AUTONOVEL_WRITER_MODEL") or self.RUNTIME_ENV_DEFAULTS["AUTONOVEL_WRITER_MODEL"]
             ).strip(),
             "AUTONOVEL_JUDGE_MODEL": (
-                os.environ.get("AUTONOVEL_JUDGE_MODEL")
-                or os.environ.get("ANTHROPIC_DEFAULT_SONNET_MODEL")
-                or os.environ.get("ANTHROPIC_MODEL")
-                or self.RUNTIME_ENV_DEFAULTS["AUTONOVEL_JUDGE_MODEL"]
+                os.environ.get("AUTONOVEL_JUDGE_MODEL") or self.RUNTIME_ENV_DEFAULTS["AUTONOVEL_JUDGE_MODEL"]
             ).strip(),
             "AUTONOVEL_REVIEW_MODEL": (
-                os.environ.get("AUTONOVEL_REVIEW_MODEL")
-                or os.environ.get("ANTHROPIC_DEFAULT_OPUS_MODEL")
-                or self.RUNTIME_ENV_DEFAULTS["AUTONOVEL_REVIEW_MODEL"]
+                os.environ.get("AUTONOVEL_REVIEW_MODEL") or self.RUNTIME_ENV_DEFAULTS["AUTONOVEL_REVIEW_MODEL"]
             ).strip(),
             "AUTONOVEL_API_BASE_URL": api_base_url,
             "FAL_KEY": os.environ.get("FAL_KEY", "").strip(),
             "ELEVENLABS_API_KEY": os.environ.get("ELEVENLABS_API_KEY", "").strip(),
         }
+        if runtime_env:
+            for key, value in runtime_env.items():
+                values[key] = str(value).strip()
+        return values
 
     def _runtime_auth_ready(self, values: dict[str, str]) -> bool:
-        return bool(values.get("ANTHROPIC_API_KEY", "").strip() or values.get("ANTHROPIC_AUTH_TOKEN", "").strip())
+        return bool(values.get("GEMINI_API_KEY", "").strip())
 
-    def _materialize_autonovel_env(self, workspace_dir: Path) -> None:
+    def _materialize_autonovel_env(self, workspace_dir: Path, runtime_env: Mapping[str, str] | None = None) -> None:
         destination = workspace_dir / ".env"
+        if runtime_env is not None:
+            destination.write_text(self._render_runtime_env(runtime_env), encoding="utf-8")
+            return
         if self.autonovel_env_source.exists():
             shutil.copyfile(self.autonovel_env_source, destination)
             return
         destination.write_text(self._render_runtime_env(), encoding="utf-8")
 
-    def _render_runtime_env(self) -> str:
-        values = self._collect_runtime_env_values()
+    def _render_runtime_env(self, runtime_env: Mapping[str, str] | None = None) -> str:
+        values = self._collect_runtime_env_values(runtime_env)
         missing_required: list[str] = []
         if not self._runtime_auth_ready(values):
             missing_required.append(self.AUTH_STATUS_KEY)

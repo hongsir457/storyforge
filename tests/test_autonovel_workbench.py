@@ -23,12 +23,11 @@ def _make_workbench_layout(root: Path) -> None:
     (root / "autonovel" / ".env.example").write_text(
         "\n".join(
             [
-                "ANTHROPIC_API_KEY=",
-                "ANTHROPIC_AUTH_TOKEN=",
-                "AUTONOVEL_WRITER_MODEL=claude-sonnet-4-6",
-                "AUTONOVEL_JUDGE_MODEL=claude-sonnet-4-6",
-                "AUTONOVEL_REVIEW_MODEL=claude-opus-4-6",
-                "AUTONOVEL_API_BASE_URL=https://api.anthropic.com",
+                "GEMINI_API_KEY=",
+                "AUTONOVEL_WRITER_MODEL=gemini-3.1-pro-preview",
+                "AUTONOVEL_JUDGE_MODEL=gemini-3-flash-preview",
+                "AUTONOVEL_REVIEW_MODEL=gemini-3.1-pro-preview",
+                "AUTONOVEL_API_BASE_URL=https://generativelanguage.googleapis.com",
                 "FAL_KEY=",
                 "ELEVENLABS_API_KEY=",
             ]
@@ -41,14 +40,14 @@ def _make_workbench_layout(root: Path) -> None:
 def test_status_snapshot_accepts_generated_runtime_env(tmp_path, monkeypatch):
     _make_workbench_layout(tmp_path)
     monkeypatch.delenv("AUTONOVEL_ENV_SOURCE", raising=False)
-    monkeypatch.setenv("ANTHROPIC_API_KEY", "sk-ant-test")
+    monkeypatch.setenv("GEMINI_API_KEY", "gemini-test-key")
 
     service = NovelWorkbenchService(tmp_path)
     status = service.status_snapshot()
 
     assert status["requirements"]["autonovel_env_exists"] is True
     assert status["autonovel_env_mode"] == "generated"
-    assert status["env_status"]["required"]["ANTHROPIC_API_KEY_OR_AUTH_TOKEN"] is True
+    assert status["env_status"]["required"]["GEMINI_API_KEY"] is True
     assert status["env_status"]["optional"]["FAL_KEY"] is False
     assert status["env_status"]["missing_required"] == []
 
@@ -56,7 +55,7 @@ def test_status_snapshot_accepts_generated_runtime_env(tmp_path, monkeypatch):
 def test_materialize_runtime_env_uses_defaults_when_source_file_missing(tmp_path, monkeypatch):
     _make_workbench_layout(tmp_path)
     monkeypatch.delenv("AUTONOVEL_ENV_SOURCE", raising=False)
-    monkeypatch.setenv("ANTHROPIC_API_KEY", "sk-ant-test")
+    monkeypatch.setenv("GEMINI_API_KEY", "gemini-test-key")
     monkeypatch.delenv("AUTONOVEL_WRITER_MODEL", raising=False)
     monkeypatch.delenv("AUTONOVEL_JUDGE_MODEL", raising=False)
     monkeypatch.delenv("AUTONOVEL_REVIEW_MODEL", raising=False)
@@ -69,33 +68,31 @@ def test_materialize_runtime_env_uses_defaults_when_source_file_missing(tmp_path
     service._materialize_autonovel_env(workspace_dir)
 
     rendered = (workspace_dir / ".env").read_text(encoding="utf-8")
-    assert "ANTHROPIC_API_KEY=sk-ant-test" in rendered
-    assert "AUTONOVEL_WRITER_MODEL=claude-sonnet-4-6" in rendered
-    assert "AUTONOVEL_JUDGE_MODEL=claude-sonnet-4-6" in rendered
-    assert "AUTONOVEL_REVIEW_MODEL=claude-opus-4-6" in rendered
-    assert "AUTONOVEL_API_BASE_URL=https://api.anthropic.com" in rendered
+    assert "GEMINI_API_KEY=gemini-test-key" in rendered
+    assert "AUTONOVEL_WRITER_MODEL=gemini-3.1-pro-preview" in rendered
+    assert "AUTONOVEL_JUDGE_MODEL=gemini-3-flash-preview" in rendered
+    assert "AUTONOVEL_REVIEW_MODEL=gemini-3.1-pro-preview" in rendered
+    assert "AUTONOVEL_API_BASE_URL=https://generativelanguage.googleapis.com" in rendered
 
 
-def test_status_snapshot_accepts_openrouter_auth_token(tmp_path, monkeypatch):
+def test_status_snapshot_accepts_gemini_api_key(tmp_path, monkeypatch):
     _make_workbench_layout(tmp_path)
     monkeypatch.delenv("AUTONOVEL_ENV_SOURCE", raising=False)
-    monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
-    monkeypatch.setenv("ANTHROPIC_AUTH_TOKEN", "sk-or-test")
+    monkeypatch.setenv("GEMINI_API_KEY", "gemini-test-key")
 
     service = NovelWorkbenchService(tmp_path)
     status = service.status_snapshot()
 
     assert status["requirements"]["autonovel_env_exists"] is True
-    assert status["env_status"]["required"]["ANTHROPIC_API_KEY_OR_AUTH_TOKEN"] is True
+    assert status["env_status"]["required"]["GEMINI_API_KEY"] is True
 
 
-def test_materialize_runtime_env_prefers_openrouter_base_when_auth_token_exists(tmp_path, monkeypatch):
+def test_materialize_runtime_env_prefers_gemini_base_url_when_env_present(tmp_path, monkeypatch):
     _make_workbench_layout(tmp_path)
     monkeypatch.delenv("AUTONOVEL_ENV_SOURCE", raising=False)
-    monkeypatch.setenv("ANTHROPIC_API_KEY", "sk-ant-test")
-    monkeypatch.setenv("ANTHROPIC_AUTH_TOKEN", "sk-or-test")
+    monkeypatch.setenv("GEMINI_API_KEY", "gemini-test-key")
     monkeypatch.delenv("AUTONOVEL_API_BASE_URL", raising=False)
-    monkeypatch.delenv("ANTHROPIC_BASE_URL", raising=False)
+    monkeypatch.setenv("GEMINI_BASE_URL", "https://example-gemini.test")
 
     service = NovelWorkbenchService(tmp_path)
     workspace_dir = tmp_path / "workspace-run"
@@ -104,14 +101,59 @@ def test_materialize_runtime_env_prefers_openrouter_base_when_auth_token_exists(
     service._materialize_autonovel_env(workspace_dir)
 
     rendered = (workspace_dir / ".env").read_text(encoding="utf-8")
-    assert "AUTONOVEL_API_BASE_URL=https://openrouter.ai/api" in rendered
+    assert "AUTONOVEL_API_BASE_URL=https://example-gemini.test" in rendered
+
+
+def test_status_snapshot_prefers_explicit_runtime_snapshot(tmp_path, monkeypatch):
+    _make_workbench_layout(tmp_path)
+    monkeypatch.delenv("AUTONOVEL_ENV_SOURCE", raising=False)
+    monkeypatch.delenv("GEMINI_API_KEY", raising=False)
+
+    service = NovelWorkbenchService(tmp_path)
+    runtime_env = {
+        "GEMINI_API_KEY": "gemini-runtime-key",
+        "AUTONOVEL_WRITER_MODEL": "gemini-3-flash-preview",
+        "AUTONOVEL_JUDGE_MODEL": "gemini-3-flash-preview",
+        "AUTONOVEL_REVIEW_MODEL": "gemini-3-flash-preview",
+        "AUTONOVEL_API_BASE_URL": "https://generativelanguage.googleapis.com",
+    }
+
+    status = service.status_snapshot(runtime_env)
+
+    assert status["autonovel_env_mode"] == "generated"
+    assert status["env_status"]["required"]["GEMINI_API_KEY"] is True
+
+
+def test_materialize_runtime_env_snapshot_overrides_stale_source_file(tmp_path, monkeypatch):
+    _make_workbench_layout(tmp_path)
+    stale_source = tmp_path / "autonovel" / ".env"
+    stale_source.write_text("ANTHROPIC_API_KEY=stale\n", encoding="utf-8")
+    monkeypatch.delenv("AUTONOVEL_ENV_SOURCE", raising=False)
+    monkeypatch.delenv("GEMINI_API_KEY", raising=False)
+
+    service = NovelWorkbenchService(tmp_path)
+    workspace_dir = tmp_path / "workspace-run"
+    workspace_dir.mkdir()
+    runtime_env = {
+        "GEMINI_API_KEY": "gemini-runtime-key",
+        "AUTONOVEL_WRITER_MODEL": "gemini-3.1-pro-preview",
+        "AUTONOVEL_JUDGE_MODEL": "gemini-3-flash-preview",
+        "AUTONOVEL_REVIEW_MODEL": "gemini-3.1-pro-preview",
+        "AUTONOVEL_API_BASE_URL": "https://generativelanguage.googleapis.com",
+    }
+
+    service._materialize_autonovel_env(workspace_dir, runtime_env)
+
+    rendered = (workspace_dir / ".env").read_text(encoding="utf-8")
+    assert "GEMINI_API_KEY=gemini-runtime-key" in rendered
+    assert "ANTHROPIC_API_KEY=stale" not in rendered
 
 
 def test_prepare_workspace_bootstraps_git_repo_when_source_is_plain_directory(tmp_path, monkeypatch):
     _make_workbench_layout(tmp_path)
     (tmp_path / "autonovel" / "run_pipeline.py").write_text("print('ok')\n", encoding="utf-8")
     monkeypatch.delenv("AUTONOVEL_ENV_SOURCE", raising=False)
-    monkeypatch.setenv("ANTHROPIC_API_KEY", "sk-ant-test")
+    monkeypatch.setenv("GEMINI_API_KEY", "gemini-test-key")
 
     service = NovelWorkbenchService(tmp_path)
     workspace_dir = service.workspaces_dir / "job-test"
@@ -126,14 +168,12 @@ def test_prepare_workspace_bootstraps_git_repo_when_source_is_plain_directory(tm
     assert (workspace_dir / ".git").exists() is True
 
 
-def test_build_headers_prefers_anthropic_api_key_for_official_base(monkeypatch):
-    monkeypatch.setenv("ANTHROPIC_API_KEY", "sk-ant-test")
-    monkeypatch.setenv("ANTHROPIC_AUTH_TOKEN", "sk-or-test")
+def test_build_headers_uses_x_goog_api_key_for_gemini(monkeypatch):
+    monkeypatch.setenv("GEMINI_API_KEY", "gemini-test-key")
 
-    headers = build_headers(base_url="https://api.anthropic.com")
+    headers = build_headers(base_url="https://generativelanguage.googleapis.com")
 
-    assert headers["x-api-key"] == "sk-ant-test"
-    assert "authorization" not in headers
+    assert headers["x-goog-api-key"] == "gemini-test-key"
 
 
 def test_discover_chapter_files_uses_actual_chapter_count(tmp_path, monkeypatch):
@@ -165,7 +205,7 @@ def test_build_outline_discovers_actual_chapter_count(tmp_path, monkeypatch):
 def test_create_job_defaults_visual_import_fields(tmp_path, monkeypatch):
     _make_workbench_layout(tmp_path)
     monkeypatch.delenv("AUTONOVEL_ENV_SOURCE", raising=False)
-    monkeypatch.setenv("ANTHROPIC_API_KEY", "sk-ant-test")
+    monkeypatch.setenv("GEMINI_API_KEY", "gemini-test-key")
 
     service = NovelWorkbenchService(tmp_path)
     asyncio.run(service.startup())
@@ -189,7 +229,7 @@ def test_create_job_defaults_visual_import_fields(tmp_path, monkeypatch):
 def test_delete_job_removes_terminal_record_and_files(tmp_path, monkeypatch):
     _make_workbench_layout(tmp_path)
     monkeypatch.delenv("AUTONOVEL_ENV_SOURCE", raising=False)
-    monkeypatch.setenv("ANTHROPIC_API_KEY", "sk-ant-test")
+    monkeypatch.setenv("GEMINI_API_KEY", "gemini-test-key")
 
     service = NovelWorkbenchService(tmp_path)
     asyncio.run(service.startup())
@@ -231,7 +271,7 @@ def test_delete_job_removes_terminal_record_and_files(tmp_path, monkeypatch):
 def test_delete_job_rejects_active_runs(tmp_path, monkeypatch):
     _make_workbench_layout(tmp_path)
     monkeypatch.delenv("AUTONOVEL_ENV_SOURCE", raising=False)
-    monkeypatch.setenv("ANTHROPIC_API_KEY", "sk-ant-test")
+    monkeypatch.setenv("GEMINI_API_KEY", "gemini-test-key")
 
     service = NovelWorkbenchService(tmp_path)
     asyncio.run(service.startup())

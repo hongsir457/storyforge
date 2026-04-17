@@ -10,14 +10,14 @@ import os
 import re
 from pathlib import Path
 
-from anthropic_compat import build_headers, messages_url
+from anthropic_compat import generate_text
 from dotenv import load_dotenv
 
 BASE_DIR = Path(__file__).parent
 load_dotenv(BASE_DIR / ".env")
 
-JUDGE_MODEL = os.environ.get("AUTONOVEL_JUDGE_MODEL", "claude-sonnet-4-6")
-API_BASE = os.environ.get("AUTONOVEL_API_BASE_URL", "https://api.anthropic.com")
+JUDGE_MODEL = os.environ.get("AUTONOVEL_JUDGE_MODEL", "gemini-3-flash-preview")
+API_BASE = os.environ.get("AUTONOVEL_API_BASE_URL", "https://generativelanguage.googleapis.com")
 CHAPTERS_DIR = BASE_DIR / "chapters"
 
 
@@ -26,9 +26,6 @@ def discover_chapter_files() -> list[Path]:
 
 
 def call_model(prompt, max_tokens=1500):
-    import httpx
-
-    headers = build_headers(base_url=API_BASE)
     payload = {
         "model": JUDGE_MODEL,
         "max_tokens": max_tokens,
@@ -40,9 +37,7 @@ def call_model(prompt, max_tokens=1500):
         ),
         "messages": [{"role": "user", "content": prompt}],
     }
-    resp = httpx.post(messages_url(API_BASE), headers=headers, json=payload, timeout=120)
-    resp.raise_for_status()
-    text = resp.json()["content"][0]["text"]
+    text = generate_text(payload, timeout=120, base_url=API_BASE)
     # Extract JSON from response
     text = text.strip()
     if text.startswith("```"):

@@ -9,32 +9,27 @@ import os
 import re
 from pathlib import Path
 
-from anthropic_compat import build_headers, messages_url
+from anthropic_compat import generate_text
 from dotenv import load_dotenv
 
 BASE_DIR = Path(__file__).parent
 load_dotenv(BASE_DIR / ".env", override=True)
 
-WRITER_MODEL = os.environ.get("AUTONOVEL_WRITER_MODEL", "claude-sonnet-4-6")
-ANTHROPIC_BASE = os.environ.get("AUTONOVEL_API_BASE_URL", "https://api.anthropic.com")
+WRITER_MODEL = os.environ.get("AUTONOVEL_WRITER_MODEL", "gemini-3.1-pro-preview")
+API_BASE = os.environ.get("AUTONOVEL_API_BASE_URL", "https://generativelanguage.googleapis.com")
 
 
-def call_claude(prompt, max_tokens=3000):
-    import httpx
-
-    resp = httpx.post(
-        messages_url(ANTHROPIC_BASE),
-        headers=build_headers(),
-        json={
+def call_writer(prompt, max_tokens=3000):
+    return generate_text(
+        {
             "model": WRITER_MODEL,
             "max_tokens": max_tokens,
             "temperature": 0.9,
             "messages": [{"role": "user", "content": prompt}],
         },
         timeout=120,
+        base_url=API_BASE,
     )
-    resp.raise_for_status()
-    return resp.json()["content"][0]["text"]
 
 
 def generate_directions(art_type, style, n=6, world_excerpt=""):
@@ -131,7 +126,7 @@ JSON array only."""
     else:
         raise ValueError(f"Unknown art type: {art_type}")
 
-    result = call_claude(task)
+    result = call_writer(task)
     text = result.strip()
     if text.startswith("```"):
         text = re.sub(r"^```\w*\n?", "", text)

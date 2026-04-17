@@ -32,7 +32,7 @@ import sys
 import time
 from pathlib import Path
 
-from anthropic_compat import build_headers, messages_url
+from anthropic_compat import generate_text
 from dotenv import load_dotenv
 
 BASE_DIR = Path(__file__).parent
@@ -48,8 +48,8 @@ SVG_DIR = ART_DIR / "svg"
 STYLE_FILE = ART_DIR / "visual_style.json"
 PICKS_FILE = ART_DIR / "picks.json"
 
-WRITER_MODEL = os.environ.get("AUTONOVEL_WRITER_MODEL", "claude-sonnet-4-6")
-ANTHROPIC_BASE = os.environ.get("AUTONOVEL_API_BASE_URL", "https://api.anthropic.com")
+WRITER_MODEL = os.environ.get("AUTONOVEL_WRITER_MODEL", "gemini-3.1-pro-preview")
+API_BASE = os.environ.get("AUTONOVEL_API_BASE_URL", "https://generativelanguage.googleapis.com")
 
 
 # ============================================================
@@ -120,22 +120,17 @@ def download_image(url, dest_path):
     return len(resp.content)
 
 
-def call_claude(prompt, max_tokens=1500):
-    import httpx
-
-    resp = httpx.post(
-        messages_url(ANTHROPIC_BASE),
-        headers=build_headers(),
-        json={
+def call_writer(prompt, max_tokens=1500):
+    return generate_text(
+        {
             "model": WRITER_MODEL,
             "max_tokens": max_tokens,
             "temperature": 0.3,
             "messages": [{"role": "user", "content": prompt}],
         },
         timeout=120,
+        base_url=API_BASE,
     )
-    resp.raise_for_status()
-    return resp.json()["content"][0]["text"]
 
 
 def load_style():
@@ -203,7 +198,7 @@ Define a VISUAL STYLE for all art in this novel. Output valid JSON:
 JSON only."""
 
     print("Deriving visual style from world + voice...")
-    result = call_claude(prompt)
+    result = call_writer(prompt)
     text = result.strip()
     if text.startswith("```"):
         text = re.sub(r"^```\w*\n?", "", text)
@@ -231,7 +226,7 @@ def cmd_curate(args):
 
     VARIANTS_DIR.mkdir(parents=True, exist_ok=True)
 
-    # Step 1: Generate fundamentally different art directions via Claude
+    # Step 1: Generate fundamentally different art directions via the writer model
     from gen_art_directions import generate_directions
 
     world = ""

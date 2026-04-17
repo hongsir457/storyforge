@@ -74,3 +74,25 @@ async def test_get_default_backend_fallback(config_service: ConfigService):
 async def test_unknown_provider_raises(config_service: ConfigService):
     with pytest.raises(ValueError, match="Unknown provider"):
         await config_service.set_provider_config("unknown-provider", "key", "val")
+
+
+async def test_build_novel_workbench_runtime_env_uses_active_gemini_credential(
+    config_service: ConfigService,
+    session: AsyncSession,
+):
+    cred_repo = CredentialRepository(session)
+    await cred_repo.create(
+        "gemini-aistudio",
+        "default",
+        api_key="AIza-novel-test",
+        base_url="https://gemini.test",
+    )
+    await config_service.set_setting("text_backend_script", "gemini-aistudio/gemini-3-flash-preview")
+
+    runtime_env = await config_service.build_novel_workbench_runtime_env()
+
+    assert runtime_env["GEMINI_API_KEY"] == "AIza-novel-test"
+    assert runtime_env["AUTONOVEL_API_BASE_URL"] == "https://gemini.test"
+    assert runtime_env["AUTONOVEL_WRITER_MODEL"] == "gemini-3-flash-preview"
+    assert runtime_env["AUTONOVEL_REVIEW_MODEL"] == "gemini-3-flash-preview"
+    assert runtime_env["AUTONOVEL_JUDGE_MODEL"] == "gemini-3-flash-preview"

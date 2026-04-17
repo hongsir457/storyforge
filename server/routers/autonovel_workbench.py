@@ -3,11 +3,13 @@ from __future__ import annotations
 import mimetypes
 from typing import Literal
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import FileResponse
 from pydantic import BaseModel
 
+from lib.config.service import ConfigService
 from server.auth import CurrentUser
+from server.dependencies import get_config_service
 from server.services.autonovel_workbench import (
     NovelWorkbenchError,
     get_novel_workbench_service,
@@ -32,8 +34,12 @@ def _raise_http_error(exc: NovelWorkbenchError) -> None:
 
 
 @router.get("/novel-workbench/status")
-async def get_workbench_status(_user: CurrentUser):
-    return get_novel_workbench_service().status_snapshot()
+async def get_workbench_status(
+    _user: CurrentUser,
+    svc: ConfigService = Depends(get_config_service),
+):
+    runtime_env = await svc.build_novel_workbench_runtime_env()
+    return get_novel_workbench_service().status_snapshot(runtime_env)
 
 
 @router.get("/novel-workbench/jobs")
@@ -51,8 +57,13 @@ async def get_novel_job(job_id: str, _user: CurrentUser):
 
 
 @router.post("/novel-workbench/jobs")
-async def create_novel_job(req: CreateNovelJobRequest, _user: CurrentUser):
+async def create_novel_job(
+    req: CreateNovelJobRequest,
+    _user: CurrentUser,
+    svc: ConfigService = Depends(get_config_service),
+):
     try:
+        runtime_env = await svc.build_novel_workbench_runtime_env()
         job = await get_novel_workbench_service().create_job(
             title=req.title,
             seed_text=req.seed_text,
@@ -60,6 +71,7 @@ async def create_novel_job(req: CreateNovelJobRequest, _user: CurrentUser):
             style=req.style,
             aspect_ratio=req.aspect_ratio,
             default_duration=req.default_duration,
+            runtime_env=runtime_env,
         )
     except NovelWorkbenchError as exc:
         _raise_http_error(exc)

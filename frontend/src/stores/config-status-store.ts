@@ -112,7 +112,7 @@ export const useConfigStatusStore = create<ConfigStatusState>((set, get) => ({
         issues: [],
         isComplete: true,
         loading: false,
-        initialized: true,
+        initialized: false,
         lastRole: useAuthStore.getState().user?.role ?? null,
       });
     }

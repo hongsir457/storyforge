@@ -282,7 +282,9 @@ class TestPatchProviderConfig:
                 yield mock_session
 
             app.dependency_overrides[get_async_session] = _override
-            app.dependency_overrides[get_current_user] = lambda: CurrentUserInfo(id="default", sub="testuser", role="admin")
+            app.dependency_overrides[get_current_user] = lambda: CurrentUserInfo(
+                id="default", sub="testuser", role="admin"
+            )
             app.include_router(providers.router, prefix="/api/v1")
 
             with TestClient(app) as client:
@@ -322,7 +324,9 @@ class TestPatchProviderConfig:
                 yield mock_session
 
             app.dependency_overrides[get_async_session] = _override
-            app.dependency_overrides[get_current_user] = lambda: CurrentUserInfo(id="default", sub="testuser", role="admin")
+            app.dependency_overrides[get_current_user] = lambda: CurrentUserInfo(
+                id="default", sub="testuser", role="admin"
+            )
             app.include_router(providers.router, prefix="/api/v1")
 
             with TestClient(app) as client:
@@ -345,7 +349,9 @@ class TestPatchProviderConfig:
                 yield mock_session
 
             app.dependency_overrides[get_async_session] = _override
-            app.dependency_overrides[get_current_user] = lambda: CurrentUserInfo(id="default", sub="testuser", role="admin")
+            app.dependency_overrides[get_current_user] = lambda: CurrentUserInfo(
+                id="default", sub="testuser", role="admin"
+            )
             app.include_router(providers.router, prefix="/api/v1")
 
             with TestClient(app) as client:

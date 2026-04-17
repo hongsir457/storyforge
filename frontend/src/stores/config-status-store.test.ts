@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { API } from "@/api";
 import type { GetSystemConfigResponse, ProviderInfo } from "@/types";
+import { useAuthStore } from "@/stores/auth-store";
 import { useConfigStatusStore } from "./config-status-store";
 
 function makeConfigResponse(overrides?: Partial<GetSystemConfigResponse["settings"]>): GetSystemConfigResponse {
@@ -56,6 +57,20 @@ function makeProviders(overrides?: Partial<ProviderInfo>[]): { providers: Provid
 describe("config-status-store", () => {
   beforeEach(() => {
     useConfigStatusStore.setState(useConfigStatusStore.getInitialState(), true);
+    useAuthStore.setState({
+      isAuthenticated: true,
+      isLoading: false,
+      token: "token",
+      user: {
+        id: "admin",
+        username: "admin",
+        email: "admin@example.com",
+        display_name: "Admin",
+        role: "admin",
+        is_active: true,
+        is_email_verified: true,
+      },
+    });
     vi.restoreAllMocks();
   });
 

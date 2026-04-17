@@ -77,8 +77,8 @@ export function SystemConfigPage() {
             {t("common:back")}
           </Link>
           <div>
-            <h1 className="text-lg font-semibold text-gray-100">{t("common:settings")}</h1>
-            <p className="text-xs text-gray-500">{t("dashboard:system_config_title")}</p>
+            <h1 className="text-lg font-semibold text-gray-100">管理控制台</h1>
+            <p className="text-xs text-gray-500">仅管理员可见：供应商、模型、用量和 API Key 管理</p>
           </div>
         </div>
       </header>

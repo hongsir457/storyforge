@@ -23,7 +23,7 @@ from lib.config.service import (
 )
 from lib.db import get_async_session
 from lib.i18n import Translator
-from server.auth import CurrentUser
+from server.auth import CurrentAdmin, CurrentUser
 from server.dependencies import get_config_service
 from server.routers._validators import validate_backend_value
 
@@ -124,6 +124,46 @@ _STRING_SETTINGS = (
 )
 
 
+def _build_public_settings(all_s: dict[str, str]) -> dict[str, Any]:
+    video_generate_audio_raw = all_s.get("video_generate_audio", "false")
+    return {
+        "default_video_backend": all_s.get("default_video_backend", ""),
+        "default_image_backend": all_s.get("default_image_backend", ""),
+        "default_text_backend": all_s.get("default_text_backend", ""),
+        "video_generate_audio": video_generate_audio_raw.lower() in ("true", "1", "yes"),
+        "text_backend_script": all_s.get("text_backend_script") or "",
+        "text_backend_overview": all_s.get("text_backend_overview") or "",
+        "text_backend_style": all_s.get("text_backend_style") or "",
+    }
+
+
+def _build_private_settings(all_s: dict[str, str]) -> dict[str, Any]:
+    settings = _build_public_settings(all_s)
+    anthropic_key = all_s.get("anthropic_api_key", "")
+    anthropic_auth_token = all_s.get("anthropic_auth_token", "")
+    settings.update(
+        {
+            "anthropic_api_key": {
+                "is_set": bool(anthropic_key),
+                "masked": mask_secret(anthropic_key) if anthropic_key else None,
+            },
+            "anthropic_auth_token": {
+                "is_set": bool(anthropic_auth_token),
+                "masked": mask_secret(anthropic_auth_token) if anthropic_auth_token else None,
+            },
+            "anthropic_base_url": all_s.get("anthropic_base_url") or None,
+            "anthropic_model": all_s.get("anthropic_model") or None,
+            "anthropic_default_haiku_model": all_s.get("anthropic_default_haiku_model") or None,
+            "anthropic_default_opus_model": all_s.get("anthropic_default_opus_model") or None,
+            "anthropic_default_sonnet_model": all_s.get("anthropic_default_sonnet_model") or None,
+            "claude_code_subagent_model": all_s.get("claude_code_subagent_model") or None,
+            "agent_session_cleanup_delay_seconds": int(all_s.get("agent_session_cleanup_delay_seconds") or "300"),
+            "agent_max_concurrent_sessions": int(all_s.get("agent_max_concurrent_sessions") or "5"),
+        }
+    )
+    return settings
+
+
 # ---------------------------------------------------------------------------
 # GET /system/config
 # ---------------------------------------------------------------------------
@@ -131,46 +171,24 @@ _STRING_SETTINGS = (
 
 @router.get("/system/config")
 async def get_system_config(
+    _user: CurrentAdmin,
+    svc: Annotated[ConfigService, Depends(get_config_service)],
+    session: AsyncSession = Depends(get_async_session),
+) -> dict[str, Any]:
+    all_s = await svc.get_all_settings()
+    options = await _build_options(svc, session)
+    return {"settings": _build_private_settings(all_s), "options": options}
+
+
+@router.get("/system/project-options")
+async def get_project_settings_options(
     _user: CurrentUser,
     svc: Annotated[ConfigService, Depends(get_config_service)],
     session: AsyncSession = Depends(get_async_session),
 ) -> dict[str, Any]:
-    # Read all settings in a single query
     all_s = await svc.get_all_settings()
-    video_generate_audio_raw = all_s.get("video_generate_audio", "false")
-    video_generate_audio = video_generate_audio_raw.lower() in ("true", "1", "yes")
-    anthropic_key = all_s.get("anthropic_api_key", "")
-    anthropic_auth_token = all_s.get("anthropic_auth_token", "")
-
-    settings: dict[str, Any] = {
-        "default_video_backend": all_s.get("default_video_backend", ""),
-        "default_image_backend": all_s.get("default_image_backend", ""),
-        "default_text_backend": all_s.get("default_text_backend", ""),
-        "video_generate_audio": video_generate_audio,
-        "anthropic_api_key": {
-            "is_set": bool(anthropic_key),
-            "masked": mask_secret(anthropic_key) if anthropic_key else None,
-        },
-        "anthropic_auth_token": {
-            "is_set": bool(anthropic_auth_token),
-            "masked": mask_secret(anthropic_auth_token) if anthropic_auth_token else None,
-        },
-        "anthropic_base_url": all_s.get("anthropic_base_url") or None,
-        "anthropic_model": all_s.get("anthropic_model") or None,
-        "anthropic_default_haiku_model": all_s.get("anthropic_default_haiku_model") or None,
-        "anthropic_default_opus_model": all_s.get("anthropic_default_opus_model") or None,
-        "anthropic_default_sonnet_model": all_s.get("anthropic_default_sonnet_model") or None,
-        "claude_code_subagent_model": all_s.get("claude_code_subagent_model") or None,
-        "agent_session_cleanup_delay_seconds": int(all_s.get("agent_session_cleanup_delay_seconds") or "300"),
-        "agent_max_concurrent_sessions": int(all_s.get("agent_max_concurrent_sessions") or "5"),
-        "text_backend_script": all_s.get("text_backend_script") or "",
-        "text_backend_overview": all_s.get("text_backend_overview") or "",
-        "text_backend_style": all_s.get("text_backend_style") or "",
-    }
-
     options = await _build_options(svc, session)
-
-    return {"settings": settings, "options": options}
+    return {"settings": _build_public_settings(all_s), "options": options}
 
 
 # ---------------------------------------------------------------------------
@@ -181,7 +199,7 @@ async def get_system_config(
 @router.patch("/system/config")
 async def patch_system_config(
     req: SystemConfigPatchRequest,
-    _user: CurrentUser,
+    _user: CurrentAdmin,
     svc: Annotated[ConfigService, Depends(get_config_service)],
     _t: Translator,
     session: AsyncSession = Depends(get_async_session),
@@ -245,4 +263,4 @@ async def patch_system_config(
     sync_anthropic_env(all_settings)
 
     # Return updated config
-    return await get_system_config(_user=_user, svc=svc)
+    return await get_system_config(_user=_user, svc=svc, session=session)

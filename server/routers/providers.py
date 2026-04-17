@@ -29,6 +29,7 @@ from lib.db.base import dt_to_iso
 from lib.db.repositories.credential_repository import CredentialRepository
 from lib.gemini_shared import VERTEX_SCOPES
 from lib.i18n import Translator
+from server.auth import CurrentAdmin, CurrentUser
 from server.dependencies import get_config_service
 
 if TYPE_CHECKING:
@@ -229,6 +230,7 @@ def _build_field(
 
 @router.get("", response_model=ProvidersListResponse)
 async def list_providers(
+    _admin: CurrentAdmin,
     _t: Translator,
     svc: Annotated[ConfigService, Depends(get_config_service)],
 ) -> ProvidersListResponse:
@@ -251,9 +253,35 @@ async def list_providers(
     return ProvidersListResponse(providers=providers)
 
 
+@router.get("/catalog", response_model=ProvidersListResponse)
+async def list_provider_catalog(
+    _user: CurrentUser,
+    _t: Translator,
+    svc: Annotated[ConfigService, Depends(get_config_service)],
+) -> ProvidersListResponse:
+    statuses = await svc.get_all_providers_status()
+    providers = [
+        ProviderSummary(
+            id=s.name,
+            display_name=_t(f"provider_name_{s.name}"),
+            description=_t(f"provider_desc_{s.name}"),
+            status=s.status,
+            media_types=s.media_types,
+            capabilities=s.capabilities,
+            configured_keys=[],
+            missing_keys=[],
+            models={mid: ModelInfoResponse(**minfo) for mid, minfo in (s.models or {}).items()},
+        )
+        for s in statuses
+        if s.status == "ready"
+    ]
+    return ProvidersListResponse(providers=providers)
+
+
 @router.get("/{provider_id}/config", response_model=ProviderConfigResponse)
 async def get_provider_config(
     provider_id: str,
+    _admin: CurrentAdmin,
     _t: Translator,
     session: AsyncSession = Depends(get_async_session),
 ) -> ProviderConfigResponse:
@@ -293,6 +321,7 @@ async def patch_provider_config(
     provider_id: str,
     body: dict[str, str | None],
     request: Request,
+    _admin: CurrentAdmin,
     _t: Translator,
     session: AsyncSession = Depends(get_async_session),
 ) -> Response:
@@ -322,6 +351,7 @@ async def patch_provider_config(
 @router.get("/{provider_id}/credentials", response_model=CredentialListResponse)
 async def list_credentials(
     provider_id: str,
+    _admin: CurrentAdmin,
     _t: Translator,
     session: AsyncSession = Depends(get_async_session),
 ) -> CredentialListResponse:
@@ -336,6 +366,7 @@ async def create_credential(
     provider_id: str,
     body: CreateCredentialRequest,
     request: Request,
+    _admin: CurrentAdmin,
     _t: Translator,
     session: AsyncSession = Depends(get_async_session),
 ) -> CredentialResponse:
@@ -358,6 +389,7 @@ async def update_credential(
     cred_id: int,
     body: UpdateCredentialRequest,
     request: Request,
+    _admin: CurrentAdmin,
     _t: Translator,
     session: AsyncSession = Depends(get_async_session),
 ) -> Response:
@@ -384,6 +416,7 @@ async def delete_credential(
     provider_id: str,
     cred_id: int,
     request: Request,
+    _admin: CurrentAdmin,
     _t: Translator,
     session: AsyncSession = Depends(get_async_session),
 ) -> Response:
@@ -411,6 +444,7 @@ async def activate_credential(
     provider_id: str,
     cred_id: int,
     request: Request,
+    _admin: CurrentAdmin,
     _t: Translator,
     session: AsyncSession = Depends(get_async_session),
 ) -> Response:
@@ -426,6 +460,7 @@ async def activate_credential(
 @router.post("/gemini-vertex/credentials/upload", status_code=201, response_model=CredentialResponse)
 async def upload_vertex_credential(
     request: Request,
+    _admin: CurrentAdmin,
     _t: Translator,
     name: str = "Vertex Credentials",
     session: AsyncSession = Depends(get_async_session),
@@ -638,6 +673,7 @@ _TEST_DISPATCH: dict[str, Callable[[dict[str, str], Any], ConnectionTestResponse
 @router.post("/{provider_id}/test", response_model=ConnectionTestResponse)
 async def test_provider_connection(
     provider_id: str,
+    _admin: CurrentAdmin,
     _t: Translator,
     credential_id: int | None = None,
     session: AsyncSession = Depends(get_async_session),

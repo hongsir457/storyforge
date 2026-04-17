@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import { API } from "@/api";
+import { useAuthStore } from "@/stores/auth-store";
 
 // ---------------------------------------------------------------------------
 // ConfigIssue
@@ -12,6 +13,11 @@ export interface ConfigIssue {
 }
 
 async function getConfigIssues(): Promise<ConfigIssue[]> {
+  const role = useAuthStore.getState().user?.role;
+  if (role !== "admin") {
+    return [];
+  }
+
   const issues: ConfigIssue[] = [];
 
   const [{ providers }, configRes] = await Promise.all([
@@ -70,6 +76,7 @@ interface ConfigStatusState {
   isComplete: boolean;
   loading: boolean;
   initialized: boolean;
+  lastRole: string | null;
   fetch: () => Promise<void>;
   refresh: () => Promise<void>;
 }
@@ -79,9 +86,12 @@ export const useConfigStatusStore = create<ConfigStatusState>((set, get) => ({
   isComplete: true,
   loading: false,
   initialized: false,
+  lastRole: null,
 
   fetch: async () => {
-    if (get().initialized || get().loading) return;
+    const currentRole = useAuthStore.getState().user?.role ?? null;
+    if (get().loading) return;
+    if (get().initialized && get().lastRole === currentRole) return;
     await get().refresh();
   },
 
@@ -90,9 +100,21 @@ export const useConfigStatusStore = create<ConfigStatusState>((set, get) => ({
     set({ loading: true });
     try {
       const issues = await getConfigIssues();
-      set({ issues, isComplete: issues.length === 0, loading: false, initialized: true });
+      set({
+        issues,
+        isComplete: issues.length === 0,
+        loading: false,
+        initialized: true,
+        lastRole: useAuthStore.getState().user?.role ?? null,
+      });
     } catch {
-      set({ loading: false });
+      set({
+        issues: [],
+        isComplete: true,
+        loading: false,
+        initialized: true,
+        lastRole: useAuthStore.getState().user?.role ?? null,
+      });
     }
   },
 }));

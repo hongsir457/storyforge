@@ -22,6 +22,7 @@ import type {
   ProjectChangeBatchPayload,
   ProjectEventSnapshotPayload,
   GetSystemConfigResponse,
+  ProjectSettingsConfigResponse,
   SystemConfigPatch,
   ApiKeyInfo,
   CreateApiKeyResponse,
@@ -401,6 +402,10 @@ class API {
       method: "PATCH",
       body: JSON.stringify(patch),
     });
+  }
+
+  static async getProjectSettingsConfig(): Promise<ProjectSettingsConfigResponse> {
+    return this.request("/system/project-options");
   }
 
 
@@ -1502,6 +1507,10 @@ class API {
     return this.request("/providers");
   }
 
+  static async getProviderCatalog(): Promise<{ providers: ProviderInfo[] }> {
+    return this.request("/providers/catalog");
+  }
+
   /** 鑾峰彇鎸囧畾 provider 鐨勯厤缃鎯咃紙鍚瓧娈靛垪琛級銆?*/
   static async getProviderConfig(id: string): Promise<ProviderConfigDetail> {
     return this.request(`/providers/${encodeURIComponent(id)}/config`);
@@ -1582,6 +1591,10 @@ class API {
 
   static async listCustomProviders(): Promise<{ providers: CustomProviderInfo[] }> {
     return this.request("/custom-providers");
+  }
+
+  static async listCustomProviderCatalog(): Promise<{ providers: CustomProviderInfo[] }> {
+    return this.request("/custom-providers/catalog");
   }
 
   static async createCustomProvider(data: CustomProviderCreateRequest): Promise<CustomProviderInfo> {

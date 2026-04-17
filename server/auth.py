@@ -353,6 +353,18 @@ async def get_current_user(token: Annotated[str, Depends(oauth2_scheme)]) -> Cur
     return user
 
 
+def require_admin(user: CurrentUserInfo) -> CurrentUserInfo:
+    if user.role != "admin":
+        raise HTTPException(status_code=403, detail="Admin access required")
+    return user
+
+
+async def get_current_admin(
+    user: Annotated[CurrentUserInfo, Depends(get_current_user)],
+) -> CurrentUserInfo:
+    return require_admin(user)
+
+
 async def get_current_user_flexible(
     token: Annotated[str | None, Depends(oauth2_scheme_optional)] = None,
     query_token: str | None = Query(None, alias="token"),
@@ -371,4 +383,5 @@ async def get_current_user_flexible(
 
 
 CurrentUser = Annotated[CurrentUserInfo, Depends(get_current_user)]
+CurrentAdmin = Annotated[CurrentUserInfo, Depends(get_current_admin)]
 CurrentUserFlexible = Annotated[CurrentUserInfo, Depends(get_current_user_flexible)]

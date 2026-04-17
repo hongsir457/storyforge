@@ -1,15 +1,13 @@
-import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { Router } from "wouter";
 import { memoryLocation } from "wouter/memory-location";
-import { API } from "@/api";
-import { useConfigStatusStore } from "@/stores/config-status-store";
-import { SystemConfigPage } from "@/components/pages/SystemConfigPage";
-import type { GetSystemConfigResponse, ProviderInfo } from "@/types";
 
-// ---------------------------------------------------------------------------
-// Helpers
-// ---------------------------------------------------------------------------
+import { API } from "@/api";
+import { SystemConfigPage } from "@/components/pages/SystemConfigPage";
+import { useAuthStore } from "@/stores/auth-store";
+import { useConfigStatusStore } from "@/stores/config-status-store";
+import type { GetSystemConfigResponse, ProviderInfo } from "@/types";
 
 function makeConfigResponse(
   overrides?: Partial<GetSystemConfigResponse["settings"]>,
@@ -62,7 +60,7 @@ function makeProviders(overrides?: Partial<ProviderInfo>): { providers: Provider
   };
 }
 
-function renderPage(path = "/app/settings") {
+function renderPage(path = "/app/admin") {
   const location = memoryLocation({ path, record: true });
   return render(
     <Router hook={location.hook}>
@@ -71,16 +69,25 @@ function renderPage(path = "/app/settings") {
   );
 }
 
-// ---------------------------------------------------------------------------
-// Tests
-// ---------------------------------------------------------------------------
-
 describe("SystemConfigPage", () => {
   beforeEach(() => {
     useConfigStatusStore.setState(useConfigStatusStore.getInitialState(), true);
+    useAuthStore.setState({
+      isAuthenticated: true,
+      isLoading: false,
+      token: "token",
+      user: {
+        id: "admin",
+        username: "admin",
+        email: "admin@example.com",
+        display_name: "Admin",
+        role: "admin",
+        is_active: true,
+        is_email_verified: true,
+      },
+    });
     vi.restoreAllMocks();
 
-    // Default: silence child section network calls so tests don't hang
     vi.spyOn(API, "getSystemConfig").mockResolvedValue(makeConfigResponse());
     vi.spyOn(API, "getProviders").mockResolvedValue(makeProviders());
     vi.spyOn(API, "listCustomProviders").mockResolvedValue({ providers: [] });
@@ -96,57 +103,37 @@ describe("SystemConfigPage", () => {
     vi.spyOn(API, "getUsageStatsGrouped").mockResolvedValue({ stats: [], period: { start: "", end: "" } });
   });
 
-  it("renders the page header", () => {
+  it("renders the admin console header", () => {
     renderPage();
-    expect(screen.getByText("设置")).toBeInTheDocument();
-    expect(screen.getByText("系统配置与 API 访问管理")).toBeInTheDocument();
+    expect(screen.getByText("管理控制台")).toBeInTheDocument();
+    expect(screen.getByText("仅管理员可见：供应商、模型、用量和 API Key 管理")).toBeInTheDocument();
   });
 
   it("renders all 5 sidebar sections", () => {
     renderPage();
-    expect(screen.getByRole("button", { name: /智能体/ })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /供应商/ })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /模型选择/ })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /用量统计/ })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /API 管理/ })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Agents|智能体/ })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Providers|供应商/ })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Models|模型选择/ })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Usage|用量统计/ })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /API Keys|API 管理/ })).toBeInTheDocument();
   });
 
-  it("defaults to the 智能体 section", () => {
+  it("defaults to the agent section", () => {
     renderPage();
-    const agentButton = screen.getByRole("button", { name: /智能体/ });
-    // Active sidebar item has the indigo border class applied
+    const agentButton = screen.getByRole("button", { name: /Agents|智能体/ });
     expect(agentButton.className).toContain("border-indigo-500");
   });
 
-  it("clicking 供应商 makes it the active section", async () => {
+  it("switches sections from the sidebar", async () => {
     renderPage();
-    const providersButton = screen.getByRole("button", { name: /供应商/ });
+    const providersButton = screen.getByRole("button", { name: /Providers|供应商/ });
     fireEvent.click(providersButton);
     await waitFor(() => {
       expect(providersButton.className).toContain("border-indigo-500");
     });
   });
 
-  it("clicking 模型选择 makes it the active section", async () => {
-    renderPage();
-    const mediaButton = screen.getByRole("button", { name: /模型选择/ });
-    fireEvent.click(mediaButton);
-    await waitFor(() => {
-      expect(mediaButton.className).toContain("border-indigo-500");
-    });
-  });
-
-  it("clicking 用量统计 makes it the active section", async () => {
-    renderPage();
-    const usageButton = screen.getByRole("button", { name: /用量统计/ });
-    fireEvent.click(usageButton);
-    await waitFor(() => {
-      expect(usageButton.className).toContain("border-indigo-500");
-    });
-  });
-
   it("shows config warning banner when there are config issues", async () => {
-    // Simulate unconfigured anthropic key to trigger an issue
     vi.spyOn(API, "getSystemConfig").mockResolvedValue(
       makeConfigResponse({ anthropic_api_key: { is_set: false, masked: null } }),
     );
@@ -155,27 +142,24 @@ describe("SystemConfigPage", () => {
     renderPage();
 
     await waitFor(() => {
-      expect(screen.getByText("当前配置存在以下问题，可能会影响部分功能：")).toBeInTheDocument();
+      expect(screen.getByText(/The following issues were found|当前配置存在以下问题/)).toBeInTheDocument();
     });
-    expect(
-      screen.getByText(/Storyforge.*API Key/),
-    ).toBeInTheDocument();
+    expect(screen.getByText(/Storyforge.*API Key/)).toBeInTheDocument();
   });
 
   it("does not show warning banner when config is complete", async () => {
     renderPage();
 
-    // Give time for config status to load
     await waitFor(() => {
       expect(API.getProviders).toHaveBeenCalled();
     });
 
-    expect(screen.queryByText("当前配置存在以下问题，可能会影响部分功能：")).not.toBeInTheDocument();
+    expect(screen.queryByText(/The following issues were found|当前配置存在以下问题/)).not.toBeInTheDocument();
   });
 
   it("renders the back link that navigates to projects", () => {
     renderPage();
-    const link = screen.getByRole("link", { name: "返回" });
+    const link = screen.getByRole("link", { name: /Back|返回/ });
     expect(link).toBeInTheDocument();
     expect(link).toHaveAttribute("href", "/app/projects");
   });

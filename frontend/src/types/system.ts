@@ -30,6 +30,21 @@ export interface GetSystemConfigResponse {
   options: SystemConfigOptions;
 }
 
+export interface ProjectSettingsConfigSettings {
+  default_video_backend: string;
+  default_image_backend: string;
+  default_text_backend: string;
+  text_backend_script: string;
+  text_backend_overview: string;
+  text_backend_style: string;
+  video_generate_audio: boolean;
+}
+
+export interface ProjectSettingsConfigResponse {
+  settings: ProjectSettingsConfigSettings;
+  options: SystemConfigOptions;
+}
+
 export interface SystemConfigPatch {
   default_video_backend?: string;
   default_image_backend?: string;

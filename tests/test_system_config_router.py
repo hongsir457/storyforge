@@ -37,7 +37,7 @@ async def db_session():
     await engine.dispose()
 
 
-def _make_app_with_mock(mock_svc: ConfigService) -> FastAPI:
+def _make_app_with_mock(mock_svc: ConfigService, *, role: str = "admin") -> FastAPI:
     """App with a fully mocked ConfigService + in-memory DB (no real DB)."""
     from contextlib import asynccontextmanager
 
@@ -51,7 +51,7 @@ def _make_app_with_mock(mock_svc: ConfigService) -> FastAPI:
         yield
 
     app = FastAPI(lifespan=_lifespan)
-    app.dependency_overrides[get_current_user] = lambda: CurrentUserInfo(id="default", sub="testuser", role="admin")
+    app.dependency_overrides[get_current_user] = lambda: CurrentUserInfo(id="default", sub="testuser", role=role)
     app.dependency_overrides[get_config_service] = lambda: mock_svc
 
     async def _override_session():
@@ -226,6 +226,35 @@ class TestGetSystemConfig:
         assert settings["video_generate_audio"] is True
         assert settings["anthropic_base_url"] == "https://proxy.example.com"
 
+    def test_requires_admin_role(self):
+        mock_svc = _make_mock_svc()
+        with TestClient(_make_app_with_mock(mock_svc, role="user")) as client:
+            res = client.get("/api/v1/system/config")
+        assert res.status_code == 403
+        assert res.json()["detail"] == "Admin access required"
+
+
+class TestGetProjectSettingsOptions:
+    def test_returns_public_settings_for_non_admin_user(self):
+        mock_svc = _make_mock_svc(
+            settings={
+                "default_video_backend": "gemini-aistudio/veo-3.1-generate-preview",
+                "text_backend_script": "openrouter/auto",
+                "video_generate_audio": "true",
+            },
+            ready_providers=["gemini-aistudio"],
+        )
+        with TestClient(_make_app_with_mock(mock_svc, role="user")) as client:
+            res = client.get("/api/v1/system/project-options")
+
+        assert res.status_code == 200
+        body = res.json()
+        assert body["settings"]["default_video_backend"] == "gemini-aistudio/veo-3.1-generate-preview"
+        assert body["settings"]["text_backend_script"] == "openrouter/auto"
+        assert body["settings"]["video_generate_audio"] is True
+        assert "anthropic_api_key" not in body["settings"]
+        assert "gemini-aistudio/veo-3.1-generate-preview" in body["options"]["video_backends"]
+
 
 # ---------------------------------------------------------------------------
 # PATCH /system/config
@@ -357,3 +386,12 @@ class TestPatchSystemConfig:
         body = res.json()
         assert "settings" in body
         assert "options" in body
+
+    def test_patch_requires_admin_role(self):
+        mock_svc = _make_mock_svc()
+        app = self._make_patch_app(mock_svc)
+        app.dependency_overrides[get_current_user] = lambda: CurrentUserInfo(id="default", sub="testuser", role="user")
+        with TestClient(app) as client:
+            res = client.patch("/api/v1/system/config", json={"video_generate_audio": True})
+        assert res.status_code == 403
+        assert res.json()["detail"] == "Admin access required"

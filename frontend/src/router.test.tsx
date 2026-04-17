@@ -22,6 +22,10 @@ vi.mock("@/components/pages/ProjectsPage", () => ({
   ProjectsPage: () => <div data-testid="projects-page">Projects Page</div>,
 }));
 
+vi.mock("@/components/pages/SystemConfigPage", () => ({
+  SystemConfigPage: () => <div data-testid="admin-page">Admin Console</div>,
+}));
+
 function renderAt(path: string) {
   const { hook } = memoryLocation({ path });
   return render(
@@ -39,7 +43,19 @@ function resetStores(): void {
 describe("AppRoutes", () => {
   beforeEach(() => {
     resetStores();
-    useAuthStore.setState({ isAuthenticated: true, isLoading: false });
+    useAuthStore.setState({
+      isAuthenticated: true,
+      isLoading: false,
+      user: {
+        id: "admin",
+        username: "admin",
+        email: "admin@example.com",
+        display_name: "Admin",
+        role: "admin",
+        is_active: true,
+        is_email_verified: true,
+      },
+    });
     vi.restoreAllMocks();
   });
 
@@ -50,6 +66,28 @@ describe("AppRoutes", () => {
 
   it("redirects /app to /app/projects", async () => {
     renderAt("/app");
+    expect(await screen.findByTestId("projects-page")).toBeInTheDocument();
+  });
+
+  it("renders admin console for admin users", async () => {
+    renderAt("/app/admin");
+    expect(await screen.findByTestId("admin-page")).toBeInTheDocument();
+  });
+
+  it("redirects non-admin users away from admin routes", async () => {
+    useAuthStore.setState({
+      user: {
+        id: "user-1",
+        username: "storyforge_demo",
+        email: "demo@example.com",
+        display_name: "Demo",
+        role: "user",
+        is_active: true,
+        is_email_verified: true,
+      },
+    });
+
+    renderAt("/app/admin");
     expect(await screen.findByTestId("projects-page")).toBeInTheDocument();
   });
 

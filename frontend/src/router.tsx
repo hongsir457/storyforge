@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { Redirect, Route, Switch, useParams } from "wouter";
+import { Redirect, Route, Switch, useParams, useSearch } from "wouter";
 import { StudioLayout } from "@/components/layout";
 import { StudioCanvasRouter } from "@/components/canvas/StudioCanvasRouter";
 import { ProjectsPage } from "@/components/pages/ProjectsPage";
@@ -53,6 +53,33 @@ function GuestGuard({ children }: { children: React.ReactNode }) {
   }
 
   return <>{children}</>;
+}
+
+function AdminGuard({ children }: { children: React.ReactNode }) {
+  const { isAuthenticated, isLoading, user } = useAuthStore();
+
+  if (isLoading) {
+    return (
+      <div className="flex h-screen items-center justify-center bg-gray-950 text-gray-400">
+        Loading...
+      </div>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return <Redirect to="/login" />;
+  }
+
+  if (user?.role !== "admin") {
+    return <Redirect to="/app/projects" />;
+  }
+
+  return <>{children}</>;
+}
+
+function LegacySettingsRedirect() {
+  const search = useSearch();
+  return <Redirect to={`/app/admin${search ? `?${search}` : ""}`} />;
 }
 
 function StudioWorkspace() {
@@ -153,8 +180,14 @@ export function AppRoutes() {
 
         <Route path="/app/settings">
           <AuthGuard>
-            <SystemConfigPage />
+            <LegacySettingsRedirect />
           </AuthGuard>
+        </Route>
+
+        <Route path="/app/admin">
+          <AdminGuard>
+            <SystemConfigPage />
+          </AdminGuard>
         </Route>
 
         <Route path="/app/account">

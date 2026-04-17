@@ -16,7 +16,7 @@ let _promise: Promise<ProviderInfo[]> | null = null;
 export async function getProviderModels(): Promise<ProviderInfo[]> {
   if (_cache) return _cache;
   if (!_promise) {
-    _promise = API.getProviders()
+    _promise = API.getProviderCatalog()
       .then((res) => {
         _cache = res.providers;
         _promise = null;
@@ -41,7 +41,7 @@ let _customPromise: Promise<CustomProviderInfo[]> | null = null;
 export async function getCustomProviderModels(): Promise<CustomProviderInfo[]> {
   if (_customCache) return _customCache;
   if (!_customPromise) {
-    _customPromise = API.listCustomProviders()
+    _customPromise = API.listCustomProviderCatalog()
       .then((res) => {
         _customCache = res.providers;
         _customPromise = null;

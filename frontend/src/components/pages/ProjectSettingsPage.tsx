@@ -56,7 +56,7 @@ export function ProjectSettingsPage() {
     let disposed = false;
 
     Promise.all([
-      API.getSystemConfig(),
+      API.getProjectSettingsConfig(),
       API.getProject(projectName),
       getProviderModels().catch(() => [] as ProviderInfo[]),
       getCustomProviderModels().catch(() => [] as CustomProviderInfo[]),

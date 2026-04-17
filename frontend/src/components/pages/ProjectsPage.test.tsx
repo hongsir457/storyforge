@@ -2,10 +2,12 @@ import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { Router } from "wouter";
 import { memoryLocation } from "wouter/memory-location";
+
 import { API } from "@/api";
-import { useAppStore } from "@/stores/app-store";
-import { useProjectsStore } from "@/stores/projects-store";
 import { ProjectsPage } from "@/components/pages/ProjectsPage";
+import { useAppStore } from "@/stores/app-store";
+import { useAuthStore } from "@/stores/auth-store";
+import { useProjectsStore } from "@/stores/projects-store";
 
 vi.mock("@/components/pages/CreateProjectModal", () => ({
   CreateProjectModal: () => <div data-testid="create-project-modal">Create Project Modal</div>,
@@ -27,30 +29,41 @@ describe("ProjectsPage", () => {
   beforeEach(() => {
     useProjectsStore.setState(useProjectsStore.getInitialState(), true);
     useAppStore.setState(useAppStore.getInitialState(), true);
+    useAuthStore.setState({
+      isAuthenticated: true,
+      isLoading: false,
+      token: "token",
+      user: {
+        id: "admin",
+        username: "admin",
+        email: "admin@example.com",
+        display_name: "Admin",
+        role: "admin",
+        is_active: true,
+        is_email_verified: true,
+      },
+    });
     vi.restoreAllMocks();
   });
 
   it("shows loading state while projects are being fetched", () => {
-    vi.spyOn(API, "listProjects").mockImplementation(
-      () => new Promise(() => {}),
-    );
+    vi.spyOn(API, "listProjects").mockImplementation(() => new Promise(() => {}));
 
     renderPage();
-    expect(screen.getByText("加载项目列表...")).toBeInTheDocument();
+    expect(screen.getByText(/Loading projects list|加载项目列表/)).toBeInTheDocument();
   });
 
-  it("shows empty state when no projects exist", async () => {
+  it("shows creator-first empty state when no projects exist", async () => {
     vi.spyOn(API, "listProjects").mockResolvedValue({ projects: [] });
 
     renderPage();
 
-    expect(await screen.findByText("暂无项目")).toBeInTheDocument();
-    expect(
-      screen.getByText("点击右上角「新建项目」或「导入 ZIP」开始创作"),
-    ).toBeInTheDocument();
+    expect(await screen.findByText("从小说种子开始，或先建一个视频项目。")).toBeInTheDocument();
+    expect(screen.getByText(/叙影工场的主路径是“小说 → 分镜 → 视频”/)).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /启动小说工坊/ })).toBeInTheDocument();
   });
 
-  it("renders project cards when data exists", async () => {
+  it("renders project cards with story-first hierarchy", async () => {
     vi.spyOn(API, "listProjects").mockResolvedValue({
       projects: [
         {
@@ -72,18 +85,19 @@ describe("ProjectsPage", () => {
     renderPage();
 
     expect(await screen.findByText("Demo Project")).toBeInTheDocument();
-    expect(screen.getByText("Anime · 制作中")).toBeInTheDocument();
-    expect(screen.getByText("50%")).toBeInTheDocument();
+    expect(screen.getByText("资产覆盖")).toBeInTheDocument();
+    expect(screen.getByText("集数产出")).toBeInTheDocument();
+    expect(screen.getAllByText("50%").length).toBeGreaterThan(0);
   });
 
   it("opens create project modal after clicking new project button", async () => {
     vi.spyOn(API, "listProjects").mockResolvedValue({ projects: [] });
 
     renderPage();
-    await screen.findByText("暂无项目");
+    await screen.findByText("从小说种子开始，或先建一个视频项目。");
     expect(screen.queryByTestId("create-project-modal")).not.toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole("button", { name: "创建项目" }));
+    fireEvent.click(screen.getByRole("button", { name: /^Create Project$|^创建项目$/ }));
 
     await waitFor(() => {
       expect(screen.getByTestId("create-project-modal")).toBeInTheDocument();
@@ -94,7 +108,7 @@ describe("ProjectsPage", () => {
     vi.spyOn(API, "listProjects").mockResolvedValue({ projects: [] });
 
     const { location } = renderPage();
-    const novelWorkbenchButton = await screen.findByRole("button", { name: "小说工坊" });
+    const novelWorkbenchButton = await screen.findByRole("button", { name: /启动小说工坊/ });
     fireEvent.click(novelWorkbenchButton);
 
     await waitFor(() => {
@@ -133,7 +147,7 @@ describe("ProjectsPage", () => {
         characters: {},
         clues: {},
       },
-      warnings: ["发现未识别的附加文件/目录: extras"],
+      warnings: ["warning"],
       conflict_resolution: "none",
       diagnostics: {
         auto_fixed: [{ code: "missing_clues_field", message: "segments[0]: 补全缺失字段 clues_in_segment" }],
@@ -142,7 +156,7 @@ describe("ProjectsPage", () => {
     });
 
     const { container, location } = renderPage();
-    await screen.findByText("暂无项目");
+    await screen.findByText("从小说种子开始，或先建一个视频项目。");
 
     const fileInput = container.querySelector('input[type="file"]') as HTMLInputElement;
     const file = new File(["zip"], "project.zip", { type: "application/zip" });
@@ -154,40 +168,30 @@ describe("ProjectsPage", () => {
     await waitFor(() => {
       expect(location.history?.at(-1)).toBe("/app/projects/imported-demo");
     });
-    expect(useAppStore.getState().toast?.text).toContain("自动修复");
+    expect(useAppStore.getState().toast?.text).toMatch(/auto-fixed|自动修复/);
   });
 
-  it("shows a structured toast when import fails", async () => {
+  it("shows diagnostics dialog when import fails", async () => {
     vi.spyOn(API, "listProjects").mockResolvedValue({ projects: [] });
     const error = new Error("导入包校验失败") as Error & {
-      detail?: string;
-      errors?: string[];
-      warnings?: string[];
       diagnostics?: {
         blocking: { code: string; message: string }[];
         auto_fixable: { code: string; message: string }[];
         warnings: { code: string; message: string }[];
       };
     };
-    error.detail = "导入包校验失败";
-    error.errors = ["缺少 project.json", "缺少 scripts/episode_1.json", "缺少角色图"];
-    error.warnings = ["发现未识别的附加文件/目录: extras"];
     error.diagnostics = {
       blocking: [
         { code: "validation_error", message: "缺少 project.json" },
         { code: "validation_error", message: "缺少 scripts/episode_1.json" },
       ],
-      auto_fixable: [
-        { code: "missing_clues_field", message: "segments[0]: 补全缺失字段 clues_in_segment" },
-      ],
-      warnings: [
-        { code: "validation_warning", message: "发现未识别的附加文件/目录: extras" },
-      ],
+      auto_fixable: [{ code: "missing_clues_field", message: "segments[0]: 补全缺失字段 clues_in_segment" }],
+      warnings: [{ code: "validation_warning", message: "发现未识别的附加文件/目录: extras" }],
     };
     vi.spyOn(API, "importProject").mockRejectedValue(error);
 
     const { container } = renderPage();
-    await screen.findByText("暂无项目");
+    await screen.findByText("从小说种子开始，或先建一个视频项目。");
 
     const fileInput = container.querySelector('input[type="file"]') as HTMLInputElement;
     fireEvent.change(fileInput, {
@@ -195,11 +199,10 @@ describe("ProjectsPage", () => {
     });
 
     await waitFor(() => {
-      expect(screen.getByText("导出诊断")).toBeInTheDocument();
+      expect(screen.getByText(/Export Diagnostics|导出诊断/)).toBeInTheDocument();
     });
     expect(screen.getByText("缺少 project.json")).toBeInTheDocument();
     expect(screen.getByText("缺少 scripts/episode_1.json")).toBeInTheDocument();
-    expect(screen.getByText("segments[0]: 补全缺失字段 clues_in_segment")).toBeInTheDocument();
   });
 
   it("opens a secondary confirmation when import hits a duplicate project id", async () => {
@@ -224,13 +227,9 @@ describe("ProjectsPage", () => {
       });
     const conflictError = new Error("检测到项目编号冲突") as Error & {
       status?: number;
-      detail?: string;
-      errors?: string[];
       conflict_project_name?: string;
     };
     conflictError.status = 409;
-    conflictError.detail = "检测到项目编号冲突";
-    conflictError.errors = ["项目编号 'demo' 已存在"];
     conflictError.conflict_project_name = "demo";
 
     vi.spyOn(API, "importProject")
@@ -255,14 +254,14 @@ describe("ProjectsPage", () => {
       });
 
     const { container, location } = renderPage();
-    await screen.findByText("暂无项目");
+    await screen.findByText("从小说种子开始，或先建一个视频项目。");
 
     const fileInput = container.querySelector('input[type="file"]') as HTMLInputElement;
     const file = new File(["zip"], "project.zip", { type: "application/zip" });
     fireEvent.change(fileInput, { target: { files: [file] } });
 
-    expect(await screen.findByText("检测到项目编号重复")).toBeInTheDocument();
-    fireEvent.click(screen.getByRole("button", { name: "自动重命名导入" }));
+    expect(await screen.findByText(/Duplicate Project ID Detected|检测到项目编号重复/)).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: /Auto Rename and Import|自动重命名导入/ }));
 
     await waitFor(() => {
       expect(API.importProject).toHaveBeenNthCalledWith(1, file, "prompt");

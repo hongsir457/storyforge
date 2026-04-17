@@ -9,7 +9,7 @@ from datetime import datetime
 from fastapi import APIRouter, Query
 
 from lib.usage_tracker import UsageTracker
-from server.auth import CurrentUser
+from server.auth import CurrentAdmin
 
 router = APIRouter()
 
@@ -18,7 +18,7 @@ _tracker = UsageTracker()
 
 @router.get("/usage/stats")
 async def get_stats(
-    _user: CurrentUser,
+    _user: CurrentAdmin,
     project_name: str | None = Query(None, description="项目名称（可选）"),
     provider: str | None = Query(None, description="按供应商筛选"),
     start_date: str | None = Query(None, description="开始日期 (YYYY-MM-DD)"),
@@ -47,7 +47,7 @@ async def get_stats(
 
 @router.get("/usage/calls")
 async def get_calls(
-    _user: CurrentUser,
+    _user: CurrentAdmin,
     project_name: str | None = Query(None, description="项目名称"),
     call_type: str | None = Query(None, description="调用类型 (image/video)"),
     status: str | None = Query(None, description="状态 (success/failed)"),
@@ -72,6 +72,6 @@ async def get_calls(
 
 
 @router.get("/usage/projects")
-async def get_projects_list(_user: CurrentUser):
+async def get_projects_list(_user: CurrentAdmin):
     projects = await _tracker.get_projects_list()
     return {"projects": projects}

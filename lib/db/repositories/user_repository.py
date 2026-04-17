@@ -41,6 +41,14 @@ class UserRepository(BaseRepository):
         result = await self.session.execute(stmt)
         return result.scalar_one_or_none()
 
+    async def list_with_username_or_email(self, *, username: str, email: str) -> list[User]:
+        stmt = self._scope_query(
+            select(User).where(or_(User.username == username.strip(), User.email == email.strip().lower())),
+            User,
+        )
+        result = await self.session.execute(stmt)
+        return list(result.scalars())
+
     async def create(
         self,
         *,
@@ -102,15 +110,14 @@ class UserRepository(BaseRepository):
         return list(result.scalars())
 
     async def exists_with_username_or_email(self, *, username: str, email: str) -> tuple[bool, bool]:
-        stmt = self._scope_query(
-            select(User).where(or_(User.username == username.strip(), User.email == email.strip().lower())),
-            User,
-        )
-        result = await self.session.execute(stmt)
-        users = list(result.scalars())
+        users = await self.list_with_username_or_email(username=username, email=email)
         has_username = any(user.username == username.strip() for user in users)
         has_email = any(user.email == email.strip().lower() for user in users)
         return has_username, has_email
+
+    async def delete(self, user: User) -> None:
+        await self.session.delete(user)
+        await self.session.flush()
 
     async def set_bootstrap_fields(
         self,

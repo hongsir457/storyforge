@@ -8,11 +8,18 @@ import json
 import os
 import secrets
 import time
-from typing import Literal
+from typing import Literal, TypedDict
 
 from redis.asyncio import Redis
 
 ChallengeKind = Literal["verify_email", "password_reset"]
+
+
+class PendingRegistration(TypedDict):
+    email: str
+    username: str
+    display_name: str
+    password_hash: str
 
 
 class ChallengeRateLimitedError(RuntimeError):
@@ -26,6 +33,10 @@ def _normalize_subject(subject: str) -> str:
 def _hash_code(subject: str, code: str) -> str:
     material = f"{_normalize_subject(subject)}:{code}".encode()
     return hashlib.sha256(material).hexdigest()
+
+
+def _normalize_username(username: str) -> str:
+    return username.strip()
 
 
 class _InMemoryStore:
@@ -80,6 +91,12 @@ class AuthChallengeStore:
     def _cooldown_key(self, kind: ChallengeKind, subject: str) -> str:
         return f"storyforge:auth:cooldown:{kind}:{_normalize_subject(subject)}"
 
+    def _pending_registration_key(self, email: str) -> str:
+        return f"storyforge:auth:pending-registration:{_normalize_subject(email)}"
+
+    def _pending_registration_username_key(self, username: str) -> str:
+        return f"storyforge:auth:pending-registration-username:{_normalize_username(username)}"
+
     async def issue_code(
         self,
         *,
@@ -100,6 +117,68 @@ class AuthChallengeStore:
         await self._backend.set(self._challenge_key(kind, subject), json.dumps(payload), ex=ttl_seconds)
         await self._backend.set(cooldown_key, "1", ex=resend_interval_seconds)
         return code
+
+    async def save_pending_registration(
+        self,
+        *,
+        email: str,
+        username: str,
+        display_name: str,
+        password_hash: str,
+        ttl_seconds: int = 86400,
+    ) -> PendingRegistration:
+        normalized_email = _normalize_subject(email)
+        normalized_username = _normalize_username(username)
+        email_key = self._pending_registration_key(normalized_email)
+        username_key = self._pending_registration_username_key(normalized_username)
+
+        previous_email = await self._backend.get(username_key)
+        if previous_email and previous_email != normalized_email:
+            await self._backend.delete(self._pending_registration_key(previous_email))
+
+        previous_raw = await self._backend.get(email_key)
+        if previous_raw is not None:
+            previous_payload = json.loads(previous_raw)
+            previous_username = _normalize_username(str(previous_payload.get("username", "")))
+            if previous_username and previous_username != normalized_username:
+                await self._backend.delete(self._pending_registration_username_key(previous_username))
+
+        payload: PendingRegistration = {
+            "email": normalized_email,
+            "username": normalized_username,
+            "display_name": display_name.strip(),
+            "password_hash": password_hash,
+        }
+        await self._backend.set(email_key, json.dumps(payload), ex=ttl_seconds)
+        await self._backend.set(username_key, normalized_email, ex=ttl_seconds)
+        return payload
+
+    async def get_pending_registration(self, *, email: str) -> PendingRegistration | None:
+        raw = await self._backend.get(self._pending_registration_key(email))
+        if raw is None:
+            return None
+        payload = json.loads(raw)
+        return PendingRegistration(
+            email=_normalize_subject(str(payload.get("email", email))),
+            username=_normalize_username(str(payload.get("username", ""))),
+            display_name=str(payload.get("display_name", "")).strip(),
+            password_hash=str(payload.get("password_hash", "")),
+        )
+
+    async def find_pending_registration(self, identifier: str) -> PendingRegistration | None:
+        normalized_identifier = identifier.strip()
+        if not normalized_identifier:
+            return None
+        if "@" in normalized_identifier:
+            return await self.get_pending_registration(email=normalized_identifier)
+
+        mapped_email = await self._backend.get(self._pending_registration_username_key(normalized_identifier))
+        if mapped_email is None:
+            return None
+        payload = await self.get_pending_registration(email=mapped_email)
+        if payload is None:
+            await self._backend.delete(self._pending_registration_username_key(normalized_identifier))
+        return payload
 
     async def verify_code(
         self,
@@ -132,6 +211,12 @@ class AuthChallengeStore:
 
     async def consume(self, *, kind: ChallengeKind, subject: str) -> None:
         await self._backend.delete(self._challenge_key(kind, subject))
+
+    async def consume_pending_registration(self, *, email: str) -> None:
+        payload = await self.get_pending_registration(email=email)
+        await self._backend.delete(self._pending_registration_key(email))
+        if payload is not None and payload["username"]:
+            await self._backend.delete(self._pending_registration_username_key(payload["username"]))
 
 
 _challenge_store: AuthChallengeStore | None = None

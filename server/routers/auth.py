@@ -24,6 +24,7 @@ from server.auth import (
 from server.services.auth_challenge_store import (
     ChallengeKind,
     ChallengeRateLimitedError,
+    PendingRegistration,
     get_auth_challenge_store,
 )
 from server.services.mailer import get_mailer_config, send_email
@@ -130,6 +131,47 @@ def _serialize_user(user: User) -> AuthenticatedUserResponse:
     )
 
 
+def _registration_delivery_message(delivery: EmailDeliveryStatus) -> str:
+    return (
+        "Verification code sent"
+        if delivery in {"sent", "debug_logged"}
+        else "Verification email could not be delivered. Check SMTP activation and sender verification."
+    )
+
+
+async def _delete_unverified_conflicts(repo: UserRepository, *, username: str, email: str) -> None:
+    conflicts = await repo.list_with_username_or_email(username=username, email=email)
+    username_taken = any(user.username == username and user.is_email_verified for user in conflicts)
+    email_taken = any(user.email == email and user.is_email_verified for user in conflicts)
+    if username_taken:
+        raise HTTPException(status_code=409, detail="Username already exists")
+    if email_taken:
+        raise HTTPException(status_code=409, detail="Email already exists")
+
+    for user in conflicts:
+        if not user.is_email_verified:
+            await repo.delete(user)
+
+
+async def _create_verified_user_from_pending(
+    *,
+    repo: UserRepository,
+    pending: PendingRegistration,
+) -> User:
+    await _delete_unverified_conflicts(repo, username=pending["username"], email=pending["email"])
+    user = await repo.create(
+        username=pending["username"],
+        email=pending["email"],
+        display_name=pending["display_name"],
+        password_hash=pending["password_hash"],
+        role="user",
+        is_active=True,
+        is_email_verified=True,
+    )
+    await repo.touch_last_login(user)
+    return user
+
+
 async def _resolve_db_user(session: AsyncSession, current_user_id: str, current_username: str | None) -> User | None:
     repo = UserRepository(session)
     user = await repo.get_by_id(current_user_id)
@@ -185,7 +227,16 @@ async def _authenticate_managed_user(identifier: str, password: str, _t: Transla
     async with async_session_factory() as session:
         repo = UserRepository(session)
         user = await repo.get_by_identifier(identifier)
-        if user is None or not user.password_hash or not verify_password(password, user.password_hash):
+        if user is None:
+            pending = await get_auth_challenge_store().find_pending_registration(identifier)
+            if pending is not None:
+                raise HTTPException(status_code=403, detail="Please verify your email before logging in")
+            raise HTTPException(
+                status_code=401,
+                detail=_t("unauthorized"),
+                headers={"WWW-Authenticate": "Bearer"},
+            )
+        if not user.password_hash or not verify_password(password, user.password_hash):
             raise HTTPException(
                 status_code=401,
                 detail=_t("unauthorized"),
@@ -277,32 +328,26 @@ async def register(
     display_name = (req.display_name or username).strip()
 
     repo = UserRepository(session)
-    username_exists, email_exists = await repo.exists_with_username_or_email(username=username, email=email)
-    if username_exists:
-        raise HTTPException(status_code=409, detail="Username already exists")
-    if email_exists:
-        raise HTTPException(status_code=409, detail="Email already exists")
+    await _delete_unverified_conflicts(repo, username=username, email=email)
+    await session.commit()
 
-    user = await repo.create(
-        username=username,
+    store = get_auth_challenge_store()
+    pending = await store.save_pending_registration(
         email=email,
+        username=username,
         display_name=display_name,
         password_hash=hash_password(req.password),
-        role="user",
-        is_active=True,
-        is_email_verified=False,
     )
-    await session.commit()
 
     delivery = await _issue_and_send_code(
         kind="verify_email",
-        email=user.email,
-        display_name=user.display_name,
+        email=pending["email"],
+        display_name=pending["display_name"],
         _t=_t,
     )
     return RegisterResponse(
         success=True,
-        email=user.email,
+        email=pending["email"],
         verification_required=True,
         email_delivery=delivery,
     )
@@ -317,15 +362,24 @@ async def request_email_verification(
     email = _normalize_email(req.email)
     repo = UserRepository(session)
     user = await repo.get_by_email(email)
-    if user is None or user.is_email_verified is True:
+    if user is not None and user.is_email_verified is True:
         return GenericSuccessResponse(success=True, message="Verification code sent")
 
-    delivery = await _issue_and_send_code(kind="verify_email", email=user.email, display_name=user.display_name, _t=_t)
-    message = (
-        "Verification code sent"
-        if delivery in {"sent", "debug_logged"}
-        else "Verification email could not be delivered. Check SMTP activation and sender verification."
-    )
+    if user is not None:
+        delivery = await _issue_and_send_code(
+            kind="verify_email", email=user.email, display_name=user.display_name, _t=_t
+        )
+    else:
+        pending = await get_auth_challenge_store().get_pending_registration(email=email)
+        if pending is None:
+            return GenericSuccessResponse(success=True, message="Verification code sent")
+        delivery = await _issue_and_send_code(
+            kind="verify_email",
+            email=pending["email"],
+            display_name=pending["display_name"],
+            _t=_t,
+        )
+    message = _registration_delivery_message(delivery)
     return GenericSuccessResponse(success=True, message=message, email_delivery=delivery)
 
 
@@ -337,17 +391,24 @@ async def confirm_email_verification(
 ):
     email = _normalize_email(req.email)
     repo = UserRepository(session)
-    user = await repo.get_by_email(email)
-    if user is None:
-        raise HTTPException(status_code=404, detail="Account not found")
-
     ok = await get_auth_challenge_store().verify_code(kind="verify_email", subject=email, code=req.code)
     if not ok:
         raise HTTPException(status_code=400, detail="Verification code is invalid or expired")
 
-    await repo.mark_email_verified(user)
-    await repo.touch_last_login(user)
+    pending_consumed = False
+    user = await repo.get_by_email(email)
+    if user is None:
+        pending = await get_auth_challenge_store().get_pending_registration(email=email)
+        if pending is None:
+            raise HTTPException(status_code=404, detail="Account not found")
+        user = await _create_verified_user_from_pending(repo=repo, pending=pending)
+        pending_consumed = True
+    else:
+        await repo.mark_email_verified(user)
+        await repo.touch_last_login(user)
     await session.commit()
+    if pending_consumed:
+        await get_auth_challenge_store().consume_pending_registration(email=email)
 
     token = create_token(
         user.username,

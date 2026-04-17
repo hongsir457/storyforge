@@ -13,10 +13,10 @@ def get_api_key() -> str:
 
 def get_api_base_url() -> str:
     return (
-        os.environ.get("AUTONOVEL_API_BASE_URL")
-        or os.environ.get("GEMINI_BASE_URL")
-        or DEFAULT_API_BASE_URL
-    ).strip().rstrip("/")
+        (os.environ.get("AUTONOVEL_API_BASE_URL") or os.environ.get("GEMINI_BASE_URL") or DEFAULT_API_BASE_URL)
+        .strip()
+        .rstrip("/")
+    )
 
 
 def has_auth_config() -> bool:

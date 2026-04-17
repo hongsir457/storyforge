@@ -3,9 +3,11 @@
 from __future__ import annotations
 
 import logging
+from html import escape
 from typing import Annotated, Literal
+from urllib.parse import quote
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.security import OAuth2PasswordRequestForm
 from pydantic import BaseModel, Field
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -119,6 +121,79 @@ def _normalize_username(username: str) -> str:
     return normalized
 
 
+def _public_base_url(request: Request) -> str:
+    return str(request.base_url).rstrip("/")
+
+
+def _build_auth_email_bodies(
+    *,
+    kind: ChallengeKind,
+    subject: str,
+    text_body: str,
+    email: str,
+    display_name: str,
+    code: str,
+    request: Request,
+) -> tuple[str, str]:
+    base_url = _public_base_url(request)
+    logo_url = f"{base_url}/storyforge-logo.png"
+    if kind == "verify_email":
+        headline = "验证你的 Storyforge 账号"
+        description = "请使用下面的 6 位验证码完成邮箱验证。验证码 15 分钟内有效。"
+        action_label = "打开验证页面"
+        action_url = f"{base_url}/verify-email?email={quote(email)}"
+    else:
+        headline = "重置你的 Storyforge 密码"
+        description = "请使用下面的 6 位验证码完成密码重置。验证码 15 分钟内有效。"
+        action_label = "打开重置页面"
+        action_url = f"{base_url}/forgot-password?email={quote(email)}"
+
+    safe_name = escape(display_name)
+    safe_subject = escape(subject)
+    safe_code = escape(code)
+    html_body = f"""\
+<!doctype html>
+<html lang="zh-CN">
+  <body style="margin:0;padding:0;background:#0b1120;font-family:'Segoe UI',Arial,'PingFang SC','Microsoft YaHei',sans-serif;color:#e5eefc;">
+    <div style="margin:0 auto;max-width:640px;padding:32px 16px;">
+      <div style="background:linear-gradient(180deg,#121a2d 0%,#0f172a 100%);border:1px solid #22304d;border-radius:24px;overflow:hidden;box-shadow:0 24px 80px rgba(8,15,31,0.45);">
+        <div style="padding:28px 32px 12px 32px;border-bottom:1px solid rgba(148,163,184,0.14);">
+          <img src="{logo_url}" alt="Storyforge" style="display:block;width:176px;max-width:100%;height:auto;margin:0 auto 18px auto;" />
+          <div style="text-align:center;">
+            <div style="font-size:14px;letter-spacing:0.14em;text-transform:uppercase;color:#f59e0b;font-weight:700;">Storyforge</div>
+            <h1 style="margin:12px 0 8px 0;font-size:28px;line-height:1.2;color:#f8fafc;">{headline}</h1>
+            <p style="margin:0;font-size:15px;line-height:1.7;color:#cbd5e1;">{description}</p>
+          </div>
+        </div>
+        <div style="padding:28px 32px 8px 32px;">
+          <p style="margin:0 0 18px 0;font-size:15px;line-height:1.8;color:#dbe4f0;">你好 <strong style="color:#ffffff;">{safe_name}</strong>，</p>
+          <p style="margin:0 0 18px 0;font-size:15px;line-height:1.8;color:#dbe4f0;">你正在进行 <strong style="color:#ffffff;">{safe_subject}</strong> 操作。为确保账号安全，请在页面中输入下面的验证码：</p>
+          <div style="margin:0 0 20px 0;padding:18px 20px;background:linear-gradient(135deg,#1f2a44 0%,#172036 100%);border:1px solid #31415f;border-radius:18px;text-align:center;">
+            <div style="font-size:13px;letter-spacing:0.2em;text-transform:uppercase;color:#93c5fd;margin-bottom:10px;">Verification Code</div>
+            <div style="font-size:34px;line-height:1;letter-spacing:0.22em;font-weight:800;color:#ffffff;font-variant-numeric:tabular-nums;">{safe_code}</div>
+            <div style="margin-top:12px;font-size:13px;color:#94a3b8;">15 分钟内有效，仅可使用一次</div>
+          </div>
+          <div style="text-align:center;margin:0 0 22px 0;">
+            <a href="{action_url}" style="display:inline-block;padding:12px 22px;border-radius:999px;background:#0ea5e9;color:#ffffff;text-decoration:none;font-size:14px;font-weight:700;">{action_label}</a>
+          </div>
+          <div style="padding:16px 18px;border-radius:16px;background:rgba(148,163,184,0.08);border:1px solid rgba(148,163,184,0.14);">
+            <div style="font-size:13px;line-height:1.8;color:#cbd5e1;">如果这不是你本人发起的操作，请忽略此邮件；只要不输入验证码，账号或密码都不会发生变化。</div>
+          </div>
+        </div>
+        <div style="padding:18px 32px 28px 32px;">
+          <div style="font-size:12px;line-height:1.8;color:#94a3b8;text-align:center;">
+            此邮件由 Storyforge（叙影工场）系统自动发送，请勿直接回复。<br />
+            登录工作台：<a href="{base_url}/login" style="color:#7dd3fc;text-decoration:none;">{base_url}/login</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>
+"""
+    return text_body, html_body
+
+
 def _serialize_user(user: User) -> AuthenticatedUserResponse:
     return AuthenticatedUserResponse(
         id=user.id,
@@ -189,6 +264,7 @@ async def _send_code_email(
     code: str,
     display_name: str,
     _t: Translator,
+    request: Request,
 ) -> EmailDeliveryStatus:
     try:
         if kind == "verify_email":
@@ -197,7 +273,16 @@ async def _send_code_email(
         else:
             subject = _t("reset_password_subject")
             body = _t("reset_password_body", name=display_name, code=code)
-        await send_email(to_email=email, subject=subject, body=body)
+        text_body, html_body = _build_auth_email_bodies(
+            kind=kind,
+            subject=subject,
+            text_body=body,
+            email=email,
+            display_name=display_name,
+            code=code,
+            request=request,
+        )
+        await send_email(to_email=email, subject=subject, body=text_body, html_body=html_body)
     except RuntimeError:
         logger.warning("Email delivery not configured for %s", email)
         return "unavailable"
@@ -214,13 +299,14 @@ async def _issue_and_send_code(
     email: str,
     display_name: str,
     _t: Translator,
+    request: Request,
 ) -> EmailDeliveryStatus:
     store = get_auth_challenge_store()
     try:
         code = await store.issue_code(kind=kind, subject=email)
     except ChallengeRateLimitedError:
         raise HTTPException(status_code=429, detail="verification code requested too frequently") from None
-    return await _send_code_email(kind=kind, email=email, code=code, display_name=display_name, _t=_t)
+    return await _send_code_email(kind=kind, email=email, code=code, display_name=display_name, _t=_t, request=request)
 
 
 async def _authenticate_managed_user(identifier: str, password: str, _t: Translator) -> User:
@@ -320,6 +406,7 @@ async def update_me(
 @router.post("/auth/register", response_model=RegisterResponse)
 async def register(
     req: RegisterRequest,
+    request: Request,
     _t: Translator,
     session: AsyncSession = Depends(get_async_session),
 ):
@@ -344,6 +431,7 @@ async def register(
         email=pending["email"],
         display_name=pending["display_name"],
         _t=_t,
+        request=request,
     )
     return RegisterResponse(
         success=True,
@@ -356,6 +444,7 @@ async def register(
 @router.post("/auth/verify-email/request", response_model=GenericSuccessResponse)
 async def request_email_verification(
     req: EmailRequest,
+    request: Request,
     _t: Translator,
     session: AsyncSession = Depends(get_async_session),
 ):
@@ -367,7 +456,7 @@ async def request_email_verification(
 
     if user is not None:
         delivery = await _issue_and_send_code(
-            kind="verify_email", email=user.email, display_name=user.display_name, _t=_t
+            kind="verify_email", email=user.email, display_name=user.display_name, _t=_t, request=request
         )
     else:
         pending = await get_auth_challenge_store().get_pending_registration(email=email)
@@ -378,6 +467,7 @@ async def request_email_verification(
             email=pending["email"],
             display_name=pending["display_name"],
             _t=_t,
+            request=request,
         )
     message = _registration_delivery_message(delivery)
     return GenericSuccessResponse(success=True, message=message, email_delivery=delivery)
@@ -424,6 +514,7 @@ async def confirm_email_verification(
 @router.post("/auth/password/forgot", response_model=GenericSuccessResponse)
 async def forgot_password(
     req: EmailRequest,
+    request: Request,
     _t: Translator,
     session: AsyncSession = Depends(get_async_session),
 ):
@@ -432,7 +523,13 @@ async def forgot_password(
     user = await repo.get_by_email(email)
     if user is not None:
         try:
-            await _issue_and_send_code(kind="password_reset", email=user.email, display_name=user.display_name, _t=_t)
+            await _issue_and_send_code(
+                kind="password_reset",
+                email=user.email,
+                display_name=user.display_name,
+                _t=_t,
+                request=request,
+            )
         except HTTPException:
             raise
         except Exception:

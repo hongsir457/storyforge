@@ -74,7 +74,13 @@ def client(tmp_path, monkeypatch):
     store.issue_code = _issue_code  # type: ignore[method-assign]
     monkeypatch.setattr(challenge_store_module, "_challenge_store", store)
 
-    async def _fake_send_email(*, to_email: str, subject: str, body: str) -> None:  # noqa: ARG001
+    async def _fake_send_email(
+        *,
+        to_email: str,
+        subject: str,
+        body: str,
+        html_body: str | None = None,
+    ) -> None:  # noqa: ARG001
         return None
 
     monkeypatch.setattr(auth_router, "send_email", _fake_send_email)

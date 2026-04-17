@@ -43,7 +43,7 @@ def get_mailer_config() -> MailerConfig:
     )
 
 
-async def send_email(*, to_email: str, subject: str, body: str) -> None:
+async def send_email(*, to_email: str, subject: str, body: str, html_body: str | None = None) -> None:
     config = get_mailer_config()
     if not config.enabled:
         raise RuntimeError("Email delivery is not configured")
@@ -58,6 +58,8 @@ async def send_email(*, to_email: str, subject: str, body: str) -> None:
     message["To"] = to_email
     message["Subject"] = subject
     message.set_content(body)
+    if html_body:
+        message.add_alternative(html_body, subtype="html")
 
     def _deliver() -> None:
         with smtplib.SMTP(config.host, config.port, timeout=30) as smtp:

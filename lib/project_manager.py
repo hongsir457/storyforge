@@ -21,11 +21,14 @@ from typing import Any
 from pydantic import BaseModel, Field
 
 from lib.project_change_hints import emit_project_change_hint
+from lib.request_user_context import get_current_request_user
 
 logger = logging.getLogger(__name__)
 
 PROJECT_NAME_PATTERN = re.compile(r"^[A-Za-z0-9-]+$")
 PROJECT_SLUG_SANITIZER = re.compile(r"[^a-zA-Z0-9]+")
+PROJECT_OWNER_USER_ID_KEY = "owner_user_id"
+PROJECT_OWNER_USERNAME_KEY = "owner_username"
 
 # ==================== 数据模型 ====================
 
@@ -58,6 +61,72 @@ class ProjectManager:
 
     # 项目元数据文件名
     PROJECT_FILE = "project.json"
+
+    @staticmethod
+    def _get_project_metadata(project: dict) -> dict:
+        metadata = project.get("metadata")
+        if isinstance(metadata, dict):
+            return metadata
+        metadata = {}
+        project["metadata"] = metadata
+        return metadata
+
+    @classmethod
+    def _project_owner(cls, project: dict) -> tuple[str | None, str | None]:
+        metadata = cls._get_project_metadata(project)
+        owner_user_id = str(metadata.get(PROJECT_OWNER_USER_ID_KEY, "")).strip() or None
+        owner_username = str(metadata.get(PROJECT_OWNER_USERNAME_KEY, "")).strip() or None
+        return owner_user_id, owner_username
+
+    @classmethod
+    def _project_has_owner(cls, project: dict) -> bool:
+        owner_user_id, owner_username = cls._project_owner(project)
+        return bool(owner_user_id or owner_username)
+
+    @staticmethod
+    def _request_username(request_user: Any | None) -> str | None:
+        if request_user is None:
+            return None
+        username = getattr(request_user, "username", None) or getattr(request_user, "sub", None)
+        if not username:
+            return None
+        normalized = str(username).strip()
+        return normalized or None
+
+    @classmethod
+    def _can_access_project(cls, project: dict, request_user: Any | None) -> bool:
+        if request_user is None:
+            return True
+        owner_user_id, owner_username = cls._project_owner(project)
+        request_user_id = str(getattr(request_user, "id", "")).strip()
+        if owner_user_id:
+            return request_user_id == owner_user_id
+        request_username = cls._request_username(request_user)
+        if owner_username:
+            return request_username == owner_username
+        return str(getattr(request_user, "role", "")).strip() == "admin"
+
+    @classmethod
+    def _ensure_project_access(cls, project_name: str, project: dict, request_user: Any | None = None) -> None:
+        effective_user = request_user if request_user is not None else get_current_request_user()
+        if cls._can_access_project(project, effective_user):
+            return
+        raise FileNotFoundError(f"项目 '{project_name}' 不存在")
+
+    @classmethod
+    def _stamp_project_owner(cls, project: dict, request_user: Any | None = None) -> dict:
+        effective_user = request_user if request_user is not None else get_current_request_user()
+        if effective_user is None:
+            return project
+        metadata = cls._get_project_metadata(project)
+        metadata[PROJECT_OWNER_USER_ID_KEY] = str(getattr(effective_user, "id", "")).strip()
+        username = cls._request_username(effective_user)
+        if username:
+            metadata[PROJECT_OWNER_USERNAME_KEY] = username
+        return project
+
+    def stamp_project_owner(self, project: dict, request_user: Any | None = None) -> dict:
+        return self._stamp_project_owner(project, request_user=request_user)
 
     @staticmethod
     def normalize_project_name(name: str) -> str:
@@ -115,7 +184,27 @@ class ProjectManager:
 
     def list_projects(self) -> list[str]:
         """列出所有项目"""
-        return [d.name for d in self.projects_root.iterdir() if d.is_dir() and not d.name.startswith(".")]
+        request_user = get_current_request_user()
+        visible_projects: list[str] = []
+        for project_dir in self.projects_root.iterdir():
+            if not project_dir.is_dir() or project_dir.name.startswith("."):
+                continue
+            if request_user is None:
+                visible_projects.append(project_dir.name)
+                continue
+            project_file = project_dir / self.PROJECT_FILE
+            if not project_file.exists():
+                if str(getattr(request_user, "role", "")).strip() == "admin":
+                    visible_projects.append(project_dir.name)
+                continue
+            try:
+                with open(project_file, encoding="utf-8") as f:
+                    project = json.load(f)
+                self._ensure_project_access(project_dir.name, project, request_user)
+            except (FileNotFoundError, json.JSONDecodeError, OSError):
+                continue
+            visible_projects.append(project_dir.name)
+        return visible_projects
 
     def create_project(self, name: str) -> Path:
         """
@@ -221,6 +310,16 @@ class ProjectManager:
         project_dir = Path(real)
         if not project_dir.exists():
             raise FileNotFoundError(f"项目 '{name}' 不存在")
+        request_user = get_current_request_user()
+        if request_user is not None:
+            project_file = project_dir / self.PROJECT_FILE
+            if project_file.exists():
+                try:
+                    with open(project_file, encoding="utf-8") as f:
+                        project = json.load(f)
+                except (OSError, json.JSONDecodeError) as exc:
+                    raise FileNotFoundError(f"项目 '{name}' 不存在") from exc
+                self._ensure_project_access(name, project, request_user)
         return project_dir
 
     @staticmethod
@@ -947,8 +1046,19 @@ class ProjectManager:
     def project_exists(self, project_name: str) -> bool:
         """检查项目元数据文件是否存在"""
         try:
-            return self._get_project_file_path(project_name).exists()
+            project_file = self._get_project_file_path(project_name)
+            if not project_file.exists():
+                return False
+            request_user = get_current_request_user()
+            if request_user is None:
+                return True
+            with open(project_file, encoding="utf-8") as f:
+                project = json.load(f)
+            self._ensure_project_access(project_name, project, request_user)
+            return True
         except FileNotFoundError:
+            return False
+        except (json.JSONDecodeError, OSError):
             return False
 
     def load_project(self, project_name: str) -> dict:
@@ -967,7 +1077,9 @@ class ProjectManager:
             raise FileNotFoundError(f"项目元数据文件不存在: {project_file}")
 
         with open(project_file, encoding="utf-8") as f:
-            return json.load(f)
+            project = json.load(f)
+        self._ensure_project_access(project_name, project)
+        return project
 
     @contextmanager
     def _project_lock(self, project_name: str):
@@ -1022,6 +1134,20 @@ class ProjectManager:
             保存的文件路径
         """
         project_file = self._get_project_file_path(project_name)
+        request_user = get_current_request_user()
+        if project_file.exists():
+            with open(project_file, encoding="utf-8") as f:
+                current_project = json.load(f)
+            self._ensure_project_access(project_name, current_project, request_user)
+            if self._project_has_owner(current_project) and not self._project_has_owner(project):
+                current_owner_user_id, current_owner_username = self._project_owner(current_project)
+                metadata = self._get_project_metadata(project)
+                if current_owner_user_id:
+                    metadata[PROJECT_OWNER_USER_ID_KEY] = current_owner_user_id
+                if current_owner_username:
+                    metadata[PROJECT_OWNER_USERNAME_KEY] = current_owner_username
+        elif request_user is not None:
+            self._stamp_project_owner(project, request_user=request_user)
 
         self._touch_metadata(project)
 

@@ -21,6 +21,7 @@ from pydantic import BaseModel, ConfigDict
 
 from lib import PROJECT_ROOT
 from lib.db.base import DEFAULT_USER_ID
+from lib.request_user_context import set_current_request_user
 
 logger = logging.getLogger(__name__)
 
@@ -347,7 +348,9 @@ def _payload_to_user(payload: dict[str, Any]) -> CurrentUserInfo:
 
 async def get_current_user(token: Annotated[str, Depends(oauth2_scheme)]) -> CurrentUserInfo:
     payload = await _verify_and_get_payload_async(token)
-    return _payload_to_user(payload)
+    user = _payload_to_user(payload)
+    set_current_request_user(user)
+    return user
 
 
 async def get_current_user_flexible(
@@ -362,7 +365,9 @@ async def get_current_user_flexible(
             headers={"WWW-Authenticate": "Bearer"},
         )
     payload = await _verify_and_get_payload_async(raw)
-    return _payload_to_user(payload)
+    user = _payload_to_user(payload)
+    set_current_request_user(user)
+    return user
 
 
 CurrentUser = Annotated[CurrentUserInfo, Depends(get_current_user)]

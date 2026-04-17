@@ -129,10 +129,20 @@ async def import_project_archive(
             )
 
         result = await asyncio.to_thread(_sync)
+        manager = get_project_manager()
+        owned_project = manager.stamp_project_owner(result.project, request_user=_user)
+
+        def _persist_imported_owner():
+            project_file = manager.projects_root / result.project_name / manager.PROJECT_FILE
+            manager._touch_metadata(owned_project)
+            with manager._project_lock(result.project_name):
+                manager._atomic_write_json(project_file, owned_project)
+
+        await asyncio.to_thread(_persist_imported_owner)
         return {
             "success": True,
             "project_name": result.project_name,
-            "project": result.project,
+            "project": owned_project,
             "warnings": result.warnings,
             "conflict_resolution": result.conflict_resolution,
             "diagnostics": result.diagnostics,

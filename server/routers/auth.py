@@ -12,7 +12,7 @@ from fastapi.security import OAuth2PasswordRequestForm
 from pydantic import BaseModel, Field
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from lib.db import async_session_factory, get_async_session
+from lib.db import get_async_session
 from lib.db.base import DEFAULT_USER_ID
 from lib.db.models.user import User
 from lib.db.repositories.user_repository import UserRepository
@@ -309,42 +309,47 @@ async def _issue_and_send_code(
     return await _send_code_email(kind=kind, email=email, code=code, display_name=display_name, _t=_t, request=request)
 
 
-async def _authenticate_managed_user(identifier: str, password: str, _t: Translator) -> User:
-    async with async_session_factory() as session:
-        repo = UserRepository(session)
-        user = await repo.get_by_identifier(identifier)
-        if user is None:
-            pending = await get_auth_challenge_store().find_pending_registration(identifier)
-            if pending is not None:
-                raise HTTPException(status_code=403, detail="Please verify your email before logging in")
-            raise HTTPException(
-                status_code=401,
-                detail=_t("unauthorized"),
-                headers={"WWW-Authenticate": "Bearer"},
-            )
-        if not user.password_hash or not verify_password(password, user.password_hash):
-            raise HTTPException(
-                status_code=401,
-                detail=_t("unauthorized"),
-                headers={"WWW-Authenticate": "Bearer"},
-            )
-        if not user.is_active:
-            raise HTTPException(status_code=403, detail="Account is disabled")
-        if not user.is_email_verified:
+async def _authenticate_managed_user(
+    identifier: str,
+    password: str,
+    _t: Translator,
+    session: AsyncSession,
+) -> User:
+    repo = UserRepository(session)
+    user = await repo.get_by_identifier(identifier)
+    if user is None:
+        pending = await get_auth_challenge_store().find_pending_registration(identifier)
+        if pending is not None:
             raise HTTPException(status_code=403, detail="Please verify your email before logging in")
+        raise HTTPException(
+            status_code=401,
+            detail=_t("unauthorized"),
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    if not user.password_hash or not verify_password(password, user.password_hash):
+        raise HTTPException(
+            status_code=401,
+            detail=_t("unauthorized"),
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    if not user.is_active:
+        raise HTTPException(status_code=403, detail="Account is disabled")
+    if not user.is_email_verified:
+        raise HTTPException(status_code=403, detail="Please verify your email before logging in")
 
-        await repo.touch_last_login(user)
-        await session.commit()
-        return user
+    await repo.touch_last_login(user)
+    await session.commit()
+    return user
 
 
 @router.post("/auth/token", response_model=TokenResponse)
 async def login_for_access_token(
     form_data: Annotated[OAuth2PasswordRequestForm, Depends()],
     _t: Translator,
+    session: AsyncSession = Depends(get_async_session),
 ):
     identifier = form_data.username.strip()
-    user = await _authenticate_managed_user(identifier, form_data.password, _t)
+    user = await _authenticate_managed_user(identifier, form_data.password, _t, session)
     token = create_token(
         user.username,
         user_id=user.id,

@@ -5,6 +5,15 @@ import { API } from "@/api";
 import { PublicShell } from "@/components/auth/PublicShell";
 import { useAuthStore } from "@/stores/auth-store";
 
+function emailDeliveryNotice(
+  delivery: string,
+  t: ReturnType<typeof useTranslation>["t"],
+) {
+  if (delivery === "unavailable") return t("email_delivery_unavailable");
+  if (delivery === "failed") return t("email_delivery_failed");
+  return "";
+}
+
 export function VerifyEmailPage() {
   const { t } = useTranslation(["auth", "dashboard"]);
   const [, setLocation] = useLocation();
@@ -21,9 +30,7 @@ export function VerifyEmailPage() {
   const [email, setEmail] = useState(initialEmail);
   const [code, setCode] = useState("");
   const [error, setError] = useState("");
-  const [notice, setNotice] = useState(
-    initialDelivery === "unavailable" ? t("email_delivery_unavailable") : "",
-  );
+  const [notice, setNotice] = useState(emailDeliveryNotice(initialDelivery, t));
   const [loading, setLoading] = useState(false);
   const [resending, setResending] = useState(false);
 
@@ -49,7 +56,7 @@ export function VerifyEmailPage() {
     setNotice("");
     try {
       const result = await API.requestEmailVerification(email);
-      setNotice(result.message || t("registration_success"));
+      setNotice(emailDeliveryNotice(result.email_delivery ?? "", t) || result.message || t("registration_success"));
     } catch (err) {
       setError(err instanceof Error ? err.message : t("login_failed"));
     } finally {

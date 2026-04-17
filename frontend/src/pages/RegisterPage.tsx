@@ -4,6 +4,15 @@ import { useTranslation } from "react-i18next";
 import { API } from "@/api";
 import { PublicShell } from "@/components/auth/PublicShell";
 
+function emailDeliveryNotice(
+  delivery: "sent" | "debug_logged" | "unavailable" | "failed",
+  t: ReturnType<typeof useTranslation>["t"],
+) {
+  if (delivery === "unavailable") return t("email_delivery_unavailable");
+  if (delivery === "failed") return t("email_delivery_failed");
+  return t("registration_success");
+}
+
 export function RegisterPage() {
   const { t } = useTranslation(["auth", "dashboard"]);
   const [form, setForm] = useState({
@@ -35,7 +44,7 @@ export function RegisterPage() {
         display_name: form.display_name,
         password: form.password,
       });
-      setNotice(result.email_delivery === "unavailable" ? t("email_delivery_unavailable") : t("registration_success"));
+      setNotice(emailDeliveryNotice(result.email_delivery, t));
       setLocation(
         `/verify-email?email=${encodeURIComponent(result.email)}&delivery=${encodeURIComponent(result.email_delivery)}`,
       );

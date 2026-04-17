@@ -117,6 +117,7 @@ export interface UsageCallsFilters {
 export interface SuccessResponse {
   success: boolean;
   message?: string;
+  email_delivery?: "sent" | "debug_logged" | "unavailable" | "failed";
 }
 
 export interface AuthUser {
@@ -139,7 +140,7 @@ export interface RegisterResponse {
   success: boolean;
   email: string;
   verification_required: boolean;
-  email_delivery: "sent" | "debug_logged" | "unavailable";
+  email_delivery: "sent" | "debug_logged" | "unavailable" | "failed";
 }
 
 /** Draft metadata returned by listDrafts. */

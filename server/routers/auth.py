@@ -31,6 +31,7 @@ from server.services.mailer import get_mailer_config, send_email
 logger = logging.getLogger(__name__)
 
 router = APIRouter()
+EmailDeliveryStatus = Literal["sent", "debug_logged", "unavailable", "failed"]
 
 
 class AuthenticatedUserResponse(BaseModel):
@@ -68,7 +69,7 @@ class RegisterResponse(BaseModel):
     success: bool
     email: str
     verification_required: bool
-    email_delivery: Literal["sent", "debug_logged", "unavailable"]
+    email_delivery: EmailDeliveryStatus
 
 
 class EmailRequest(BaseModel):
@@ -98,6 +99,7 @@ class UpdateProfileRequest(BaseModel):
 class GenericSuccessResponse(BaseModel):
     success: bool
     message: str | None = None
+    email_delivery: EmailDeliveryStatus | None = None
 
 
 def _normalize_email(email: str) -> str:
@@ -145,7 +147,7 @@ async def _send_code_email(
     code: str,
     display_name: str,
     _t: Translator,
-) -> Literal["sent", "debug_logged", "unavailable"]:
+) -> EmailDeliveryStatus:
     try:
         if kind == "verify_email":
             subject = _t("verify_email_subject")
@@ -159,7 +161,7 @@ async def _send_code_email(
         return "unavailable"
     except Exception:
         logger.exception("Failed to send auth email to %s", email)
-        return "unavailable"
+        return "failed"
 
     return "debug_logged" if get_mailer_config().debug_log_only else "sent"
 
@@ -170,7 +172,7 @@ async def _issue_and_send_code(
     email: str,
     display_name: str,
     _t: Translator,
-) -> Literal["sent", "debug_logged", "unavailable"]:
+) -> EmailDeliveryStatus:
     store = get_auth_challenge_store()
     try:
         code = await store.issue_code(kind=kind, subject=email)
@@ -318,8 +320,13 @@ async def request_email_verification(
     if user is None or user.is_email_verified is True:
         return GenericSuccessResponse(success=True, message="Verification code sent")
 
-    await _issue_and_send_code(kind="verify_email", email=user.email, display_name=user.display_name, _t=_t)
-    return GenericSuccessResponse(success=True, message="Verification code sent")
+    delivery = await _issue_and_send_code(kind="verify_email", email=user.email, display_name=user.display_name, _t=_t)
+    message = (
+        "Verification code sent"
+        if delivery in {"sent", "debug_logged"}
+        else "Verification email could not be delivered. Check SMTP activation and sender verification."
+    )
+    return GenericSuccessResponse(success=True, message=message, email_delivery=delivery)
 
 
 @router.post("/auth/verify-email/confirm", response_model=TokenResponse)

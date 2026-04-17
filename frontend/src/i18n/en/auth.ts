@@ -47,6 +47,7 @@ export default {
   verification_hint: "Enter the 6-digit code sent to {{email}}.",
   registration_success: "Account created. Verify your email to continue.",
   email_delivery_unavailable: "Email delivery is not configured yet. Ask the admin to configure SMTP or enable debug delivery.",
+  email_delivery_failed: "Email delivery is configured, but the SMTP provider rejected or blocked the message. Check provider activation and sender verification.",
   email_verification_status: "Email verification",
   verified: "Verified",
   unverified: "Not verified",

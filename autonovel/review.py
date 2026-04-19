@@ -22,6 +22,7 @@ from pathlib import Path
 
 from anthropic_compat import auth_error_message, generate_text, has_auth_config
 from dotenv import load_dotenv
+from writing_language import get_writing_language
 
 BASE_DIR = Path(__file__).parent
 load_dotenv(BASE_DIR / ".env", override=True)
@@ -29,11 +30,14 @@ load_dotenv(BASE_DIR / ".env", override=True)
 # Use the configured Gemini review model for prose-level analysis.
 REVIEW_MODEL = os.environ.get("AUTONOVEL_REVIEW_MODEL", "gemini-3.1-pro-preview")
 API_BASE = os.environ.get("AUTONOVEL_API_BASE_URL", "https://generativelanguage.googleapis.com")
+WRITING_LANGUAGE = get_writing_language()
 
 CHAPTERS_DIR = BASE_DIR / "chapters"
 LOGS_DIR = BASE_DIR / "edit_logs"
 
 REVIEW_PROMPT = """Read the below novel, "{title}". Review it first as a literary critic (like a newspaper book review) and then as a professor of fiction. In the later review, give specific, actionable suggestions for any defects you find. Be fair but honest. You don't *have* to find defects.
+
+Write the full review in {writing_language}.
 
 {manuscript}"""
 
@@ -213,7 +217,7 @@ def cmd_review(args):
     title = get_title()
     manuscript = build_manuscript()
 
-    prompt = REVIEW_PROMPT.format(title=title, manuscript=manuscript)
+    prompt = REVIEW_PROMPT.format(title=title, manuscript=manuscript, writing_language=WRITING_LANGUAGE)
 
     review_text = call_reviewer(prompt)
 

@@ -482,6 +482,7 @@ class API {
     title: string;
     seed_text: string;
     project_name?: string;
+    writing_language?: string;
     style?: string;
     aspect_ratio?: "9:16" | "16:9";
     default_duration?: 4 | 6 | 8;

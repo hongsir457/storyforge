@@ -12,6 +12,7 @@ from pathlib import Path
 
 from anthropic_compat import generate_text
 from dotenv import load_dotenv
+from writing_language import get_writing_language, json_output_requirement
 
 BASE_DIR = Path(__file__).parent
 load_dotenv(BASE_DIR / ".env")
@@ -19,6 +20,7 @@ load_dotenv(BASE_DIR / ".env")
 JUDGE_MODEL = os.environ.get("AUTONOVEL_JUDGE_MODEL", "gemini-3-flash-preview")
 API_BASE = os.environ.get("AUTONOVEL_API_BASE_URL", "https://generativelanguage.googleapis.com")
 CHAPTERS_DIR = BASE_DIR / "chapters"
+WRITING_LANGUAGE = get_writing_language()
 
 
 def discover_chapter_files() -> list[Path]:
@@ -33,7 +35,7 @@ def call_model(prompt, max_tokens=1500):
         "system": (
             "You produce structured outline entries for novel chapters. "
             "Be precise about what HAPPENS, what CHANGES, and what threads are planted/harvested. "
-            "Output valid JSON only."
+            f"{json_output_requirement()}"
         ),
         "messages": [{"role": "user", "content": prompt}],
     }
@@ -78,7 +80,7 @@ Return JSON with these fields:
 - "emotional_arc": one sentence describing the emotional movement (string)
 - "chapter_question": the question left open at chapter's end (string)
 
-JSON only, no other text."""
+JSON only, no other text. All natural-language string values must be in {WRITING_LANGUAGE}."""
 
         data = call_model(prompt)
         data["num"] = ch

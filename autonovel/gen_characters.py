@@ -10,6 +10,7 @@ from pathlib import Path
 
 from anthropic_compat import generate_text
 from dotenv import load_dotenv
+from writing_language import get_writing_language, prose_output_requirement
 
 BASE_DIR = Path(__file__).parent
 load_dotenv(BASE_DIR / ".env")
@@ -17,6 +18,7 @@ OUTPUT_PATH = BASE_DIR / "characters.md"
 
 WRITER_MODEL = os.environ.get("AUTONOVEL_WRITER_MODEL", "gemini-3.1-pro-preview")
 API_BASE = os.environ.get("AUTONOVEL_API_BASE_URL", "https://generativelanguage.googleapis.com")
+WRITING_LANGUAGE = get_writing_language()
 
 
 def call_writer(prompt, max_tokens=16000):
@@ -29,7 +31,8 @@ def call_writer(prompt, max_tokens=16000):
             "wound/want/need/lie frameworks, Sanderson's three sliders, and dialogue "
             "distinctiveness. You create characters who feel like real people with "
             "contradictions, secrets, and speech patterns you can hear. "
-            "You never use AI slop words. You write in clean, direct prose."
+            "You never use AI slop words. You write in clean, direct prose. "
+            f"{prose_output_requirement()}"
         ),
         "messages": [{"role": "user", "content": prompt}],
     }
@@ -109,6 +112,7 @@ IMPORTANT:
 - Give major characters bodily habits, unconscious tells, and private contradictions.
 - If the seed implies a special ability, burden, injury, duty, or inheritance, tie it to habits and speech.
 - Antagonists must be as fully realized as protagonists -- understandable, not cardboard.
+- Write the entire CHARACTERS.MD document in {WRITING_LANGUAGE}.
 - Target ~3000-4000 words. Dense character work, not padding.
 """
 

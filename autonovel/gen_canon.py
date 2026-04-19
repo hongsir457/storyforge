@@ -9,6 +9,7 @@ from pathlib import Path
 
 from anthropic_compat import generate_text
 from dotenv import load_dotenv
+from writing_language import get_writing_language, prose_output_requirement
 
 BASE_DIR = Path(__file__).parent
 load_dotenv(BASE_DIR / ".env")
@@ -16,6 +17,7 @@ OUTPUT_PATH = BASE_DIR / "canon.md"
 
 WRITER_MODEL = os.environ.get("AUTONOVEL_WRITER_MODEL", "gemini-3.1-pro-preview")
 API_BASE = os.environ.get("AUTONOVEL_API_BASE_URL", "https://generativelanguage.googleapis.com")
+WRITING_LANGUAGE = get_writing_language()
 
 
 def call_writer(prompt, max_tokens=16000):
@@ -27,7 +29,8 @@ def call_writer(prompt, max_tokens=16000):
             "You are a continuity editor extracting hard facts from fantasy novel "
             "planning documents. You are precise, exhaustive, and never invent facts "
             "that aren't in the source material. Every entry must be traceable to a "
-            "specific statement in the source documents."
+            "specific statement in the source documents. "
+            f"{prose_output_requirement()}"
         ),
         "messages": [{"role": "user", "content": prompt}],
     }
@@ -85,6 +88,7 @@ RULES:
 - Aim for 80-120 entries minimum. Be exhaustive.
 - If two documents give slightly different details, note the discrepancy.
 - DO NOT invent facts. Only record what's explicitly stated.
+- Write the canon database in {WRITING_LANGUAGE}.
 """
 
 print("Calling writer model...", file=sys.stderr)

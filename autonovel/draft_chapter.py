@@ -11,6 +11,7 @@ from pathlib import Path
 
 from anthropic_compat import generate_text
 from dotenv import load_dotenv
+from writing_language import get_writing_language, prose_output_requirement
 
 BASE_DIR = Path(__file__).parent
 load_dotenv(BASE_DIR / ".env")
@@ -18,6 +19,7 @@ load_dotenv(BASE_DIR / ".env")
 WRITER_MODEL = os.environ.get("AUTONOVEL_WRITER_MODEL", "gemini-3.1-pro-preview")
 API_BASE = os.environ.get("AUTONOVEL_API_BASE_URL", "https://generativelanguage.googleapis.com")
 CHAPTERS_DIR = BASE_DIR / "chapters"
+WRITING_LANGUAGE = get_writing_language()
 
 
 def call_writer(prompt, max_tokens=16000):
@@ -32,7 +34,8 @@ def call_writer(prompt, max_tokens=16000):
             "You never use words from the banned list. You show, never tell emotions. "
             "Your prose is specific, sensory, grounded. Metaphors come from the character's "
             "experience. You vary sentence length. You trust the reader. "
-            "You write the FULL chapter -- do not truncate, summarize, or skip ahead."
+            "You write the FULL chapter -- do not truncate, summarize, or skip ahead. "
+            f"{prose_output_requirement('All chapter prose')}"
         ),
         "messages": [{"role": "user", "content": prompt}],
     }
@@ -147,6 +150,7 @@ PATTERNS TO AVOID (these have been flagged in previous chapters):
 24. DIALOGUE should sound like speech, not prose. Characters should
     occasionally stumble, interrupt, trail off, or say something
     slightly wrong. A 14-year-old does not speak in polished epigrams.
+25. Write the entire chapter in {WRITING_LANGUAGE}.
 
 Write the chapter now. Full text, beginning to end.
 """

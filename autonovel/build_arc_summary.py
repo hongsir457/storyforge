@@ -11,6 +11,7 @@ from pathlib import Path
 
 from anthropic_compat import generate_text
 from dotenv import load_dotenv
+from writing_language import get_writing_language, prose_output_requirement
 
 BASE_DIR = Path(__file__).parent
 load_dotenv(BASE_DIR / ".env")
@@ -18,6 +19,7 @@ load_dotenv(BASE_DIR / ".env")
 WRITER_MODEL = os.environ.get("AUTONOVEL_WRITER_MODEL", "gemini-3.1-pro-preview")
 API_BASE = os.environ.get("AUTONOVEL_API_BASE_URL", "https://generativelanguage.googleapis.com")
 CHAPTERS_DIR = BASE_DIR / "chapters"
+WRITING_LANGUAGE = get_writing_language()
 
 
 def discover_chapter_files() -> list[Path]:
@@ -29,7 +31,11 @@ def call_writer(prompt, max_tokens=4000):
         "model": WRITER_MODEL,
         "max_tokens": max_tokens,
         "temperature": 0.1,
-        "system": "You summarize novel chapters precisely. State what HAPPENS, what CHANGES, and what QUESTIONS are left open. No evaluation. No praise. Just events and shifts.",
+        "system": (
+            "You summarize novel chapters precisely. State what HAPPENS, what CHANGES, "
+            "and what QUESTIONS are left open. No evaluation. No praise. Just events and shifts. "
+            f"{prose_output_requirement()}"
+        ),
         "messages": [{"role": "user", "content": prompt}],
     }
     return generate_text(payload, timeout=120, base_url=API_BASE)
@@ -66,7 +72,8 @@ def main():
 
         # Get a 100-word summary from the model
         summary = call_writer(
-            f"Summarize this chapter in exactly 3 sentences. What happens, what changes, what question is left open.\n\nCHAPTER {ch}:\n{text}",
+            f"Summarize this chapter in exactly 3 sentences in {WRITING_LANGUAGE}. "
+            f"What happens, what changes, what question is left open.\n\nCHAPTER {ch}:\n{text}",
             max_tokens=200,
         )
 

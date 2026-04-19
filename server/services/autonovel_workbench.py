@@ -38,6 +38,7 @@ class NovelWorkbenchService:
         "AUTONOVEL_JUDGE_MODEL",
         "AUTONOVEL_REVIEW_MODEL",
         "AUTONOVEL_API_BASE_URL",
+        "AUTONOVEL_WRITING_LANGUAGE",
     )
     OPTIONAL_RUNTIME_ENV = ("FAL_KEY", "ELEVENLABS_API_KEY")
     RUNTIME_ENV_DEFAULTS = {
@@ -45,6 +46,7 @@ class NovelWorkbenchService:
         "AUTONOVEL_JUDGE_MODEL": "gemini-3-flash-preview",
         "AUTONOVEL_REVIEW_MODEL": "gemini-3.1-pro-preview",
         "AUTONOVEL_API_BASE_URL": "https://generativelanguage.googleapis.com",
+        "AUTONOVEL_WRITING_LANGUAGE": "简体中文",
     }
     GENERATED_OUTPUT_NAMES = (
         "chapters",
@@ -179,6 +181,7 @@ class NovelWorkbenchService:
         title: str,
         seed_text: str,
         project_name: str | None,
+        writing_language: str | None = None,
         style: str | None = None,
         aspect_ratio: str | None = None,
         default_duration: int | None = None,
@@ -186,6 +189,7 @@ class NovelWorkbenchService:
     ) -> dict[str, Any]:
         title = title.strip()
         seed_text = seed_text.strip()
+        writing_language = (writing_language or "").strip() or self.RUNTIME_ENV_DEFAULTS["AUTONOVEL_WRITING_LANGUAGE"]
         style = (style or "").strip() or "Photographic"
         aspect_ratio = (aspect_ratio or "9:16").strip()
         default_duration = int(default_duration or 4)
@@ -225,6 +229,7 @@ class NovelWorkbenchService:
                 "job_id": job_id,
                 "title": title,
                 "seed_text": seed_text,
+                "writing_language": writing_language,
                 "style": style,
                 "aspect_ratio": aspect_ratio,
                 "default_duration": default_duration,
@@ -241,10 +246,9 @@ class NovelWorkbenchService:
                 "finished_at": None,
             }
             self._jobs[job_id] = job
-            if runtime_env is not None:
-                self._runtime_env_overrides[job_id] = dict(runtime_env)
-            else:
-                self._runtime_env_overrides.pop(job_id, None)
+            runtime_env_snapshot = dict(runtime_env) if runtime_env is not None else {}
+            runtime_env_snapshot["AUTONOVEL_WRITING_LANGUAGE"] = writing_language
+            self._runtime_env_overrides[job_id] = runtime_env_snapshot
             self._save_jobs_locked()
             self._tasks[job_id] = asyncio.create_task(self._run_job(job_id), name=f"novel-workbench-{job_id}")
             return self._job_view(job)
@@ -383,6 +387,10 @@ class NovelWorkbenchService:
         if job is None:
             return {}
         view = dict(job)
+        view["writing_language"] = (
+            str(view.get("writing_language") or "").strip()
+            or self.RUNTIME_ENV_DEFAULTS["AUTONOVEL_WRITING_LANGUAGE"]
+        )
         view["seed_excerpt"] = textwrap.shorten(
             " ".join(view.get("seed_text", "").split()), width=180, placeholder="..."
         )
@@ -742,6 +750,9 @@ class NovelWorkbenchService:
                 os.environ.get("AUTONOVEL_REVIEW_MODEL") or self.RUNTIME_ENV_DEFAULTS["AUTONOVEL_REVIEW_MODEL"]
             ).strip(),
             "AUTONOVEL_API_BASE_URL": api_base_url,
+            "AUTONOVEL_WRITING_LANGUAGE": (
+                os.environ.get("AUTONOVEL_WRITING_LANGUAGE") or self.RUNTIME_ENV_DEFAULTS["AUTONOVEL_WRITING_LANGUAGE"]
+            ).strip(),
             "FAL_KEY": os.environ.get("FAL_KEY", "").strip(),
             "ELEVENLABS_API_KEY": os.environ.get("ELEVENLABS_API_KEY", "").strip(),
         }

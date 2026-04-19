@@ -18,6 +18,7 @@ _NOVEL_WORKBENCH_DEFAULTS: dict[str, str] = {
     "AUTONOVEL_JUDGE_MODEL": "gemini-3-flash-preview",
     "AUTONOVEL_REVIEW_MODEL": "gemini-3.1-pro-preview",
     "AUTONOVEL_API_BASE_URL": "https://generativelanguage.googleapis.com",
+    "AUTONOVEL_WRITING_LANGUAGE": "简体中文",
 }
 
 # DB setting key → environment variable name
@@ -191,6 +192,11 @@ class ConfigService:
         judge_model = (
             all_settings.get("autonovel_judge_model", "").strip() or _NOVEL_WORKBENCH_DEFAULTS["AUTONOVEL_JUDGE_MODEL"]
         )
+        writing_language = (
+            all_settings.get("autonovel_writing_language", "").strip()
+            or os.environ.get("AUTONOVEL_WRITING_LANGUAGE", "").strip()
+            or _NOVEL_WORKBENCH_DEFAULTS["AUTONOVEL_WRITING_LANGUAGE"]
+        )
 
         return {
             "GEMINI_API_KEY": api_key,
@@ -198,6 +204,7 @@ class ConfigService:
             "AUTONOVEL_JUDGE_MODEL": judge_model,
             "AUTONOVEL_REVIEW_MODEL": review_model,
             "AUTONOVEL_API_BASE_URL": api_base_url,
+            "AUTONOVEL_WRITING_LANGUAGE": writing_language,
             "FAL_KEY": os.environ.get("FAL_KEY", "").strip(),
             "ELEVENLABS_API_KEY": os.environ.get("ELEVENLABS_API_KEY", "").strip(),
         }

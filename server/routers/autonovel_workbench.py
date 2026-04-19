@@ -22,6 +22,7 @@ class CreateNovelJobRequest(BaseModel):
     title: str
     seed_text: str
     project_name: str | None = None
+    writing_language: str | None = None
     style: str | None = None
     aspect_ratio: Literal["9:16", "16:9"] | None = None
     default_duration: Literal[4, 6, 8] | None = None
@@ -68,6 +69,7 @@ async def create_novel_job(
             title=req.title,
             seed_text=req.seed_text,
             project_name=req.project_name,
+            writing_language=req.writing_language,
             style=req.style,
             aspect_ratio=req.aspect_ratio,
             default_duration=req.default_duration,

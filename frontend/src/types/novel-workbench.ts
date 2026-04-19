@@ -93,6 +93,7 @@ export interface NovelWorkbenchJob {
   title: string;
   seed_text: string;
   seed_excerpt: string;
+  writing_language: string;
   style: string;
   aspect_ratio: "9:16" | "16:9";
   default_duration: 4 | 6 | 8;

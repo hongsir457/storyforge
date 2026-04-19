@@ -8,6 +8,7 @@ from pathlib import Path
 
 from anthropic_compat import generate_text
 from dotenv import load_dotenv
+from writing_language import get_writing_language, prose_output_requirement
 
 BASE_DIR = Path(__file__).parent
 load_dotenv(BASE_DIR / ".env")
@@ -15,6 +16,7 @@ OUTLINE_PATH = BASE_DIR / "outline.md"
 
 WRITER_MODEL = os.environ.get("AUTONOVEL_WRITER_MODEL", "gemini-3.1-pro-preview")
 API_BASE = os.environ.get("AUTONOVEL_API_BASE_URL", "https://generativelanguage.googleapis.com")
+WRITING_LANGUAGE = get_writing_language()
 
 
 def call_writer(prompt, max_tokens=16000):
@@ -25,7 +27,8 @@ def call_writer(prompt, max_tokens=16000):
         "system": (
             "You are a novel architect continuing an outline. Continue in the exact same "
             "format as the material you are given. Do not restart from chapter 1. "
-            "Fill in the missing chapters, then finish the foreshadowing ledger."
+            "Fill in the missing chapters, then finish the foreshadowing ledger. "
+            f"{prose_output_requirement()}"
         ),
         "messages": [{"role": "user", "content": prompt}],
     }
@@ -66,6 +69,7 @@ REQUIREMENTS:
 - The ending must feel earned but does not need to resolve every wound cleanly.
 - The Foreshadowing Ledger must include at least 15 threads with plant-to-payoff
   distance of at least 3 chapters whenever possible.
+- Continue writing in {WRITING_LANGUAGE}.
 """
 
 print("Calling writer model...", file=sys.stderr)

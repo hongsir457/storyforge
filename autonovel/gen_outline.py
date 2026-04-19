@@ -7,6 +7,7 @@ from pathlib import Path
 
 from anthropic_compat import generate_text
 from dotenv import load_dotenv
+from writing_language import get_writing_language, prose_output_requirement
 
 BASE_DIR = Path(__file__).parent
 load_dotenv(BASE_DIR / ".env")
@@ -14,6 +15,7 @@ OUTPUT_PATH = BASE_DIR / "outline.md"
 
 WRITER_MODEL = os.environ.get("AUTONOVEL_WRITER_MODEL", "gemini-3.1-pro-preview")
 API_BASE = os.environ.get("AUTONOVEL_API_BASE_URL", "https://generativelanguage.googleapis.com")
+WRITING_LANGUAGE = get_writing_language()
 
 
 def call_writer(prompt, max_tokens=16000):
@@ -26,7 +28,8 @@ def call_writer(prompt, max_tokens=16000):
             "Sanderson's plotting principles, Dan Harmon's Story Circle, and MICE Quotient. "
             "You build outlines that an author can draft from without inventing structure "
             "on the fly. Every chapter has beats, emotional arc, and try-fail cycle type. "
-            "You never use AI slop words. You write in clean, direct prose."
+            "You never use AI slop words. You write in clean, direct prose. "
+            f"{prose_output_requirement()}"
         ),
         "messages": [{"role": "user", "content": prompt}],
     }
@@ -119,6 +122,7 @@ CONSTRAINTS:
 - At least 3 chapters should be "quiet" -- character-focused, low-action, emotionally rich
 - Vary the try-fail types: 60%+ should be "yes-but" or "no-and"
 - The foreshadowing ledger must have plant-to-payoff distances of at least 3 chapters
+- Write the complete outline and ledger in {WRITING_LANGUAGE}.
 """
 
 print("Calling writer model...", file=sys.stderr)

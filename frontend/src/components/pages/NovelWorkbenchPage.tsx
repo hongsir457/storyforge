@@ -103,6 +103,7 @@ export function NovelWorkbenchPage() {
 
   const [title, setTitle] = useState("");
   const [projectName, setProjectName] = useState("");
+  const [writingLanguage, setWritingLanguage] = useState("简体中文");
   const [seedText, setSeedText] = useState("");
   const [artifacts, setArtifacts] = useState<NovelWorkbenchArtifactListResponse | null>(null);
   const [artifactsLoading, setArtifactsLoading] = useState(false);
@@ -283,6 +284,7 @@ export function NovelWorkbenchPage() {
         title: title.trim(),
         seed_text: seedText.trim(),
         project_name: projectName.trim() || undefined,
+        writing_language: writingLanguage,
       });
       pushToast("小说流水线已启动。", "success");
       setSelectedJobId(response.job.job_id);
@@ -453,6 +455,21 @@ export function NovelWorkbenchPage() {
                       placeholder="可选，留空时自动生成"
                       className="w-full rounded-2xl border border-gray-700 bg-gray-800/80 px-4 py-3 text-sm text-gray-100 outline-none focus:border-indigo-500"
                     />
+                  </div>
+
+                  <div>
+                    <label htmlFor="writing-language" className="mb-1 block text-sm text-gray-400">
+                      写作语言
+                    </label>
+                    <select
+                      id="writing-language"
+                      value={writingLanguage}
+                      onChange={(event) => setWritingLanguage(event.target.value)}
+                      className="w-full rounded-2xl border border-gray-700 bg-gray-800/80 px-4 py-3 text-sm text-gray-100 outline-none focus:border-indigo-500"
+                    >
+                      <option value="简体中文">简体中文</option>
+                      <option value="English">English</option>
+                    </select>
                   </div>
 
                   <div>
@@ -745,6 +762,10 @@ export function NovelWorkbenchPage() {
                       <div>
                         <div className="text-xs uppercase tracking-wide text-gray-500">Updated</div>
                         <div className="mt-1 text-gray-200">{formatTimestamp(selectedJob.updated_at)}</div>
+                      </div>
+                      <div>
+                        <div className="text-xs uppercase tracking-wide text-gray-500">Language</div>
+                        <div className="mt-1 text-gray-200">{selectedJob.writing_language}</div>
                       </div>
                       <div>
                         <div className="text-xs uppercase tracking-wide text-gray-500">Started</div>

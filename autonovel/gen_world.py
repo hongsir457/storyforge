@@ -10,6 +10,7 @@ from pathlib import Path
 
 from anthropic_compat import generate_text
 from dotenv import load_dotenv
+from writing_language import get_writing_language, prose_output_requirement
 
 BASE_DIR = Path(__file__).parent
 load_dotenv(BASE_DIR / ".env")
@@ -17,6 +18,7 @@ OUTPUT_PATH = BASE_DIR / "world.md"
 
 WRITER_MODEL = os.environ.get("AUTONOVEL_WRITER_MODEL", "gemini-3.1-pro-preview")
 API_BASE = os.environ.get("AUTONOVEL_API_BASE_URL", "https://generativelanguage.googleapis.com")
+WRITING_LANGUAGE = get_writing_language()
 
 
 def call_writer(prompt, max_tokens=16000):
@@ -30,7 +32,8 @@ def call_writer(prompt, max_tokens=16000):
             "You write world bibles that are specific, interconnected, and imply depth "
             "beyond what's stated. You never use AI slop words (delve, tapestry, myriad, etc). "
             "You write in clean, direct prose. Every rule has a cost. Every cultural detail "
-            "implies a history. Every location has a sensory signature."
+            "implies a history. Every location has a sensory signature. "
+            f"{prose_output_requirement()}"
         ),
         "messages": [{"role": "user", "content": prompt}],
     }
@@ -120,6 +123,7 @@ IMPORTANT:
 - Write in clean, direct prose. No AI slop. No "rich tapestry." No "delving."
 - The world should feel grounded and LIVED-IN, not imagined. Think: what does 
   breakfast smell like? What do children play? How do old people complain?
+- Write the entire WORLD.MD document in {WRITING_LANGUAGE}.
 - Target ~3000-4000 words. Dense, not padded.
 """
 

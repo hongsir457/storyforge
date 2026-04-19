@@ -10,12 +10,14 @@ from pathlib import Path
 
 from anthropic_compat import generate_text
 from dotenv import load_dotenv
+from writing_language import get_writing_language, prose_output_requirement
 
 BASE_DIR = Path(__file__).parent
 load_dotenv(BASE_DIR / ".env")
 
 WRITER_MODEL = os.environ.get("AUTONOVEL_WRITER_MODEL", "gemini-3.1-pro-preview")
 API_BASE = os.environ.get("AUTONOVEL_API_BASE_URL", "https://generativelanguage.googleapis.com")
+WRITING_LANGUAGE = get_writing_language()
 
 
 def call_writer(prompt, max_tokens=16000):
@@ -27,7 +29,8 @@ def call_writer(prompt, max_tokens=16000):
             "You are rewriting a fantasy novel chapter based on a specific revision brief. "
             "You follow the brief exactly. You preserve the voice, world, and characters "
             "from the existing draft while making the structural changes specified. "
-            "You write the FULL chapter. Do not truncate or summarize."
+            "You write the FULL chapter. Do not truncate or summarize. "
+            f"{prose_output_requirement('All revised chapter prose')}"
         ),
         "messages": [{"role": "user", "content": prompt}],
     }
@@ -87,6 +90,7 @@ ANTI-PATTERN RULES:
 - At least one moment that genuinely surprises
 - 70%+ in-scene (dialogue and action, not summary)
 - Dialogue should sound like speech, not prose
+- Write the revised chapter in {WRITING_LANGUAGE}.
 
 Write the FULL revised chapter now."""
 

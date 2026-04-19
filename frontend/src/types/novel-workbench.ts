@@ -73,6 +73,14 @@ export interface NovelWorkbenchArtifactContentResponse {
   truncated: boolean;
 }
 
+export interface NovelWorkbenchLogResponse {
+  path: string;
+  content: string;
+  truncated: boolean;
+  size_bytes: number;
+  modified_at: string;
+}
+
 export type NovelWorkbenchJobStatus =
   | "queued"
   | "running"

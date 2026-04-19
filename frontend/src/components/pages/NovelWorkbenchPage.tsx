@@ -2,9 +2,12 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useLocation } from "wouter";
 import {
   AlertCircle,
+  Archive,
   BookOpen,
   CheckCircle2,
   ChevronLeft,
+  Download,
+  Eye,
   ExternalLink,
   FileText,
   Loader2,
@@ -15,7 +18,14 @@ import {
 
 import { API } from "@/api";
 import { useAppStore } from "@/stores/app-store";
-import type { NovelWorkbenchJob, NovelWorkbenchStatus } from "@/types";
+import type {
+  NovelWorkbenchArtifact,
+  NovelWorkbenchArtifactContentResponse,
+  NovelWorkbenchArtifactListResponse,
+  NovelWorkbenchJob,
+  NovelWorkbenchLogResponse,
+  NovelWorkbenchStatus,
+} from "@/types";
 
 const WORKFLOW_STEPS = [
   "输入标题和 seed，明确故事起点。",
@@ -61,6 +71,23 @@ function isActiveJob(status: NovelWorkbenchJob["status"]): boolean {
   return status === "queued" || status === "running";
 }
 
+function formatFileSize(sizeBytes: number): string {
+  if (sizeBytes < 1024) return `${sizeBytes} B`;
+  if (sizeBytes < 1024 * 1024) return `${(sizeBytes / 1024).toFixed(1)} KB`;
+  return `${(sizeBytes / (1024 * 1024)).toFixed(1)} MB`;
+}
+
+function downloadBlob(blob: Blob, filename: string): void {
+  const url = window.URL.createObjectURL(blob);
+  const anchor = document.createElement("a");
+  anchor.href = url;
+  anchor.download = filename;
+  document.body.appendChild(anchor);
+  anchor.click();
+  anchor.remove();
+  window.URL.revokeObjectURL(url);
+}
+
 export function NovelWorkbenchPage() {
   const [, navigate] = useLocation();
   const pushToast = useAppStore((state) => state.pushToast);
@@ -77,6 +104,14 @@ export function NovelWorkbenchPage() {
   const [title, setTitle] = useState("");
   const [projectName, setProjectName] = useState("");
   const [seedText, setSeedText] = useState("");
+  const [artifacts, setArtifacts] = useState<NovelWorkbenchArtifactListResponse | null>(null);
+  const [artifactsLoading, setArtifactsLoading] = useState(false);
+  const [selectedArtifactPath, setSelectedArtifactPath] = useState<string | null>(null);
+  const [artifactPreview, setArtifactPreview] = useState<NovelWorkbenchArtifactContentResponse | null>(null);
+  const [artifactPreviewLoading, setArtifactPreviewLoading] = useState(false);
+  const [fullLog, setFullLog] = useState<NovelWorkbenchLogResponse | null>(null);
+  const [fullLogLoading, setFullLogLoading] = useState(false);
+  const [downloadingKey, setDownloadingKey] = useState<string | null>(null);
 
   const fetchAll = useCallback(async (showSpinner: boolean) => {
     if (showSpinner) {
@@ -120,6 +155,10 @@ export function NovelWorkbenchPage() {
     () => jobs.find((job) => job.job_id === selectedJobId) ?? null,
     [jobs, selectedJobId],
   );
+  const selectedArtifact = useMemo(
+    () => artifacts?.artifacts.find((artifact) => artifact.path === selectedArtifactPath) ?? null,
+    [artifacts, selectedArtifactPath],
+  );
 
   const missingRequiredEnv = status?.env_status?.missing_required ?? [];
   const missingOptionalEnv = status?.env_status?.missing_optional ?? [];
@@ -128,6 +167,111 @@ export function NovelWorkbenchPage() {
     () => jobs.find((job) => job.status === "succeeded") ?? null,
     [jobs],
   );
+  const artifactGroups = useMemo(() => {
+    if (!artifacts) return [];
+    const grouped = new Map<string, NovelWorkbenchArtifact[]>();
+    for (const artifact of artifacts.artifacts) {
+      const bucket = grouped.get(artifact.group) ?? [];
+      bucket.push(artifact);
+      grouped.set(artifact.group, bucket);
+    }
+    return Array.from(grouped.entries());
+  }, [artifacts]);
+
+  const fetchArtifacts = useCallback(
+    async (jobId: string) => {
+      setArtifactsLoading(true);
+      try {
+        const listing = await API.listNovelWorkbenchArtifacts(jobId);
+        setArtifacts(listing);
+      } catch (error) {
+        setArtifacts(null);
+        pushToast((error as Error).message, "error");
+      } finally {
+        setArtifactsLoading(false);
+      }
+    },
+    [pushToast],
+  );
+
+  const handleLoadFullLog = useCallback(
+    async (job: NovelWorkbenchJob) => {
+      setFullLogLoading(true);
+      try {
+        const payload = await API.getNovelWorkbenchLog(job.job_id);
+        setFullLog(payload);
+      } catch (error) {
+        pushToast((error as Error).message, "error");
+      } finally {
+        setFullLogLoading(false);
+      }
+    },
+    [pushToast],
+  );
+
+  useEffect(() => {
+    if (!selectedJobId) {
+      setArtifacts(null);
+      setSelectedArtifactPath(null);
+      setArtifactPreview(null);
+      setFullLog(null);
+      return;
+    }
+    void fetchArtifacts(selectedJobId);
+    setSelectedArtifactPath(null);
+    setArtifactPreview(null);
+    setFullLog(null);
+  }, [fetchArtifacts, selectedJobId]);
+
+  useEffect(() => {
+    const previewablePath = artifacts?.artifacts.find((artifact) => artifact.previewable)?.path ?? null;
+    if (!previewablePath) {
+      setSelectedArtifactPath(null);
+      return;
+    }
+    if (!selectedArtifactPath || !artifacts?.artifacts.some((artifact) => artifact.path === selectedArtifactPath)) {
+      setSelectedArtifactPath(previewablePath);
+    }
+  }, [artifacts, selectedArtifactPath]);
+
+  useEffect(() => {
+    if (!selectedJobId || !selectedArtifactPath) {
+      setArtifactPreview(null);
+      setArtifactPreviewLoading(false);
+      return;
+    }
+
+    const artifact = artifacts?.artifacts.find((item) => item.path === selectedArtifactPath);
+    if (!artifact?.previewable) {
+      setArtifactPreview(null);
+      setArtifactPreviewLoading(false);
+      return;
+    }
+
+    let cancelled = false;
+    setArtifactPreviewLoading(true);
+    void API.getNovelWorkbenchArtifactContent(selectedJobId, selectedArtifactPath)
+      .then((payload) => {
+        if (!cancelled) {
+          setArtifactPreview(payload);
+        }
+      })
+      .catch((error) => {
+        if (!cancelled) {
+          setArtifactPreview(null);
+          pushToast((error as Error).message, "error");
+        }
+      })
+      .finally(() => {
+        if (!cancelled) {
+          setArtifactPreviewLoading(false);
+        }
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [artifacts, pushToast, selectedArtifactPath, selectedJobId]);
 
   const handleCreateJob = async (event: React.FormEvent) => {
     event.preventDefault();
@@ -187,6 +331,43 @@ export function NovelWorkbenchPage() {
       pushToast((error as Error).message, "error");
     } finally {
       setDeletingJobId(null);
+    }
+  };
+
+  const handleDownloadArtifact = async (job: NovelWorkbenchJob, artifact: NovelWorkbenchArtifact) => {
+    const key = `artifact:${artifact.path}`;
+    setDownloadingKey(key);
+    try {
+      const blob = await API.downloadNovelWorkbenchArtifact(job.job_id, artifact.path);
+      downloadBlob(blob, artifact.path.split("/").pop() || artifact.path);
+    } catch (error) {
+      pushToast((error as Error).message, "error");
+    } finally {
+      setDownloadingKey(null);
+    }
+  };
+
+  const handleDownloadLog = async (job: NovelWorkbenchJob) => {
+    setDownloadingKey("log");
+    try {
+      const blob = await API.downloadNovelWorkbenchLog(job.job_id);
+      downloadBlob(blob, `${job.job_id}.log`);
+    } catch (error) {
+      pushToast((error as Error).message, "error");
+    } finally {
+      setDownloadingKey(null);
+    }
+  };
+
+  const handleDownloadWorkspace = async (job: NovelWorkbenchJob) => {
+    setDownloadingKey("workspace");
+    try {
+      const blob = await API.downloadNovelWorkbenchWorkspace(job.job_id);
+      downloadBlob(blob, `${job.job_id}-workspace.zip`);
+    } catch (error) {
+      pushToast((error as Error).message, "error");
+    } finally {
+      setDownloadingKey(null);
     }
   };
 
@@ -589,7 +770,39 @@ export function NovelWorkbenchPage() {
                         </pre>
                       </div>
                       <div className="rounded-2xl border border-gray-800 bg-gray-950/50 p-4">
-                        <div className="text-xs uppercase tracking-wide text-gray-500">Workspace</div>
+                        <div className="flex flex-wrap items-center justify-between gap-3">
+                          <div className="text-xs uppercase tracking-wide text-gray-500">Workspace & Log</div>
+                          <div className="flex flex-wrap gap-2">
+                            <button
+                              type="button"
+                              onClick={() => void handleLoadFullLog(selectedJob)}
+                              disabled={fullLogLoading}
+                              className="inline-flex items-center gap-1.5 rounded-lg border border-gray-700 bg-gray-900 px-3 py-2 text-xs text-gray-200 transition-colors hover:border-gray-500 hover:bg-gray-800 disabled:cursor-not-allowed disabled:opacity-60"
+                            >
+                              {fullLogLoading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Eye className="h-3.5 w-3.5" />}
+                              查看完整日志
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => void handleDownloadLog(selectedJob)}
+                              disabled={downloadingKey === "log"}
+                              className="inline-flex items-center gap-1.5 rounded-lg border border-gray-700 bg-gray-900 px-3 py-2 text-xs text-gray-200 transition-colors hover:border-gray-500 hover:bg-gray-800 disabled:cursor-not-allowed disabled:opacity-60"
+                            >
+                              {downloadingKey === "log" ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Download className="h-3.5 w-3.5" />}
+                              下载日志
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => void handleDownloadWorkspace(selectedJob)}
+                              disabled={downloadingKey === "workspace"}
+                              className="inline-flex items-center gap-1.5 rounded-lg border border-indigo-500/30 bg-indigo-500/10 px-3 py-2 text-xs text-indigo-200 transition-colors hover:bg-indigo-500/20 disabled:cursor-not-allowed disabled:opacity-60"
+                            >
+                              {downloadingKey === "workspace" ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Archive className="h-3.5 w-3.5" />}
+                              导出工作区 ZIP
+                            </button>
+                          </div>
+                        </div>
+                        <div className="mt-3 text-xs uppercase tracking-wide text-gray-500">Workspace Path</div>
                         <div className="mt-2 break-all font-mono text-xs text-gray-300">{selectedJob.workspace_dir}</div>
                         <div className="mt-4 text-xs uppercase tracking-wide text-gray-500">Log File</div>
                         <div className="mt-2 break-all font-mono text-xs text-gray-300">{selectedJob.log_path}</div>
@@ -597,9 +810,24 @@ export function NovelWorkbenchPage() {
                     </div>
 
                     <div className="rounded-2xl border border-gray-800 bg-gray-950/50 p-4">
-                      <div className="mb-2 flex items-center justify-between">
-                        <div className="text-xs uppercase tracking-wide text-gray-500">Log Tail</div>
-                        {selectedJob.status === "running" && (
+                      <div className="mb-2 flex items-center justify-between gap-3">
+                        <div className="text-xs uppercase tracking-wide text-gray-500">
+                          {fullLog ? "Full Log" : "Log Tail"}
+                        </div>
+                        <div className="flex items-center gap-3">
+                          {fullLog && (
+                            <span className="text-xs text-gray-500">
+                              {formatFileSize(fullLog.size_bytes)} · {formatTimestamp(fullLog.modified_at)}
+                            </span>
+                          )}
+                          {selectedJob.status === "running" && !fullLog && (
+                            <span className="inline-flex items-center gap-1 text-xs text-amber-300">
+                              <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                              实时刷新
+                            </span>
+                          )}
+                        </div>
+                        {false && (
                           <span className="inline-flex items-center gap-1 text-xs text-amber-300">
                             <Loader2 className="h-3.5 w-3.5 animate-spin" />
                             实时刷新
@@ -607,8 +835,135 @@ export function NovelWorkbenchPage() {
                         )}
                       </div>
                       <pre className="max-h-[32rem] overflow-auto whitespace-pre-wrap break-words rounded-xl bg-black/30 p-3 font-mono text-xs text-gray-200">
-                        {selectedJob.log_tail || "No logs yet."}
+                        {fullLog?.content || selectedJob.log_tail || "No logs yet."}
                       </pre>
+                      {fullLog?.truncated && (
+                        <div className="mt-3 text-xs text-amber-300">
+                          仅预览前 250 KB 日志，完整内容请使用“下载日志”。
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="rounded-2xl border border-gray-800 bg-gray-950/50 p-4">
+                      <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+                        <div>
+                          <div className="text-xs uppercase tracking-wide text-gray-500">Workspace Artifacts</div>
+                          <div className="mt-1 text-sm text-gray-400">
+                            {artifacts
+                              ? `${artifacts.summary.available_count} files · ${artifacts.summary.chapter_count} chapters`
+                              : "加载工作区产物中..."}
+                          </div>
+                        </div>
+                        {artifactsLoading && (
+                          <span className="inline-flex items-center gap-1 text-xs text-amber-300">
+                            <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                            同步产物
+                          </span>
+                        )}
+                      </div>
+
+                      <div className="grid gap-4 xl:grid-cols-[0.95fr,1.05fr]">
+                        <div className="space-y-4">
+                          {artifactGroups.length > 0 ? (
+                            artifactGroups.map(([group, groupArtifacts]) => (
+                              <div key={group} className="rounded-2xl border border-gray-800 bg-black/20 p-3">
+                                <div className="mb-2 text-xs uppercase tracking-wide text-gray-500">{group}</div>
+                                <div className="space-y-2">
+                                  {groupArtifacts.map((artifact) => (
+                                    <div
+                                      key={artifact.path}
+                                      className={`rounded-xl border px-3 py-2 ${
+                                        selectedArtifactPath === artifact.path
+                                          ? "border-indigo-500/40 bg-indigo-500/10"
+                                          : "border-gray-800 bg-gray-950/50"
+                                      }`}
+                                    >
+                                      <div className="flex items-start justify-between gap-3">
+                                        <button
+                                          type="button"
+                                          onClick={() => {
+                                            if (artifact.previewable) {
+                                              setSelectedArtifactPath(artifact.path);
+                                            }
+                                          }}
+                                          className="min-w-0 text-left"
+                                        >
+                                          <div className="truncate text-sm font-medium text-gray-100">{artifact.label}</div>
+                                          <div className="mt-1 truncate font-mono text-[11px] text-gray-500">
+                                            {artifact.path}
+                                          </div>
+                                          <div className="mt-1 text-[11px] text-gray-400">
+                                            {formatFileSize(artifact.size_bytes)} · {formatTimestamp(artifact.modified_at)}
+                                          </div>
+                                        </button>
+                                        <button
+                                          type="button"
+                                          onClick={() => void handleDownloadArtifact(selectedJob, artifact)}
+                                          disabled={downloadingKey === `artifact:${artifact.path}`}
+                                          className="inline-flex items-center gap-1 rounded-lg border border-gray-700 bg-gray-900 px-2 py-1 text-xs text-gray-200 transition-colors hover:border-gray-500 hover:bg-gray-800 disabled:cursor-not-allowed disabled:opacity-60"
+                                        >
+                                          {downloadingKey === `artifact:${artifact.path}` ? (
+                                            <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                                          ) : (
+                                            <Download className="h-3.5 w-3.5" />
+                                          )}
+                                          下载
+                                        </button>
+                                      </div>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            ))
+                          ) : (
+                            <div className="rounded-2xl border border-dashed border-gray-800 px-4 py-10 text-sm text-gray-500">
+                              暂无可展示的工作区产物。
+                            </div>
+                          )}
+                        </div>
+
+                        <div className="rounded-2xl border border-gray-800 bg-black/20 p-4">
+                          <div className="mb-2 flex items-center gap-2 text-xs uppercase tracking-wide text-gray-500">
+                            <FileText className="h-3.5 w-3.5" />
+                            Artifact Preview
+                          </div>
+                          {selectedArtifact ? (
+                            <div className="space-y-3">
+                              <div>
+                                <div className="text-sm font-medium text-gray-100">{selectedArtifact.label}</div>
+                                <div className="mt-1 break-all font-mono text-[11px] text-gray-500">
+                                  {selectedArtifact.path}
+                                </div>
+                              </div>
+                              {artifactPreviewLoading ? (
+                                <div className="flex items-center gap-2 rounded-xl border border-gray-800 bg-gray-950/50 px-4 py-8 text-sm text-gray-400">
+                                  <Loader2 className="h-4 w-4 animate-spin" />
+                                  正在加载预览...
+                                </div>
+                              ) : artifactPreview ? (
+                                <>
+                                  <pre className="max-h-[38rem] overflow-auto whitespace-pre-wrap break-words rounded-xl bg-gray-950/60 p-3 font-mono text-xs text-gray-200">
+                                    {artifactPreview.content}
+                                  </pre>
+                                  {artifactPreview.truncated && (
+                                    <div className="text-xs text-amber-300">
+                                      预览已截断，完整文件请使用下载。
+                                    </div>
+                                  )}
+                                </>
+                              ) : (
+                                <div className="rounded-xl border border-dashed border-gray-800 px-4 py-10 text-sm text-gray-500">
+                                  这个文件不支持内联预览，请直接下载。
+                                </div>
+                              )}
+                            </div>
+                          ) : (
+                            <div className="rounded-xl border border-dashed border-gray-800 px-4 py-10 text-sm text-gray-500">
+                              选择一个可预览的产物查看内容，或直接下载整个工作区。
+                            </div>
+                          )}
+                        </div>
+                      </div>
                     </div>
                   </div>
                 ) : (

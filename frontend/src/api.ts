@@ -40,6 +40,7 @@ import type {
   NovelWorkbenchArtifactContentResponse,
   NovelWorkbenchArtifactListResponse,
   NovelWorkbenchJob,
+  NovelWorkbenchLogResponse,
   NovelWorkbenchStatus,
 } from "@/types";
 import type { GridGeneration } from "@/types/grid";
@@ -522,6 +523,28 @@ class API {
       withAuth(),
     );
     await throwIfNotOk(response, "Failed to download novel artifact");
+    return response.blob();
+  }
+
+  static async getNovelWorkbenchLog(jobId: string): Promise<NovelWorkbenchLogResponse> {
+    return this.request(`/novel-workbench/jobs/${encodeURIComponent(jobId)}/log`);
+  }
+
+  static async downloadNovelWorkbenchLog(jobId: string): Promise<Blob> {
+    const response = await fetch(
+      `${API_BASE}/novel-workbench/jobs/${encodeURIComponent(jobId)}/log/download`,
+      withAuth(),
+    );
+    await throwIfNotOk(response, "Failed to download novel workbench log");
+    return response.blob();
+  }
+
+  static async downloadNovelWorkbenchWorkspace(jobId: string): Promise<Blob> {
+    const response = await fetch(
+      `${API_BASE}/novel-workbench/jobs/${encodeURIComponent(jobId)}/workspace/download`,
+      withAuth(),
+    );
+    await throwIfNotOk(response, "Failed to export novel workspace");
     return response.blob();
   }
 

@@ -104,6 +104,7 @@ class NovelWorkbenchService:
         self.state_dir = self.projects_root / ".novel_workbench"
         self.logs_dir = self.state_dir / "logs"
         self.workspaces_dir = self.state_dir / "workspaces"
+        self.exports_dir = self.state_dir / "exports"
         self.jobs_file = self.state_dir / "jobs.json"
 
         self.pm = ProjectManager(self.projects_root)
@@ -117,6 +118,7 @@ class NovelWorkbenchService:
         self.state_dir.mkdir(parents=True, exist_ok=True)
         self.logs_dir.mkdir(parents=True, exist_ok=True)
         self.workspaces_dir.mkdir(parents=True, exist_ok=True)
+        self.exports_dir.mkdir(parents=True, exist_ok=True)
 
         async with self._lock:
             self._load_jobs_locked()
@@ -288,6 +290,8 @@ class NovelWorkbenchService:
         if workspace_dir.exists():
             shutil.rmtree(workspace_dir, ignore_errors=True)
         log_path.unlink(missing_ok=True)
+        archive_path = self.exports_dir / f"{job_id}-workspace.zip"
+        archive_path.unlink(missing_ok=True)
         return deleted_job
 
     async def list_job_artifacts(self, job_id: str) -> dict[str, Any]:
@@ -311,6 +315,53 @@ class NovelWorkbenchService:
     async def get_job_artifact_path(self, job_id: str, relative_path: str) -> Path:
         path, _artifact = await self._resolve_job_artifact(job_id, relative_path)
         return path
+
+    async def read_job_log(self, job_id: str, limit: int = 250_000) -> dict[str, Any]:
+        job = await self._get_raw_job(job_id)
+        if not job:
+            raise NovelWorkbenchError(f"Novel job not found: {job_id}")
+
+        log_path = Path(job["log_path"]).resolve()
+        if not log_path.is_file():
+            raise NovelWorkbenchError(f"Novel job log is missing: {job_id}")
+
+        with open(log_path, "rb") as handle:
+            payload = handle.read(limit + 1)
+        truncated = len(payload) > limit
+        content = payload[:limit].decode("utf-8", errors="replace")
+        stat = log_path.stat()
+        return {
+            "path": str(log_path),
+            "content": content,
+            "truncated": truncated,
+            "size_bytes": stat.st_size,
+            "modified_at": datetime.fromtimestamp(stat.st_mtime, UTC).strftime("%Y-%m-%dT%H:%M:%SZ"),
+        }
+
+    async def get_job_log_path(self, job_id: str) -> Path:
+        job = await self._get_raw_job(job_id)
+        if not job:
+            raise NovelWorkbenchError(f"Novel job not found: {job_id}")
+
+        log_path = Path(job["log_path"]).resolve()
+        if not log_path.is_file():
+            raise NovelWorkbenchError(f"Novel job log is missing: {job_id}")
+        return log_path
+
+    async def get_job_workspace_archive_path(self, job_id: str) -> Path:
+        job = await self._get_raw_job(job_id)
+        if not job:
+            raise NovelWorkbenchError(f"Novel job not found: {job_id}")
+
+        workspace_dir = Path(job["workspace_dir"]).resolve()
+        if not workspace_dir.is_dir():
+            raise NovelWorkbenchError(f"Novel workspace is missing: {job_id}")
+
+        self.exports_dir.mkdir(parents=True, exist_ok=True)
+        archive_path = self.exports_dir / f"{job_id}-workspace.zip"
+        archive_path.unlink(missing_ok=True)
+        shutil.make_archive(str(archive_path.with_suffix("")), "zip", root_dir=workspace_dir)
+        return archive_path
 
     def _load_jobs_locked(self) -> None:
         if not self.jobs_file.exists():

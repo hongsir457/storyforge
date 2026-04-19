@@ -18,6 +18,7 @@ import glob
 import json
 import os
 import re
+import traceback
 from datetime import datetime
 from pathlib import Path
 
@@ -805,6 +806,21 @@ def evaluate_full():
 # --- Main ---
 
 
+def safe_evaluate(label: str, evaluator, score_key: str) -> dict:
+    try:
+        result = evaluator()
+    except Exception as exc:
+        return {
+            score_key: 0.0,
+            "error": f"{label} evaluation failed: {exc}",
+            "_debug_traceback": traceback.format_exc(),
+        }
+
+    if score_key not in result:
+        result[score_key] = 0.0
+    return result
+
+
 def main():
     parser = argparse.ArgumentParser(description="Evaluate the novel")
     group = parser.add_mutually_exclusive_group(required=True)
@@ -814,13 +830,17 @@ def main():
     args = parser.parse_args()
 
     if args.phase == "foundation":
-        result = evaluate_foundation()
+        result = safe_evaluate("foundation", evaluate_foundation, "overall_score")
         score_key = "overall_score"
     elif args.chapter is not None:
-        result = evaluate_chapter(args.chapter)
+        result = safe_evaluate(
+            f"chapter {args.chapter}",
+            lambda: evaluate_chapter(args.chapter),
+            "overall_score",
+        )
         score_key = "overall_score"
     elif args.full:
-        result = evaluate_full()
+        result = safe_evaluate("full novel", evaluate_full, "novel_score")
         score_key = "novel_score"
 
     # Print structured output
@@ -828,7 +848,7 @@ def main():
     if score_key in result:
         print(f"{score_key}: {result[score_key]}")
     for key, val in result.items():
-        if key == score_key:
+        if key == score_key or key.startswith("_"):
             continue
         if isinstance(val, dict):
             print(f"{key}: {val.get('score', 'N/A')} -- {val.get('note', '')}")

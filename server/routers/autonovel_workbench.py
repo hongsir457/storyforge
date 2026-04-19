@@ -124,3 +124,37 @@ async def download_novel_job_artifact(job_id: str, path: str, _user: CurrentUser
         media_type=media_type,
         filename=artifact_path.name,
     )
+
+
+@router.get("/novel-workbench/jobs/{job_id}/log")
+async def get_novel_job_log(job_id: str, _user: CurrentUser):
+    try:
+        return await get_novel_workbench_service().read_job_log(job_id)
+    except NovelWorkbenchError as exc:
+        _raise_http_error(exc)
+
+
+@router.get("/novel-workbench/jobs/{job_id}/log/download")
+async def download_novel_job_log(job_id: str, _user: CurrentUser):
+    try:
+        log_path = await get_novel_workbench_service().get_job_log_path(job_id)
+    except NovelWorkbenchError as exc:
+        _raise_http_error(exc)
+    return FileResponse(
+        log_path,
+        media_type="text/plain; charset=utf-8",
+        filename=log_path.name,
+    )
+
+
+@router.get("/novel-workbench/jobs/{job_id}/workspace/download")
+async def download_novel_job_workspace(job_id: str, _user: CurrentUser):
+    try:
+        archive_path = await get_novel_workbench_service().get_job_workspace_archive_path(job_id)
+    except NovelWorkbenchError as exc:
+        _raise_http_error(exc)
+    return FileResponse(
+        archive_path,
+        media_type="application/zip",
+        filename=archive_path.name,
+    )

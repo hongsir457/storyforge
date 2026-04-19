@@ -261,7 +261,7 @@ def main():
     print("=" * 50)
 
     if totals["failed"] > 0:
-        sys.exit(2)
+        print("Completed with unresolved cuts; leaving unmatched passages in place.")
 
 
 if __name__ == "__main__":

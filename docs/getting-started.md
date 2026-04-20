@@ -1,60 +1,31 @@
-# 完整入门教程
+# Storyforge 入门指南
 
-这份教程面向当前版本的 `Storyforge / 叙影工场`，目标是带你从零完成部署、登录、模型配置，并跑通“小说工坊”到项目资产生成的最小闭环。
+这份文档面向第一次部署和第一次使用 `Storyforge / 叙影工场` 的用户，目标是帮你完成：
 
-## 你会完成什么
-
-1. 部署 Storyforge
+1. 部署服务
 2. 初始化管理员账号
-3. 配置 Anthropic 或 OpenRouter
-4. 配置至少一个图像或视频供应商
-5. 进入 `小说工坊` 启动自动写小说流程
-6. 把结果导回项目并继续做分镜和视频
+3. 配置文本模型与媒体供应商
+4. 跑通小说工坊
+5. 把结果导回项目继续做视频生产
 
-## 先理解当前架构
+## 首页预览
 
-当前线上和生产部署已经不是单体容器，而是四个工作负载：
+<p align="center">
+  <img src="assets/hero-screenshot.png" alt="Storyforge 首页与工作台预览" width="960">
+</p>
 
-- `storyforge-frontend`
-- `storyforge-backend`
-- `storyforge-postgres`
-- `storyforge-redis`
+## 核心能力
 
-本地开发默认仍可先用 SQLite 跑起来，生产环境建议直接用 PostgreSQL。
+- 小说 seed 到长篇章节的自动生成
+- 小说到项目的自动导入
+- 角色、线索、分镜、宫格、视频片段的连续生产
+- 多模型路由与多供应商媒体生成
+- 托管式注册、登录、邮箱验证、忘记密码
+- PostgreSQL + Redis 的生产级后端支撑
 
-## 准备项
+## 部署方式
 
-### 1. 运行环境
-
-- Linux / macOS / Windows WSL2
-- Docker 和 Docker Compose
-- 至少 4GB 可用内存
-
-### 2. 必需配置
-
-你至少需要准备两类能力：
-
-- 文本大模型
-- 图像或视频生成模型
-
-当前推荐路径：
-
-- 文本模型：Anthropic 官方 API，或 OpenRouter
-- 图像/视频模型：Gemini、火山方舟、Grok、OpenAI，或自定义兼容供应商
-
-### 3. OpenRouter 和 Anthropic 的区别
-
-如果你想用一把 key 统一走 Claude、GPT、Gemini 等文本模型，推荐直接使用 OpenRouter。
-
-当前产品里：
-
-- `Storyforge Agent` 支持 Anthropic 官方 API
-- 也支持 OpenRouter 的 Anthropic-compatible 接法
-- OpenRouter 推荐通过前端设置页完成，不需要你手改额外配置文件
-
-## 部署方式一：默认部署（SQLite）
-
-适合本地快速试用。
+### 本地快速启动（SQLite）
 
 ```bash
 git clone https://github.com/hongsir457/storyforge.git
@@ -63,21 +34,16 @@ cp .env.example .env
 docker compose up -d
 ```
 
-启动后访问：
+访问：`http://localhost:1241`
 
-- 本地：`http://localhost:1241`
-
-## 部署方式二：生产部署（PostgreSQL）
-
-适合正式使用或多人环境。
+### 生产部署（PostgreSQL）
 
 ```bash
-git clone https://github.com/hongsir457/storyforge.git
 cd storyforge/deploy/production
 cp .env.example .env
 ```
 
-至少补齐这些环境变量：
+至少补齐：
 
 ```env
 POSTGRES_PASSWORD=replace-me
@@ -87,13 +53,51 @@ AUTH_EMAIL=admin@storyforge.local
 AUTH_TOKEN_SECRET=replace-me-with-a-long-random-secret
 ```
 
-然后启动：
+启动：
 
 ```bash
 docker compose up -d
 ```
 
-如果你需要注册、邮箱验证、忘记密码真实可用，再继续补齐：
+## 首次配置
+
+### 1. 管理员登录
+
+登录页：`/login`
+
+管理员账号来自环境变量：
+
+- 用户名：`AUTH_USERNAME`
+- 密码：`AUTH_PASSWORD`
+
+### 2. 配置文本模型
+
+入口：`/app/admin`
+
+推荐顺序：
+
+1. 配置 OpenRouter
+2. 或直接配置 Anthropic
+
+如果走 OpenRouter，建议：
+
+1. 填入 `OpenRouter API Key`
+2. 应用 OpenRouter 预设
+3. 确认 Anthropic-compatible base URL 为 `https://openrouter.ai/api`
+
+### 3. 配置图像 / 视频供应商
+
+至少配置一个可用供应商，例如：
+
+- Gemini
+- 火山方舟
+- Grok
+- OpenAI
+- 自定义兼容供应商
+
+### 4. 配置邮件
+
+如果要启用真实注册验证和忘记密码邮件，再补齐：
 
 ```env
 SMTP_HOST=
@@ -104,150 +108,63 @@ SMTP_FROM_EMAIL=
 SMTP_FROM_NAME=Storyforge
 ```
 
-如果暂时没有 SMTP，可以先打开：
+如果暂时不接 SMTP，可先用：
 
 ```env
 AUTH_EMAIL_DEBUG=true
 ```
 
-这样验证码和重置码会打印到后端日志。
-
-## 首次登录
-
-启动完成后访问登录页：
-
-- `/login`
-
-管理员账号来自环境变量：
-
-- 用户名：`AUTH_USERNAME`
-- 密码：`AUTH_PASSWORD`
-
-当前账号体系完整入口包括：
-
-- `/login`
-- `/register`
-- `/verify-email`
-- `/forgot-password`
-- `/app/account`
-
-## 首次配置模型
-
-登录后进入：
-
-- `/app/settings`
-
-### 路径 A：使用 OpenRouter
-
-推荐给想统一调 Claude、GPT、Gemini 的用户。
-
-1. 在设置页找到 `OpenRouter API Key`
-2. 填入你的 OpenRouter key
-3. 应用 OpenRouter 预设
-4. 确认 Anthropic 兼容地址为 `https://openrouter.ai/api`
-
-建议同时检查默认文本模型是否符合你的预算和质量要求。
-
-### 路径 B：使用 Anthropic 官方 API
-
-如果你只想先让 `Storyforge Agent` 和小说工坊跑起来，也可以直接填写 Anthropic API Key。
-
-### 图像与视频供应商
-
-自动写小说之外，后续角色图、分镜图、视频片段仍然依赖图像或视频供应商。你至少要配置其中一个：
-
-- Gemini
-- 火山方舟
-- Grok
-- OpenAI
-- 自定义兼容供应商
-
 ## 跑通小说工坊
 
 ### 1. 创建项目
 
-进入：
-
-- `/app/projects`
+进入：`/app/projects`
 
 你可以：
 
 - 新建项目
-- 上传小说源文件
-- 导入历史项目 ZIP
+- 导入项目 ZIP
+- 上传已有小说源文件
 
-### 2. 进入小说工坊
+### 2. 启动小说工坊
 
-入口：
+进入：`/app/novel-workbench`
 
-- `/app/novel-workbench`
-
-需要填写的核心信息：
+填写：
 
 - 小说标题
-- Seed 文案
-- 风格
-- 画幅
-- 默认时长
+- Seed 文本
+- 写作语言
 
-然后点击启动小说流水线。
+然后启动任务。
 
-### 3. 流程实际做了什么
+### 3. 等待自动流程完成
 
-小说工坊会调用 `autonovel` 流程，生成结构化的叙事结果，并把结果导回 Storyforge 项目。你之后就可以继续：
+小说工坊会依次执行：
 
-- 生成角色设定图
-- 生成线索或道具图
-- 生成分镜图
-- 生成宫格图
-- 生成视频片段
-- 导出项目 ZIP
-- 导出剪映草稿
+1. foundation
+2. drafting
+3. revision
+4. export
+5. import into Storyforge project
 
-## 最小可用闭环
+成功后，结果会自动导入项目。
 
-如果你想最快验证整条链路，建议按这个顺序：
+## 后续视频生产
 
-1. 用 PostgreSQL 或默认 SQLite 部署成功
-2. 用管理员登录
-3. 在 `/app/settings` 配好 OpenRouter 或 Anthropic
-4. 至少再配一个图像供应商
-5. 在 `/app/novel-workbench` 启动小说流水线
-6. 回到项目里验证角色、分镜和视频生成入口可用
+小说导入项目后，可以继续做：
 
-## 常见问题
+- 角色图
+- 线索和道具图
+- 分镜图
+- 宫格图
+- 视频片段
+- 项目 ZIP 导出
+- 剪映草稿导出
 
-### 1. 为什么登录、注册、忘记密码没有邮件？
+## 相关文档
 
-因为你还没配置 SMTP。
-如果只是在本地联调，先开 `AUTH_EMAIL_DEBUG=true`。
-
-### 2. 为什么小说工坊按钮不可用？
-
-通常是因为 `Storyforge Agent` 没配置好。优先检查：
-
-- 是否已填 Anthropic 或 OpenRouter
-- 是否保存成功
-- 后端日志里是否有认证错误
-
-### 3. 为什么能写小说，但后续图像或视频生成失败？
-
-因为小说工坊和媒体供应商是两套能力。
-文本模型可用，不代表图像和视频供应商已经配置完成。
-
-### 4. 为什么仓库和某些文件里还会看到 `autovideo`？
-
-这是当前仓库内部兼容标识，用于迁移和历史文件命名。
-对外品牌仍然是：
-
-- `Storyforge`
-- `叙影工场`
-
-## 进一步阅读
-
-- [README.md](../README.md)
-- [deploy/sealos/README.md](../deploy/sealos/README.md)
-- [deploy/production/MIGRATE-TO-POSTGRES.md](../deploy/production/MIGRATE-TO-POSTGRES.md)
-- [docs/jianying-export-guide.md](jianying-export-guide.md)
-
-如果部署后要接 Sealos 独立命名空间，请直接看 Sealos 部署文档，不要再沿用旧的单体 SQLite 迁移方式。
+- [../README.md](../README.md)
+- [../deploy/sealos/README.md](../deploy/sealos/README.md)
+- [../deploy/production/MIGRATE-TO-POSTGRES.md](../deploy/production/MIGRATE-TO-POSTGRES.md)
+- [jianying-export-guide.md](jianying-export-guide.md)

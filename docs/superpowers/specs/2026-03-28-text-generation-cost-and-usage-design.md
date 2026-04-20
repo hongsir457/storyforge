@@ -1,6 +1,6 @@
 # 文本生成费用计算与使用记录
 
-> GitHub Issue: autovedio/autovedio#169
+> GitHub Issue: autovideo/autovideo#169
 > 日期: 2026-03-28
 
 ## 背景

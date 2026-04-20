@@ -1,8 +1,8 @@
 # GrokVideoBackend 接入设计
 
-> Issue: [#100](https://github.com/autovedio/autovedio/issues/100) — grok-imagine-video 接入
-> 父任务: [#98](https://github.com/autovedio/autovedio/issues/98) — 多供应商视频生成
-> 前置依赖: [#99](https://github.com/autovedio/autovedio/issues/99) — 提取通用视频生成服务层（已完成）
+> Issue: [#100](https://github.com/autovideo/autovideo/issues/100) — grok-imagine-video 接入
+> 父任务: [#98](https://github.com/autovideo/autovideo/issues/98) — 多供应商视频生成
+> 前置依赖: [#99](https://github.com/autovideo/autovideo/issues/99) — 提取通用视频生成服务层（已完成）
 
 ## 范围
 

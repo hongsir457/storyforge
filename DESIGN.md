@@ -4,7 +4,7 @@
 
 - External brand: `Storyforge / 叙影工场`
 - External subtitle: `AI novel&video studio / 小说与视频自动生成工作台`
-- Internal compatibility name: `autovedio`
+- Internal compatibility name: `autovideo`
 - Product wedge: `小说 -> 分镜 -> 视频`
 
 Storyforge is not a generic AI playground and not a generic video editor. It is a narrative production studio that turns a seed idea into a reusable story world, then into scenes, assets, and short-form video output.

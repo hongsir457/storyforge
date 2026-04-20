@@ -7,7 +7,8 @@ import type { EpisodeMeta } from "@/types/project";
 
 export type ExportScope = "current" | "full" | "jianying-draft";
 
-const DRAFT_PATH_STORAGE_KEY = "autovedio_jianying_draft_path";
+const DRAFT_PATH_STORAGE_KEY = "autovideo_jianying_draft_path";
+const LEGACY_DRAFT_PATH_STORAGE_KEY = "autovedio_jianying_draft_path";
 
 interface ExportScopeDialogProps {
   open: boolean;
@@ -38,8 +39,19 @@ export function ExportScopeDialog({
   const defaultDraftPath = isWindows
     ? t("dashboard:draft_path_default_windows")
     : t("dashboard:draft_path_default_mac");
+  const loadStoredDraftPath = () => {
+    const nextValue = localStorage.getItem(DRAFT_PATH_STORAGE_KEY);
+    if (nextValue) return nextValue;
+    const legacyValue = localStorage.getItem(LEGACY_DRAFT_PATH_STORAGE_KEY);
+    if (legacyValue) {
+      localStorage.setItem(DRAFT_PATH_STORAGE_KEY, legacyValue);
+      localStorage.removeItem(LEGACY_DRAFT_PATH_STORAGE_KEY);
+      return legacyValue;
+    }
+    return defaultDraftPath;
+  };
   const [draftPath, setDraftPath] = useState<string>(
-    () => localStorage.getItem(DRAFT_PATH_STORAGE_KEY) || defaultDraftPath,
+    () => loadStoredDraftPath(),
   );
   const [jianyingVersion, setJianyingVersion] = useState("6");
 

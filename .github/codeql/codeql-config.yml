@@ -1,4 +1,4 @@
-name: "autovedio CodeQL Config"
+name: "autovideo CodeQL Config"
 
 paths-ignore:
   - alembic/versions

@@ -1,7 +1,7 @@
 # SQLAlchemy Async ORM 迁移设计
 
 **日期**：2026-03-04
-**Issue**：[#48](https://github.com/autovedio/autovedio/issues/48)
+**Issue**：[#48](https://github.com/autovideo/autovideo/issues/48)
 **状态**：已批准
 
 ---
@@ -64,8 +64,8 @@ scripts/
 ### Engine 配置 (`lib/db/engine.py`)
 
 - **DATABASE_URL 解析**：从环境变量 `DATABASE_URL` 读取
-  - 默认值：`sqlite+aiosqlite:///./projects/.autovedio.db`
-  - PostgreSQL：`postgresql+asyncpg://user:pass@host:5432/autovedio`
+  - 默认值：`sqlite+aiosqlite:///./projects/.autovideo.db`
+  - PostgreSQL：`postgresql+asyncpg://user:pass@host:5432/autovideo`
 - **SQLite 专用配置**：通过 `event.listens_for("connect")` 设置 WAL + busy_timeout
 - **AsyncSession 工厂**：`async_sessionmaker(engine, expire_on_commit=False)`
 - **FastAPI Depends**：`get_async_session()` 生成器注入 AsyncSession
@@ -77,7 +77,7 @@ def get_database_url() -> str:
     if url:
         return url
     project_root = Path(__file__).parent.parent.parent
-    db_path = project_root / "projects" / ".autovedio.db"
+    db_path = project_root / "projects" / ".autovideo.db"
     return f"sqlite+aiosqlite:///{db_path}"
 
 async_engine = create_async_engine(get_database_url(), echo=False, pool_pre_ping=True)
@@ -318,9 +318,9 @@ alembic/
 `.env.example` 新增：
 ```bash
 # 数据库配置（默认使用 SQLite）
-# SQLite（开发/单机）: sqlite+aiosqlite:///./projects/.autovedio.db
-# PostgreSQL（生产）:  postgresql+asyncpg://user:pass@host:5432/autovedio
-# DATABASE_URL=sqlite+aiosqlite:///./projects/.autovedio.db
+# SQLite（开发/单机）: sqlite+aiosqlite:///./projects/.autovideo.db
+# PostgreSQL（生产）:  postgresql+asyncpg://user:pass@host:5432/autovideo
+# DATABASE_URL=sqlite+aiosqlite:///./projects/.autovideo.db
 ```
 
 ### 新增依赖

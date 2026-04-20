@@ -92,11 +92,15 @@ class NovelWorkbenchService:
         self.autonovel_source_dir = Path(
             os.environ.get("AUTONOVEL_SOURCE_DIR", str(self.workspace_root / "autonovel"))
         ).resolve()
-        self.importer_script = Path(
-            os.environ.get(
-                "AUTONOVEL_IMPORTER_SCRIPT", str(self.workspace_root / "tools" / "import_autonovel_to_autovedio.py")
-            )
-        ).resolve()
+        importer_default = self.workspace_root / "tools" / "import_autonovel_to_autovideo.py"
+        legacy_importer_default = self.workspace_root / "tools" / "import_autonovel_to_autovedio.py"
+        importer_source = os.environ.get("AUTONOVEL_IMPORTER_SCRIPT", "").strip()
+        if importer_source:
+            self.importer_script = Path(importer_source).resolve()
+        else:
+            self.importer_script = (
+                importer_default if importer_default.exists() or not legacy_importer_default.exists() else legacy_importer_default
+            ).resolve()
 
         shared_env = self.workspace_root / ".env.shared"
         default_env_source = shared_env if shared_env.exists() else self.autonovel_source_dir / ".env"
@@ -567,7 +571,7 @@ class NovelWorkbenchService:
                     str(self.importer_script),
                     "--autonovel-dir",
                     str(workspace_dir),
-                    "--autovedio-dir",
+                    "--autovideo-dir",
                     str(self.project_root),
                     "--project-name",
                     str(job["target_project_name"]),

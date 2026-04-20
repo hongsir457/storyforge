@@ -335,7 +335,7 @@ export function AgentCopilot() {
             <PanelRightClose className="h-4 w-4" />
           </button>
           <Bot className="h-4 w-4 text-indigo-400" />
-          <span className="text-sm font-medium text-gray-300">{t("autovedio_agent")}</span>
+          <span className="text-sm font-medium text-gray-300">{t("autovideo_agent")}</span>
         </div>
         <div className="flex items-center gap-1">
           {isRunning && (

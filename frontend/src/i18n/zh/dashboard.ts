@@ -77,7 +77,7 @@ export default {
   'system_config_title': '系统配置与 API 访问管理',
   'config_issues': '配置问题',
   'config_issues_hint': '当前配置存在以下问题，可能会影响部分功能：',
-  'autovedio_agent': 'Storyforge 智能体',
+  'autovideo_agent': 'Storyforge 智能体',
   'agent_sdk_desc': '基于 Claude Agent SDK，驱动对话式 AI 助手与自动化工作流',
   'claude_code_compat_hint': '配置项兼容 Claude Code 环境变量命名，可使用兼容 Claude Code 的 Coding Plan API。',
   'api_access': 'API 访问',

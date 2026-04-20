@@ -1,6 +1,6 @@
-# autovedio Skill
+# autovideo Skill
 
-autovedio 是一个 AI 视频生成平台，将小说转化为短视频。通过此 Skill，你可以使用自然语言对话来调用 autovedio 的项目管理和内容创作能力。
+autovideo 是一个 AI 视频生成平台，将小说转化为短视频。通过此 Skill，你可以使用自然语言对话来调用 autovideo 的项目管理和内容创作能力。
 
 ## 认证
 
@@ -10,7 +10,7 @@ autovedio 是一个 AI 视频生成平台，将小说转化为短视频。通过
 Authorization: Bearer arc-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 ```
 
-API Key 可从 autovedio 设置页面的「API Keys」管理区获取。
+API Key 可从 autovideo 设置页面的「API Keys」管理区获取。
 
 ## 工作流
 
@@ -155,7 +155,7 @@ curl -X PATCH {{BASE_URL}}/api/v1/projects/my-novel \
 
 ### 6. Agent 对话（剧本与创作）
 
-向 autovedio AI Agent 发送消息，Agent 可执行剧本生成、分镜创作、视频生成等复杂任务。
+向 autovideo AI Agent 发送消息，Agent 可执行剧本生成、分镜创作、视频生成等复杂任务。
 
 - **端点**：`POST {{BASE_URL}}/api/v1/agent/chat`
 - **认证**：需要 Bearer Token

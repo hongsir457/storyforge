@@ -74,7 +74,7 @@ If you are upgrading from the old single-pod SQLite deployment, copy the legacy 
 ```bash
 kubectl exec -n ns-qkcc8vj1 deploy/storyforge-backend -- \
   python scripts/migrate_sqlite_to_postgres.py \
-    --source-sqlite /app/projects/.autovedio.db \
+    --source-sqlite /app/projects/.autovideo.db \
     --target-database-url "postgresql+asyncpg://storyforge:<postgres-password>@storyforge-postgres:5432/storyforge"
 ```
 
@@ -99,4 +99,4 @@ Expected result:
 
 - The Sealos `App` resource in the manifest points at `storyforge-frontend:80`
 - Public brand is `Storyforge / 叙影工场`
-- Internal compatibility identifiers may still use `autovedio` in filenames and migration scripts
+- Internal compatibility identifiers may still use `autovideo` in filenames and migration scripts

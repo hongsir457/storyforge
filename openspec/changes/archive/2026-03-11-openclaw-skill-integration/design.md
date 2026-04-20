@@ -1,8 +1,8 @@
 ## Context
 
-autovedio 当前使用 OAuth2 Bearer JWT 认证，所有 API 端点通过 `get_current_user` 依赖验证。前端先通过 `/auth/token` 获取 JWT，后续请求携带 `Authorization: Bearer <jwt>`。
+autovideo 当前使用 OAuth2 Bearer JWT 认证，所有 API 端点通过 `get_current_user` 依赖验证。前端先通过 `/auth/token` 获取 JWT，后续请求携带 `Authorization: Bearer <jwt>`。
 
-OpenClaw 等外部平台需要长期有效的 API Key 来调用 autovedio API，而非短期 JWT。此外，现有助手对话基于 SSE 流式，外部 Agent 需要同步请求-响应接口。
+OpenClaw 等外部平台需要长期有效的 API Key 来调用 autovideo API，而非短期 JWT。此外，现有助手对话基于 SSE 流式，外部 Agent 需要同步请求-响应接口。
 
 ## Goals / Non-Goals
 

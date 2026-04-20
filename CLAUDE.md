@@ -16,7 +16,7 @@ This file provides guidance to Claude Code when working with this repository.
 
 仓库内部兼容标识：
 
-- `autovedio`
+- `autovideo`
 
 Storyforge 是一个面向“小说 -> 分镜 -> 视频”的 AI 工作台。当前主干能力包括：
 
@@ -108,7 +108,7 @@ cd frontend && pnpm check
 
 ### 数据存储
 
-- 开发默认：`projects/.autovedio.db`
+- 开发默认：`projects/.autovideo.db`
 - 生产默认：PostgreSQL
 - 异步支撑：Redis
 
@@ -138,7 +138,7 @@ ORM 和仓储位于：
 
 - 更新用户可见文案时，同时检查 `README.md`、`README.en.md`、`docs/getting-started.md`
 - 更新部署能力时，同时检查 `deploy/sealos/README.md` 和生产部署说明
-- 变更品牌时，区分清楚“对外品牌 Storyforge / 叙影工场”和“内部兼容标识 autovedio”
+- 变更品牌时，区分清楚“对外品牌 Storyforge / 叙影工场”和“内部兼容标识 autovideo”
 
 ## 质量要求
 

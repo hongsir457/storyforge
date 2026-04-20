@@ -80,11 +80,30 @@ function findLatestUserTurn(turns: Turn[]): Turn | null {
 // localStorage helpers — 记住每个项目最后使用的会话
 // ---------------------------------------------------------------------------
 
-const LAST_SESSION_KEY = "autovedio:lastSessionByProject";
+const LAST_SESSION_KEY = "autovideo:lastSessionByProject";
+const LEGACY_LAST_SESSION_KEY = "autovedio:lastSessionByProject";
+
+function loadSessionMap(): Record<string, string> {
+  try {
+    const nextMap = JSON.parse(localStorage.getItem(LAST_SESSION_KEY) || "{}");
+    if (nextMap && typeof nextMap === "object" && Object.keys(nextMap).length > 0) {
+      return nextMap;
+    }
+    const legacyMap = JSON.parse(localStorage.getItem(LEGACY_LAST_SESSION_KEY) || "{}");
+    if (legacyMap && typeof legacyMap === "object" && Object.keys(legacyMap).length > 0) {
+      localStorage.setItem(LAST_SESSION_KEY, JSON.stringify(legacyMap));
+      localStorage.removeItem(LEGACY_LAST_SESSION_KEY);
+      return legacyMap;
+    }
+  } catch {
+    // ignore malformed localStorage state
+  }
+  return {};
+}
 
 function getLastSessionId(projectName: string): string | null {
   try {
-    const map = JSON.parse(localStorage.getItem(LAST_SESSION_KEY) || "{}");
+    const map = loadSessionMap();
     return map[projectName] ?? null;
   } catch {
     return null;
@@ -93,7 +112,7 @@ function getLastSessionId(projectName: string): string | null {
 
 function saveLastSessionId(projectName: string, sessionId: string): void {
   try {
-    const map = JSON.parse(localStorage.getItem(LAST_SESSION_KEY) || "{}");
+    const map = loadSessionMap();
     map[projectName] = sessionId;
     localStorage.setItem(LAST_SESSION_KEY, JSON.stringify(map));
   } catch {

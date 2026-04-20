@@ -1,4 +1,4 @@
-"""Shared pytest fixtures for the autovedio test suite."""
+"""Shared pytest fixtures for the autovideo test suite."""
 
 from __future__ import annotations
 

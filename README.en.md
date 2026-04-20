@@ -43,13 +43,13 @@ Storyforge is a narrative production workspace for the pipeline from novel seed 
 ## Brand vs Internal Identifier
 
 - Public product brand: `Storyforge / 叙影工场`
-- Internal compatibility identifier: `autovedio`
-- You will still see `autovedio` in a few internal filenames and migration tools, for example:
-  - `projects/.autovedio.db`
-  - `autovedio-export.json`
-  - `tools/import_autonovel_to_autovedio.py`
+- Internal compatibility identifier: `autovideo`
+- You will still see `autovideo` in a few internal filenames and migration tools, for example:
+  - `projects/.autovideo.db`
+  - `autovideo-export.json`
+  - `tools/import_autonovel_to_autovideo.py`
 
-If you are migrating older data or grepping the repo, search `autovedio` first.
+If you are migrating older data or grepping the repo, search `autovideo` first.
 
 ## Production Topology
 

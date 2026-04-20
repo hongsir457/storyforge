@@ -245,7 +245,7 @@ class JianyingDraftService:
         raw_title = project.get("title", project_name)
         safe_title = raw_title.replace("/", "_").replace("\\", "_").replace("..", "_")
         draft_name = f"{safe_title}_第{episode}集"
-        tmp_dir = Path(tempfile.mkdtemp(prefix="autovedio_jy_"))
+        tmp_dir = Path(tempfile.mkdtemp(prefix="autovideo_jy_"))
         try:
             staging_dir = tmp_dir / "staging"
             staging_dir.mkdir()

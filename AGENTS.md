@@ -16,7 +16,7 @@ This file provides guidance to Codex when working with this repository.
 
 内部兼容标识：
 
-- `autovedio`
+- `autovideo`
 
 Storyforge 不是通用视频编辑器，而是围绕“小说 -> 分镜 -> 视频”的叙事生产工作台。重点是：
 
@@ -91,7 +91,7 @@ pnpm check
 
 ## 数据与部署
 
-- 开发默认 SQLite：`projects/.autovedio.db`
+- 开发默认 SQLite：`projects/.autovideo.db`
 - 生产部署使用 PostgreSQL
 - Redis 用于异步任务和缓存
 - Sealos 当前为前后端分离部署

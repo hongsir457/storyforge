@@ -19,7 +19,9 @@ from lib.project_manager import ProjectManager
 
 logger = logging.getLogger(__name__)
 
-ARCHIVE_MANIFEST_NAME = "autovedio-export.json"
+ARCHIVE_MANIFEST_NAME = "autovideo-export.json"
+LEGACY_ARCHIVE_MANIFEST_NAMES = ("autovedio-export.json",)
+SUPPORTED_ARCHIVE_MANIFEST_NAMES = (ARCHIVE_MANIFEST_NAME, *LEGACY_ARCHIVE_MANIFEST_NAMES)
 ARCHIVE_FORMAT_VERSION = 2
 ARCHIVE_SCRIPT_SCHEMA_VERSION = 2
 DEFAULT_IMPORT_FILENAME = "imported-project.zip"
@@ -246,7 +248,7 @@ class ProjectArchiveService:
                 members = self._scan_archive_members(archive)
                 root_parts, manifest = self._locate_project_root(archive, members)
 
-                with tempfile.TemporaryDirectory(prefix="autovedio-import-") as temp_dir:
+                with tempfile.TemporaryDirectory(prefix="autovideo-import-") as temp_dir:
                     staging_dir = Path(temp_dir) / "project"
                     staging_dir.mkdir(parents=True, exist_ok=True)
 
@@ -317,7 +319,7 @@ class ProjectArchiveService:
         scope: str,
     ) -> tuple[tempfile.TemporaryDirectory[str], Path, dict[str, Any], ArchiveDiagnostics]:
         source_dir = self.project_manager.get_project_path(project_name)
-        temp_dir = tempfile.TemporaryDirectory(prefix="autovedio-export-")
+        temp_dir = tempfile.TemporaryDirectory(prefix="autovideo-export-")
         snapshot_dir = Path(temp_dir.name) / project_name
         self._copy_visible_tree(source_dir, snapshot_dir)
 
@@ -1152,13 +1154,15 @@ class ProjectArchiveService:
     ) -> tuple[tuple[str, ...], dict[str, Any] | None]:
         visible_members = [member for member in members if not self._is_hidden_member(member.parts)]
 
-        manifest_members = [member for member in visible_members if member.parts[-1] == ARCHIVE_MANIFEST_NAME]
+        manifest_members = [
+            member for member in visible_members if member.parts[-1] in SUPPORTED_ARCHIVE_MANIFEST_NAMES
+        ]
         if manifest_members:
             root_candidates = {member.parts[:-1] for member in manifest_members}
             if len(root_candidates) != 1:
                 raise ProjectArchiveValidationError(
                     "导入包校验失败",
-                    errors=["ZIP 中包含多个 autovedio-export.json，无法确定项目根目录"],
+                    errors=["ZIP 中包含多个 autovideo-export.json，无法确定项目根目录"],
                 )
 
             root_parts = next(iter(root_candidates))
@@ -1171,7 +1175,7 @@ class ProjectArchiveService:
             manifest = self._load_member_json(
                 archive,
                 manifest_members[0],
-                ARCHIVE_MANIFEST_NAME,
+                manifest_members[0].parts[-1],
             )
             return root_parts, manifest
 
@@ -1209,7 +1213,7 @@ class ProjectArchiveService:
             relative_parts = member.parts[root_length:]
             if not relative_parts:
                 continue
-            if relative_parts == (ARCHIVE_MANIFEST_NAME,):
+            if len(relative_parts) == 1 and relative_parts[0] in SUPPORTED_ARCHIVE_MANIFEST_NAMES:
                 continue
             if self._is_hidden_member(relative_parts):
                 continue

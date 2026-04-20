@@ -19,7 +19,7 @@ def _make_workbench_layout(root: Path) -> None:
     (root / "projects").mkdir()
     (root / "autonovel").mkdir()
     (root / "tools").mkdir()
-    (root / "tools" / "import_autonovel_to_autovedio.py").write_text("# importer\n", encoding="utf-8")
+    (root / "tools" / "import_autonovel_to_autovideo.py").write_text("# importer\n", encoding="utf-8")
     (root / "autonovel" / ".env.example").write_text(
         "\n".join(
             [

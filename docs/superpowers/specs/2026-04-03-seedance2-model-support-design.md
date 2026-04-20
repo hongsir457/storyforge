@@ -1,6 +1,6 @@
 # Seedance 2.0 模型支持设计
 
-> 关联 Issue: [autovedio/autovedio#42](https://github.com/autovedio/autovedio/issues/42)
+> 关联 Issue: [autovideo/autovideo#42](https://github.com/autovideo/autovideo/issues/42)
 > 日期: 2026-04-03
 > 范围: 最小可用（模型注册 + 定价 + 能力声明）
 

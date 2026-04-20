@@ -2257,7 +2257,7 @@ async function getConfigIssues(): Promise<ConfigIssue[]> {
     issues.push({
       key: "anthropic",
       tab: "agent",
-      label: "autovedio 智能体 API Key（Anthropic）未配置",
+      label: "autovideo 智能体 API Key（Anthropic）未配置",
     });
   }
 

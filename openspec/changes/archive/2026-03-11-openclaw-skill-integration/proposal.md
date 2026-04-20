@@ -1,6 +1,6 @@
 ## Why
 
-OpenClaw 是 2026 年最热门的开源 AI Agent 平台（GitHub 247k+ stars），支持通过 AgentSkill 扩展能力。为 autovedio 接入 OpenClaw Skill，可让用户通过自然语言对话调用 autovedio 的项目创建、剧本生成、分镜制作、视频生成等能力，降低使用门槛并拓展获客渠道。
+OpenClaw 是 2026 年最热门的开源 AI Agent 平台（GitHub 247k+ stars），支持通过 AgentSkill 扩展能力。为 autovideo 接入 OpenClaw Skill，可让用户通过自然语言对话调用 autovideo 的项目创建、剧本生成、分镜制作、视频生成等能力，降低使用门槛并拓展获客渠道。
 
 ## What Changes
 

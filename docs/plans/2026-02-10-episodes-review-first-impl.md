@@ -20,7 +20,7 @@
 **Step 1: Create isolated worktree/branch (@superpowers:using-git-worktrees)**
 
 ```bash
-git worktree add ../autovedio-review-first -b codex/episodes-review-first
+git worktree add ../autovideo-review-first -b codex/episodes-review-first
 ```
 
 **Step 2: Install/confirm frontend dependencies in worktree**
@@ -29,7 +29,7 @@ git worktree add ../autovedio-review-first -b codex/episodes-review-first
 npm install
 ```
 
-Run in: `../autovedio-review-first/frontend`
+Run in: `../autovideo-review-first/frontend`
 
 **Step 3: Run current frontend baseline tests**
 

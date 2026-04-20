@@ -31,7 +31,10 @@ def get_database_url() -> str:
     if url:
         return url
     project_root = Path(__file__).parent.parent.parent
-    db_path = project_root / "projects" / ".autovedio.db"
+    db_path = project_root / "projects" / ".autovideo.db"
+    legacy_db_path = project_root / "projects" / ".autovedio.db"
+    if not db_path.exists() and legacy_db_path.exists():
+        db_path = legacy_db_path
     return f"sqlite+aiosqlite:///{db_path}"
 
 

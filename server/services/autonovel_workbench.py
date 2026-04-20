@@ -99,7 +99,9 @@ class NovelWorkbenchService:
             self.importer_script = Path(importer_source).resolve()
         else:
             self.importer_script = (
-                importer_default if importer_default.exists() or not legacy_importer_default.exists() else legacy_importer_default
+                importer_default
+                if importer_default.exists() or not legacy_importer_default.exists()
+                else legacy_importer_default
             ).resolve()
 
         shared_env = self.workspace_root / ".env.shared"
@@ -392,8 +394,7 @@ class NovelWorkbenchService:
             return {}
         view = dict(job)
         view["writing_language"] = (
-            str(view.get("writing_language") or "").strip()
-            or self.RUNTIME_ENV_DEFAULTS["AUTONOVEL_WRITING_LANGUAGE"]
+            str(view.get("writing_language") or "").strip() or self.RUNTIME_ENV_DEFAULTS["AUTONOVEL_WRITING_LANGUAGE"]
         )
         view["seed_excerpt"] = textwrap.shorten(
             " ".join(view.get("seed_text", "").split()), width=180, placeholder="..."

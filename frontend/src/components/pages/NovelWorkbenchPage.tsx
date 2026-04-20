@@ -848,12 +848,6 @@ export function NovelWorkbenchPage() {
                             </span>
                           )}
                         </div>
-                        {false && (
-                          <span className="inline-flex items-center gap-1 text-xs text-amber-300">
-                            <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                            实时刷新
-                          </span>
-                        )}
                       </div>
                       <pre className="max-h-[32rem] overflow-auto whitespace-pre-wrap break-words rounded-xl bg-black/30 p-3 font-mono text-xs text-gray-200">
                         {fullLog?.content || selectedJob.log_tail || "No logs yet."}

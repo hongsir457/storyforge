@@ -12,6 +12,7 @@ import {
   FileText,
   Loader2,
   RefreshCw,
+  ServerCog,
   Sparkles,
   Square,
   Trash2,
@@ -21,6 +22,7 @@ import { useTranslation } from "react-i18next";
 import { API } from "@/api";
 import { SiteLegalFooter } from "@/components/legal/SiteLegalFooter";
 import { useAppStore } from "@/stores/app-store";
+import { useAuthStore } from "@/stores/auth-store";
 import type {
   NovelWorkbenchArtifact,
   NovelWorkbenchArtifactContentResponse,
@@ -370,8 +372,10 @@ function downloadBlob(blob: Blob, filename: string): void {
 export function NovelWorkbenchPage() {
   const [, navigate] = useLocation();
   const pushToast = useAppStore((state) => state.pushToast);
+  const user = useAuthStore((state) => state.user);
   const locale = useWorkbenchLocale();
   const copy = useWorkbenchCopy();
+  const isAdmin = user?.role === "admin";
 
   const [status, setStatus] = useState<NovelWorkbenchStatus | null>(null);
   const [jobs, setJobs] = useState<NovelWorkbenchJob[]>([]);
@@ -681,14 +685,29 @@ export function NovelWorkbenchPage() {
             </div>
           </div>
 
-          <button
-            type="button"
-            onClick={() => void fetchAll(true)}
-            className="storyforge-secondary-button inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-sm font-medium transition hover:-translate-y-0.5"
-          >
-            {refreshing ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
-            {copy.refresh}
-          </button>
+          <div className="flex flex-wrap items-center gap-2">
+            {isAdmin && (
+              <button
+                type="button"
+                onClick={() => navigate("/app/admin")}
+                className="storyforge-secondary-button inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-sm font-medium transition hover:-translate-y-0.5"
+                title={locale === "zh" ? "全局配置" : "Global Config"}
+                aria-label={locale === "zh" ? "全局配置" : "Global Config"}
+              >
+                <ServerCog className="h-4 w-4" />
+                {locale === "zh" ? "全局配置" : "Global Config"}
+              </button>
+            )}
+
+            <button
+              type="button"
+              onClick={() => void fetchAll(true)}
+              className="storyforge-secondary-button inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-sm font-medium transition hover:-translate-y-0.5"
+            >
+              {refreshing ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
+              {copy.refresh}
+            </button>
+          </div>
         </div>
       </header>
 

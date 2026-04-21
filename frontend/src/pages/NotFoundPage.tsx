@@ -1,9 +1,12 @@
+import { useTranslation } from "react-i18next";
 import { useLocation } from "wouter";
 import { BrandLogo } from "@/components/brand/BrandLogo";
 import { SiteLegalFooter } from "@/components/legal/SiteLegalFooter";
 
 export function NotFoundPage() {
   const [, navigate] = useLocation();
+  const { i18n } = useTranslation();
+  const isZh = (i18n.resolvedLanguage ?? i18n.language ?? "").startsWith("zh");
 
   return (
     <div className="storyforge-public-shell flex min-h-screen flex-col">
@@ -16,15 +19,19 @@ export function NotFoundPage() {
           >
             404
           </p>
-          <p className="mt-4 text-lg text-[var(--sf-text-muted)]">这个入口不在当前的叙事版图里。</p>
+          <p className="mt-4 text-lg text-[var(--sf-text-muted)]">
+            {isZh ? "这个入口不在当前的叙事版图里。" : "This route is outside the current Storyforge map."}
+          </p>
           <p className="mt-3 text-sm leading-7 text-[var(--sf-text-soft)]">
-            返回项目库继续工作，或者回到首页重新进入正确的路径。
+            {isZh
+              ? "回到项目主页继续工作，或者从首页重新进入正确的路径。"
+              : "Return to your projects or head back home and enter from the right path."}
           </p>
           <button
             onClick={() => navigate("/app/projects", { replace: true })}
             className="storyforge-primary-button mt-8 rounded-[1rem] px-6 py-3 text-sm font-semibold transition hover:-translate-y-0.5"
           >
-            返回项目库
+            {isZh ? "返回项目主页" : "Back to Projects"}
           </button>
         </div>
       </main>

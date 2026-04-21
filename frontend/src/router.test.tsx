@@ -61,7 +61,7 @@ describe("AppRoutes", () => {
 
   it("renders the public home page at root", async () => {
     renderAt("/");
-    expect(await screen.findByText("把长篇故事做成可复用的视觉 IP。")).toBeInTheDocument();
+    expect((await screen.findAllByText("AutoNovel")).length).toBeGreaterThan(0);
   });
 
   it("redirects /app to /app/projects", async () => {
@@ -91,10 +91,10 @@ describe("AppRoutes", () => {
     expect(await screen.findByTestId("projects-page")).toBeInTheDocument();
   });
 
-  it("renders 404 for unknown routes", () => {
+  it("renders 404 for unknown routes", async () => {
     renderAt("/not-found");
-    expect(screen.getByText("404")).toBeInTheDocument();
-    expect(screen.getByText("页面未找到")).toBeInTheDocument();
+    expect(await screen.findByText("404")).toBeInTheDocument();
+    expect(await screen.findByText("这个入口不在当前的叙事版图里。")).toBeInTheDocument();
   });
 
   it("loads project workspace and resets assistant state", async () => {
@@ -154,6 +154,27 @@ describe("AppRoutes", () => {
     view.unmount();
     expect(useProjectsStore.getState().currentProjectName).toBeNull();
     expect(useProjectsStore.getState().currentProjectData).toBeNull();
+  });
+
+  it("decodes encoded project names before loading the workspace", async () => {
+    vi.spyOn(API, "getProject").mockResolvedValue({
+      project: {
+        title: "深度",
+        content_mode: "narration",
+        style: "Editorial",
+        episodes: [],
+        characters: {},
+        clues: {},
+      },
+      scripts: {},
+    });
+
+    renderAt("/app/projects/%E6%B7%B1%E5%BA%A6");
+
+    expect(await screen.findByTestId("studio-layout")).toBeInTheDocument();
+    await waitFor(() => {
+      expect(API.getProject).toHaveBeenCalledWith("深度");
+    });
   });
 
   it("keeps project name when loading project details fails", async () => {

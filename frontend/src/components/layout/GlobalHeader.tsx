@@ -1,6 +1,6 @@
 import { startTransition, useState, useEffect, useRef } from "react";
 import { useLocation } from "wouter";
-import { ChevronLeft, Activity, Settings, Bell, Download, Loader2 } from "lucide-react";
+import { ChevronLeft, Activity, Settings, Bell, Download, Loader2, ServerCog } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useAppStore } from "@/stores/app-store";
 import { useConfigStatusStore } from "@/stores/config-status-store";
@@ -8,6 +8,7 @@ import { useProjectsStore } from "@/stores/projects-store";
 import { useTasksStore } from "@/stores/tasks-store";
 import { useUsageStore, type UsageStats } from "@/stores/usage-store";
 import { useAuthStore } from "@/stores/auth-store";
+import { buildProjectSettingsRoute } from "@/utils/project-routes";
 import { TaskHud } from "@/components/task-hud/TaskHud";
 import { BrandLogo } from "@/components/brand/BrandLogo";
 import { UsageDrawer } from "./UsageDrawer";
@@ -137,6 +138,12 @@ export function GlobalHeader({ onNavigateBack }: GlobalHeaderProps) {
   const displayProjectTitle =
     currentProjectData?.title?.trim() || currentProjectName || t("no_project_selected");
   const unreadNotificationCount = workspaceNotifications.filter((item) => !item.read).length;
+  const isAdmin = user?.role === "admin";
+  const projectSettingsLabel = t("dashboard:project_settings", { defaultValue: "Project Settings" });
+  const globalConfigLabel =
+    user?.role === "admin"
+      ? t("dashboard:global_model_config", { defaultValue: "Global Model Config" })
+      : t("dashboard:account_settings", { defaultValue: "Account Settings" });
 
   // 加载费用统计数据（任务完成时自动刷新）
   const completedTaskCount = stats.succeeded + stats.failed;
@@ -382,7 +389,22 @@ export function GlobalHeader({ onNavigateBack }: GlobalHeaderProps) {
           />
         </div>
 
-        {/* Settings (placeholder) */}
+        {isAdmin && (
+          <button
+            type="button"
+            onClick={() => setLocation("/app/admin")}
+            className="storyforge-rail-button relative inline-flex items-center gap-1 rounded-full px-3 py-2 text-xs font-medium transition hover:-translate-y-0.5"
+            title={globalConfigLabel}
+            aria-label={globalConfigLabel}
+          >
+            <ServerCog className="h-3.5 w-3.5" />
+            <span className="hidden lg:inline">{globalConfigLabel}</span>
+            {!isConfigComplete && (
+              <span className="absolute right-2 top-1.5 h-2 w-2 rounded-full bg-rose-500" aria-label={t("dashboard:config_incomplete")} />
+            )}
+          </button>
+        )}
+
         <button
           type="button"
           onClick={() => setLocation("/app/account")}
@@ -394,17 +416,21 @@ export function GlobalHeader({ onNavigateBack }: GlobalHeaderProps) {
 
         <button
           type="button"
-          onClick={() => setLocation(
-            currentProjectName
-              ? `/app/projects/${encodeURIComponent(currentProjectName)}/settings`
-              : "/app/settings"
-          )}
+          onClick={() =>
+            setLocation(
+              currentProjectName
+                ? buildProjectSettingsRoute(currentProjectName)
+                : isAdmin
+                  ? "/app/admin"
+                  : "/app/account",
+            )
+          }
           className="storyforge-rail-button relative rounded-full p-2.5 transition hover:-translate-y-0.5"
-          title={t("settings")}
-          aria-label={t("settings")}
+          title={projectSettingsLabel}
+          aria-label={projectSettingsLabel}
         >
           <Settings className="h-4 w-4" />
-          {!isConfigComplete && !currentProjectName && (
+          {!isConfigComplete && !currentProjectName && isAdmin && (
             <span className="absolute right-0.5 top-0.5 h-2 w-2 rounded-full bg-rose-500" aria-label={t("dashboard:config_incomplete")} />
           )}
         </button>

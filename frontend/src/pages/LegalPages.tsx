@@ -87,57 +87,69 @@ const LEGAL_PAGE_COPY = {
     privacy: {
       eyebrow: "Privacy",
       title: "隐私政策",
-      intro: "Storyforge 只保存运行账号体系、创作任务与工作台稳定性所必需的最小数据。",
+      intro:
+        "Storyforge 只保存账号鉴权、项目运行、生成任务与系统稳定性所必需的最小数据集合。",
       sections: [
         {
-          title: "我们收集什么",
-          body: "我们可能保存账号标识、邮箱验证状态、项目元数据、生成资产、任务日志，以及保障系统运行所需的诊断信息。",
+          title: "我们会收集什么",
+          body:
+            "我们可能保存账号标识、邮箱验证状态、项目元数据、生成产物、任务日志，以及为保障服务稳定所需的运行诊断信息。",
         },
         {
           title: "我们如何使用数据",
-          body: "这些数据仅用于身份验证、执行小说与视频工作流、保持项目连续性、处理支持请求，以及提升系统稳定性。",
+          body:
+            "这些数据仅用于身份验证、执行小说与视频工作流、保持项目连续性、处理支持请求，以及提升系统可靠性。",
         },
         {
           title: "我们如何共享数据",
-          body: "Storyforge 不出售用户数据。只有在完成生成任务或托管服务确有必要时，才会向基础设施或模型供应商传递最小必要信息。",
+          body:
+            "Storyforge 不出售用户数据。只有在完成模型推理、文件托管或基础设施服务确有必要时，才会向相关服务商传递最小必要信息。",
         },
       ],
     },
     terms: {
       eyebrow: "Terms",
       title: "服务条款",
-      intro: "请合法使用 Storyforge，尊重知识产权，并在发布或分发前自行审核生成内容。",
+      intro:
+        "请合法使用 Storyforge，尊重知识产权，并在发布或分发生成内容前自行完成审核。",
       sections: [
         {
-          title: "可接受使用范围",
-          body: "不得将产品用于违法行为、骚扰、攻击系统、安全滥用、欺骗性媒体，或任何违反平台、模型供应商和适用法律规则的内容。",
+          title: "允许的使用范围",
+          body:
+            "不得将产品用于违法行为、骚扰、安全攻击、欺骗性媒体、侵犯他人权益，或任何违反平台、模型供应商与适用法律规则的内容。",
         },
         {
           title: "内容责任",
-          body: "与你的账号或部署相关的提示词、上传素材、项目内容与生成结果，均由你或对应部署管理员自行负责。",
+          body:
+            "与你的账号或部署相关的提示词、上传素材、项目内容与生成结果，均由你或对应部署管理员自行负责。",
         },
         {
-          title: "服务变更与限制",
-          body: "管理员可以调整访问权限、额度、模型供应商与运行限制。为保护用户和基础设施，平台可对滥用行为采取限制或停用措施。",
+          title: "服务调整",
+          body:
+            "管理员可以调整访问权限、额度、模型供应商与运行限制。为保护用户与基础设施，平台可能对滥用行为采取限制或停用措施。",
         },
       ],
     },
     contact: {
       eyebrow: "Contact",
       title: "联系我们",
-      intro: "如需支持、隐私处理或法务沟通，请通过下面的方式联系到正确的维护方。",
+      intro:
+        "如需产品支持、隐私请求或法务沟通，请通过下面的方式联系到正确的维护方。",
       sections: [
         {
           title: "产品支持",
-          body: "如需反馈缺陷或产品问题，请优先提交 GitHub Issue，或联系你所使用部署的管理员。",
+          body:
+            "如果需要反馈缺陷或产品问题，请优先提交 GitHub Issue，或联系你当前所使用部署的管理员。",
         },
         {
           title: "隐私与法务请求",
-          body: "如需数据访问、删除或政策说明，请联系当前部署管理员。对于自托管环境，部署方是其自身数据的主要控制者。",
+          body:
+            "如需数据访问、删除或政策说明，请联系当前部署管理员。对于自托管环境，部署方是其自身数据的主要控制者。",
         },
         {
           title: "公开联系渠道",
-          body: "对于仓库级反馈、缺陷追踪与协作沟通，GitHub Issues 仍然是最清晰的公共入口。",
+          body:
+            "对于仓库级反馈、缺陷追踪与贡献协作，GitHub Issues 仍然是最清晰的公共入口。",
         },
       ],
       actions: {
@@ -217,8 +229,12 @@ function LegalPageFrame({
                   key={section.title}
                   className="rounded-[1.7rem] border border-[rgba(117,132,159,0.16)] bg-white/76 p-5 shadow-[0_18px_40px_rgba(23,38,69,0.06)]"
                 >
-                  <h2 className="text-lg font-semibold tracking-[-0.02em] text-[var(--sf-text)]">{section.title}</h2>
-                  <p className="mt-3 text-sm leading-7 text-[var(--sf-text-muted)]">{section.body}</p>
+                  <h2 className="text-lg font-semibold tracking-[-0.02em] text-[var(--sf-text)]">
+                    {section.title}
+                  </h2>
+                  <p className="mt-3 text-sm leading-7 text-[var(--sf-text-muted)]">
+                    {section.body}
+                  </p>
                 </article>
               ))}
             </div>

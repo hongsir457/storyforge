@@ -608,11 +608,11 @@ export function ProjectsPage() {
                 type="button"
                 onClick={() => navigate("/app/admin")}
                 className="storyforge-secondary-button relative inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium transition hover:-translate-y-0.5"
-                title={locale === "zh" ? "管理控制台" : "Admin Console"}
-                aria-label={locale === "zh" ? "管理控制台" : "Admin Console"}
+                title={locale === "zh" ? "全局配置" : "Global Config"}
+                aria-label={locale === "zh" ? "全局配置" : "Global Config"}
               >
                 <Settings className="h-4 w-4" />
-                {locale === "zh" ? "控制台" : "Console"}
+                {locale === "zh" ? "全局配置" : "Global Config"}
                 {!isConfigComplete && (
                   <span className="absolute right-3 top-2 h-2 w-2 rounded-full bg-rose-500" aria-label={t("dashboard:config_incomplete")} />
                 )}

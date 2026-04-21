@@ -22,7 +22,8 @@ type LegalFooterLocale = keyof typeof LEGAL_FOOTER_COPY;
 
 function useLegalFooterCopy() {
   const { i18n } = useTranslation();
-  const locale: LegalFooterLocale = (i18n.resolvedLanguage ?? i18n.language ?? "").startsWith("zh") ? "zh" : "en";
+  const locale: LegalFooterLocale =
+    (i18n.resolvedLanguage ?? i18n.language ?? "").startsWith("zh") ? "zh" : "en";
   return LEGAL_FOOTER_COPY[locale];
 }
 
@@ -46,23 +47,40 @@ export function SiteLegalFooter({
   const copy = useLegalFooterCopy();
 
   return (
-    <footer className={`border-t border-[rgba(117,132,159,0.12)] bg-white/58 backdrop-blur-sm ${className ?? ""}`}>
+    <footer
+      className={`border-t border-[rgba(117,132,159,0.12)] bg-white/58 backdrop-blur-sm ${className ?? ""}`}
+    >
       <div
         className={`mx-auto flex max-w-7xl flex-col gap-3 px-6 py-5 text-xs sm:flex-row sm:items-center sm:justify-between ${contentClassName ?? ""}`}
       >
-        <p className={`flex flex-wrap items-center gap-2 text-[11px] text-[var(--sf-text-soft)] ${textClassName ?? ""}`}>
-          <span className={`font-semibold text-[var(--sf-text)] ${brandClassName ?? ""}`}>{copy.brand}</span>
+        <p
+          className={`flex flex-wrap items-center gap-2 text-[11px] text-[var(--sf-text-soft)] ${textClassName ?? ""}`}
+        >
+          <span className={`font-semibold text-[var(--sf-text)] ${brandClassName ?? ""}`}>
+            {copy.brand}
+          </span>
           <span>{copy.rights}</span>
         </p>
 
-        <nav className={`flex flex-wrap items-center gap-6 text-[11px] text-[var(--sf-text-soft)] ${navClassName ?? ""}`}>
-          <Link href="/privacy" className={`transition-colors hover:text-[var(--sf-blue-strong)] ${linkClassName ?? ""}`}>
+        <nav
+          className={`flex flex-wrap items-center gap-6 text-[11px] text-[var(--sf-text-soft)] ${navClassName ?? ""}`}
+        >
+          <Link
+            href="/privacy"
+            className={`transition-colors hover:text-[var(--sf-blue-strong)] ${linkClassName ?? ""}`}
+          >
             {copy.privacy}
           </Link>
-          <Link href="/terms" className={`transition-colors hover:text-[var(--sf-blue-strong)] ${linkClassName ?? ""}`}>
+          <Link
+            href="/terms"
+            className={`transition-colors hover:text-[var(--sf-blue-strong)] ${linkClassName ?? ""}`}
+          >
             {copy.terms}
           </Link>
-          <Link href="/contact" className={`transition-colors hover:text-[var(--sf-blue-strong)] ${linkClassName ?? ""}`}>
+          <Link
+            href="/contact"
+            className={`transition-colors hover:text-[var(--sf-blue-strong)] ${linkClassName ?? ""}`}
+          >
             {copy.contact}
           </Link>
         </nav>

@@ -1,12 +1,11 @@
 import type { ReactNode } from "react";
 import {
   ArrowRight,
-  Bell,
   BookOpenText,
+  Boxes,
   Clapperboard,
   LibraryBig,
   PlayCircle,
-  Search,
   ServerCog,
   Sparkles,
   SwatchBook,
@@ -25,23 +24,23 @@ const HOME_COPY = {
       novel: "Novel Workbench",
       studio: "Video Studio",
       assets: "Asset Library",
+      pricing: "Pricing",
+      contact: "Contact",
       cta: "Enter Studio",
-      searchLabel: "Search",
-      notificationsLabel: "Notifications",
     },
     hero: {
       eyebrow: "Editorial Architected AI",
       titleLead: "From a single spark,",
       titleAccent: "forge images that endure.",
       body:
-        "A story-to-video production studio for creators. Turn fragmented inspiration into narrative structure, long-form fiction, storyboards, and cinematic visual output inside one Storyforge workflow.",
+        "Storyforge is a narrative-to-video production studio for creators. Turn a loose idea into a novel structure, storyboard logic, asset system, and cinematic delivery inside one workflow.",
       primary: "Start Creating",
       secondary: "Watch Demo",
       steps: [
         {
           index: "01",
           title: "Capture the seed",
-          body: "Turn one premise into a story world with structure and direction.",
+          body: "Turn one premise into a story world with clear structure and direction.",
         },
         {
           index: "02",
@@ -62,6 +61,10 @@ const HOME_COPY = {
         "More than text generation. Storyforge analyzes pacing, character arcs, conflict, and structural tension so the novel layer can mature before visual production begins.",
       quote: '"Every line should carry emotional resonance."',
       engine: "AutoNovel Engine v4.0",
+      link: "Explore the novel workspace",
+      panelTitle: "Narrative desk",
+      panelBody:
+        "Worldbuilding notes, manuscript rhythm, and chapter intent stay visible in one editorial surface.",
       points: [
         {
           title: "Character psychology map",
@@ -72,36 +75,69 @@ const HOME_COPY = {
           body: "Explore alternate arcs and stable chapter structures before the manuscript hardens.",
         },
       ],
-      link: "Explore the narrative pipeline",
-      panelTitle: "Narrative desk",
-      panelBody: "Worldbuilding notes, manuscript rhythm, and chapter intent stay visible in one editorial surface.",
     },
     video: {
       title: "AutoVideo cinematic production",
-      body: "From text to 4K visual sequences, Storyforge compresses months of production iteration into a tighter creative loop.",
+      body:
+        "From text to 4K visual sequences, Storyforge compresses months of production iteration into a tighter creative loop.",
       mainLabel: "Main Engine",
       mainTitle: "Dynamic visual capture",
-      mainBody: "Storyboard prompts, style references, and render output stay linked so motion language is grounded in the story source.",
+      mainBody:
+        "Storyboard prompts, style references, and render output stay linked so motion language is grounded in the story source.",
       syncTitle: "Realtime storyboard sync",
-      syncBody: "Mirror the novel's emotional beats into visual sequences and adjust the shot language before final export.",
-      syncAction: "Try Director Mode",
+      syncBody:
+        "Mirror the novel's emotional beats into visual sequences and adjust the shot language before final export.",
+      syncAction: "Open Video Studio",
       colorTitle: "Color direction studio",
-      colorBody: "Move between restrained palettes, warm editorial toning, and stylized cinematic looks without losing continuity.",
+      colorBody:
+        "Move between restrained palettes, warm editorial toning, and stylized cinematic looks without losing continuity.",
       infraTitle: "Compute-backed delivery",
-      infraBody: "Render-intensive work can stay in the production pipeline instead of getting pushed out to disconnected tools.",
+      infraBody:
+        "Render-intensive work can stay inside the production pipeline instead of getting scattered across disconnected tools.",
+    },
+    workflow: {
+      eyebrow: "Workflow and Assets",
+      title: "Keep story, assets, and production state in one place.",
+      body:
+        "The studio surface is built to keep the narrative source, asset organization, and execution controls visible together so the team does not have to rebuild context on every step.",
+      workflowTitle: "Creator workflow",
+      workflowBody:
+        "Projects, scripts, visual tasks, and exports stay on one routed workspace instead of moving between unrelated tools.",
+      assetsTitle: "Asset library",
+      assetsBody:
+        "Generated stills, references, and source files remain attached to the project timeline so assets are reusable instead of disposable.",
+      workflowAction: "Open creator home",
+      assetsAction: "View pricing",
     },
     footer: {
       productTitle: "Product",
       studioTitle: "Studio",
-      subscribeHeader: "Get product updates",
-      body: "Storyforge is an AI-native narrative production studio for creators shaping fiction, story worlds, and visual output in one system.",
-      product: ["AI Studio", "AutoNovel", "AutoVideo", "Pricing"],
-      studio: ["Workflow", "Assets", "Render Center", "Collaboration"],
-      subscribeBody: "Receive releases, production notes, and design updates from the Storyforge team.",
-      subscribePlaceholder: "Your email address",
-      subscribeAction: "Subscribe",
-      legal: ["Pricing", "API", "Legal"],
-      copyright: "© 2026 Storyforge AI. Editorial Architected.",
+      body:
+        "Storyforge is an AI-native narrative production studio for creators shaping fiction, story worlds, and visual output in one system.",
+      updatesTitle: "Next steps",
+      updatesBody:
+        "Continue into the studio, review plan options, or contact the team about deployment and production support.",
+      actions: {
+        primary: "Enter Storyforge",
+        secondary: "Contact us",
+      },
+      product: [
+        { label: "AI Studio", href: "/app/projects" },
+        { label: "AutoNovel", href: "#autonovel" },
+        { label: "AutoVideo", href: "#autovideo" },
+        { label: "Pricing", href: "/pricing" },
+      ],
+      studio: [
+        { label: "Workflow", href: "#workflow" },
+        { label: "Asset Library", href: "#asset-library" },
+        { label: "Render Center", href: "#autovideo" },
+        { label: "Collaboration", href: "/contact" },
+      ],
+      iconLinks: [
+        { label: "Novel", href: "#autonovel", icon: "novel" },
+        { label: "Assets", href: "#asset-library", icon: "assets" },
+        { label: "Contact", href: "/contact", icon: "contact" },
+      ],
     },
   },
   zh: {
@@ -110,33 +146,33 @@ const HOME_COPY = {
       novel: "小说工作台",
       studio: "视频工作室",
       assets: "资源库",
+      pricing: "价格方案",
+      contact: "联系我们",
       cta: "进入工作台",
-      searchLabel: "搜索",
-      notificationsLabel: "通知",
     },
     hero: {
       eyebrow: "Editorial Architected AI",
       titleLead: "从一个灵感，",
       titleAccent: "铸就不朽影像",
       body:
-        "面向创作者的小说与视频自动生成工作台。把碎片化的灵感推进成故事结构、长篇叙事、分镜语言与电影级视觉输出，全部收进同一套 Storyforge 流程。",
-      primary: "立即开启创作",
-      secondary: "观看演示视频",
+        "Storyforge 是一套把叙事推进到视频生产的创作工作室。你可以把松散的灵感收束成小说结构、分镜逻辑、资产系统和可交付的视觉成品，全程停留在同一套工作流里。",
+      primary: "立即开始创作",
+      secondary: "查看演示",
       steps: [
         {
           index: "01",
-          title: "捕捉灵感种子",
-          body: "从一个设定出发，先把世界观与叙事方向搭稳。",
+          title: "抓住故事种子",
+          body: "先把一个前提、一个角色关系或一个世界观起点，变成可推进的叙事方向。",
         },
         {
           index: "02",
           title: "构建内容引擎",
-          body: "同步生成小说结构、角色系统与分镜逻辑。",
+          body: "同步生成小说结构、角色系统和分镜逻辑，不再分散在多个入口里。",
         },
         {
           index: "03",
-          title: "推进视觉制作",
-          body: "把作品送进视觉生产、导出与可交付资产链路。",
+          title: "进入视觉制作",
+          body: "把成果推入视觉生产、导出和交付，让故事真正进入成片阶段。",
         },
       ],
     },
@@ -144,67 +180,106 @@ const HOME_COPY = {
       title: "AutoNovel",
       accent: "重塑叙事维度",
       body:
-        "不只是文字生成。Storyforge 会先分析节奏、人物弧光、冲突密度与结构张力，让小说层先成熟，再把成果稳定交给视觉生产。",
+        "它不只是文字生成。Storyforge 会先分析节奏、角色弧光、冲突密度与结构张力，让小说层先成熟，再把稳定结果交给视觉生产。",
       quote: "“每一行文字都应该承载情绪的共鸣。”",
       engine: "AutoNovel Engine v4.0",
+      link: "进入小说工作台",
+      panelTitle: "Narrative desk",
+      panelBody: "世界观笔记、章节节奏与写作意图，会被收进同一个 editorial 面板里。",
       points: [
         {
           title: "人物心理图谱",
-          body: "围绕动机、矛盾与情绪压力建立角色行为逻辑。",
+          body: "围绕动机、矛盾与情绪压力建立角色行为逻辑，让长篇推进更稳。",
         },
         {
           title: "多线剧情推演",
-          body: "在故事定稿前探索平行路径、章节结构与更稳定的长篇方向。",
+          body: "在故事定稿前探索平行路径、章节结构与更稳定的长篇走向。",
         },
       ],
-      link: "查看叙事引擎细节",
-      panelTitle: "Narrative desk",
-      panelBody: "世界观笔记、章节节奏与写作意图会被收在同一个编辑面板里。",
     },
     video: {
       title: "AutoVideo 电影级视觉生产",
-      body: "从文字脚本到 4K 视觉序列，Storyforge 把原本按月计算的生产迭代压缩成更短的创作闭环。",
+      body:
+        "从文本到 4K 视觉序列，Storyforge 把原本按月计算的生产迭代压缩成更短的创作闭环。",
       mainLabel: "Main Engine",
       mainTitle: "动态视觉捕捉",
-      mainBody: "让分镜提示词、风格参考与渲染结果保持联动，镜头语言才不会脱离故事源头。",
+      mainBody:
+        "让分镜提示词、风格参考与渲染结果保持联动，镜头语言不会再脱离故事源头。",
       syncTitle: "实时分镜同步",
-      syncBody: "把小说的情绪节拍同步为画面序列，并在最终导出前微调镜头语言。",
-      syncAction: "尝试导演模式",
+      syncBody:
+        "把小说的情绪节拍同步成画面序列，并在最终导出前微调镜头语言。",
+      syncAction: "打开视频工作室",
       colorTitle: "色调控制台",
-      colorBody: "在克制的出版感、暖色叙事氛围与风格化电影质感之间切换，而不丢失统一性。",
-      infraTitle: "算力支持生产链路",
-      infraBody: "让重渲染环节留在同一套生产系统里，而不是散落到互不相干的工具之间。",
+      colorBody:
+        "在克制的出版感、暖色叙事氛围与风格化电影质感之间切换，而不丢失统一性。",
+      infraTitle: "算力支撑的交付链路",
+      infraBody:
+        "让重渲染环节留在同一套生产系统里，而不是散落到彼此脱节的工具之间。",
+    },
+    workflow: {
+      eyebrow: "Workflow and Assets",
+      title: "把故事、资产和生产状态留在同一个场域里。",
+      body:
+        "工作台不是把功能堆在一起，而是让叙事源头、资产组织和执行控制同时可见，团队不需要在每个阶段重新找回上下文。",
+      workflowTitle: "创作工作流",
+      workflowBody:
+        "项目、脚本、视觉任务和导出入口都留在同一个路由空间里，而不是在多个工具之间反复跳转。",
+      assetsTitle: "资产资源库",
+      assetsBody:
+        "生成图、参考图和源文件都会留在项目脉络里，资产能复用，不再只是一次性产物。",
+      workflowAction: "进入项目主页",
+      assetsAction: "查看价格方案",
     },
     footer: {
       productTitle: "产品",
       studioTitle: "工作室",
-      subscribeHeader: "订阅我们的最新动态",
-      body: "叙影工厂是一套面向创作者的 AI 叙事生产系统，把小说、故事世界、分镜与视觉输出收进同一个工作流。",
-      product: ["AI Studio", "AutoNovel", "AutoVideo", "定价"],
-      studio: ["工作流", "资产库", "渲染中心", "团队协作"],
-      subscribeBody: "接收 Storyforge 的版本动态、生产笔记与设计更新。",
-      subscribePlaceholder: "您的电子邮箱",
-      subscribeAction: "订阅",
-      legal: ["Pricing", "API", "Legal"],
-      copyright: "© 2026 Storyforge AI. Editorial Architected.",
+      body:
+        "Storyforge 是一套面向创作者的 AI 叙事生产系统，把小说、故事世界、分镜与视觉输出收进同一个工作流。",
+      updatesTitle: "下一步",
+      updatesBody:
+        "你可以直接进入工作台、查看价格方案，或者联系我们了解部署与生产支持。",
+      actions: {
+        primary: "进入 Storyforge",
+        secondary: "联系我们",
+      },
+      product: [
+        { label: "AI Studio", href: "/app/projects" },
+        { label: "AutoNovel", href: "#autonovel" },
+        { label: "AutoVideo", href: "#autovideo" },
+        { label: "价格方案", href: "/pricing" },
+      ],
+      studio: [
+        { label: "工作流", href: "#workflow" },
+        { label: "资产资源库", href: "#asset-library" },
+        { label: "渲染中心", href: "#autovideo" },
+        { label: "团队协作", href: "/contact" },
+      ],
+      iconLinks: [
+        { label: "小说工作台", href: "#autonovel", icon: "novel" },
+        { label: "资源库", href: "#asset-library", icon: "assets" },
+        { label: "联系我们", href: "/contact", icon: "contact" },
+      ],
     },
   },
 } as const;
 
 type HomeLocale = keyof typeof HOME_COPY;
+type FooterItem = { label: string; href: string };
+type FooterIconKind = "novel" | "assets" | "contact";
 
 function useHomeCopy() {
   const { i18n } = useTranslation();
-  const locale: HomeLocale = (i18n.resolvedLanguage ?? i18n.language ?? "").startsWith("zh") ? "zh" : "en";
+  const locale: HomeLocale =
+    (i18n.resolvedLanguage ?? i18n.language ?? "").startsWith("zh") ? "zh" : "en";
   return HOME_COPY[locale];
 }
 
 export function HomePage() {
   const copy = useHomeCopy();
-  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
 
   const studioHref = isAuthenticated ? "/app/projects" : "/login";
-  const novelHref = isAuthenticated ? "/app/novel-workbench" : "/login";
+  const novelWorkspaceHref = isAuthenticated ? "/app/novel-workbench" : "/login";
 
   return (
     <div className="storyforge-public-shell min-h-screen text-[var(--sf-text)]">
@@ -219,21 +294,39 @@ export function HomePage() {
           </Link>
 
           <div className="hidden items-center gap-10 md:flex">
-            <HomeNavLink href="/">{copy.nav.home}</HomeNavLink>
-            <HomeNavLink href={novelHref}>{copy.nav.novel}</HomeNavLink>
-            <HomeNavLink href={studioHref}>{copy.nav.studio}</HomeNavLink>
-            <HomeNavLink href={studioHref}>{copy.nav.assets}</HomeNavLink>
+            <SmartLink href="/" className="text-sm font-medium text-slate-500 transition-colors hover:text-[var(--sf-blue-strong)]">
+              {copy.nav.home}
+            </SmartLink>
+            <SmartLink href="#autonovel" className="text-sm font-medium text-slate-500 transition-colors hover:text-[var(--sf-blue-strong)]">
+              {copy.nav.novel}
+            </SmartLink>
+            <SmartLink href="#autovideo" className="text-sm font-medium text-slate-500 transition-colors hover:text-[var(--sf-blue-strong)]">
+              {copy.nav.studio}
+            </SmartLink>
+            <SmartLink href="#asset-library" className="text-sm font-medium text-slate-500 transition-colors hover:text-[var(--sf-blue-strong)]">
+              {copy.nav.assets}
+            </SmartLink>
           </div>
 
           <div className="flex items-center gap-3">
-            <DecorativeIcon label={copy.nav.searchLabel} icon={<Search className="h-4 w-4" />} />
-            <DecorativeIcon label={copy.nav.notificationsLabel} icon={<Bell className="h-4 w-4" />} />
-            <Link
+            <SmartLink
+              href="/pricing"
+              className="storyforge-secondary-button hidden rounded-full px-4 py-2 text-sm font-medium transition hover:-translate-y-0.5 lg:inline-flex"
+            >
+              {copy.nav.pricing}
+            </SmartLink>
+            <SmartLink
+              href="/contact"
+              className="storyforge-secondary-button hidden rounded-full px-4 py-2 text-sm font-medium transition hover:-translate-y-0.5 lg:inline-flex"
+            >
+              {copy.nav.contact}
+            </SmartLink>
+            <SmartLink
               href={studioHref}
               className="storyforge-primary-button inline-flex h-11 items-center justify-center rounded-full px-5 text-sm font-semibold transition hover:-translate-y-0.5"
             >
               {copy.nav.cta}
-            </Link>
+            </SmartLink>
           </div>
         </div>
       </nav>
@@ -259,19 +352,19 @@ export function HomePage() {
             </p>
 
             <div className="mt-12 flex flex-wrap gap-4">
-              <Link
+              <SmartLink
                 href={studioHref}
                 className="storyforge-primary-button inline-flex h-14 items-center justify-center rounded-[1rem] px-8 text-lg font-semibold transition hover:-translate-y-0.5"
               >
                 {copy.hero.primary}
-              </Link>
-              <Link
-                href={novelHref}
+              </SmartLink>
+              <SmartLink
+                href="#autovideo"
                 className="storyforge-secondary-button inline-flex h-14 items-center justify-center gap-2 rounded-[1rem] px-8 text-lg font-semibold transition hover:-translate-y-0.5"
               >
                 <PlayCircle className="h-5 w-5" />
                 {copy.hero.secondary}
-              </Link>
+              </SmartLink>
             </div>
           </div>
 
@@ -282,7 +375,10 @@ export function HomePage() {
           </div>
         </header>
 
-        <section className="mx-auto max-w-[1400px] rounded-[2rem] bg-[rgba(246,249,253,0.68)] px-0 py-24">
+        <section
+          id="autonovel"
+          className="mx-auto max-w-[1400px] rounded-[2rem] bg-[rgba(246,249,253,0.68)] px-0 py-24"
+        >
           <div className="grid gap-14 lg:grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)] lg:items-center">
             <div className="px-0 lg:px-6">
               <div className="relative aspect-[4/5] overflow-hidden rounded-[2rem] border border-[rgba(117,132,159,0.16)] bg-[linear-gradient(180deg,rgba(235,246,253,0.92),rgba(230,235,244,0.92))] shadow-[0_20px_40px_rgba(23,27,42,0.04)]">
@@ -322,18 +418,18 @@ export function HomePage() {
                 ))}
               </div>
 
-              <Link
-                href={novelHref}
+              <SmartLink
+                href={novelWorkspaceHref}
                 className="mt-12 inline-flex items-center gap-2 text-base font-semibold text-[var(--sf-blue-strong)] transition hover:gap-3"
               >
                 {copy.novel.link}
                 <ArrowRight className="h-4 w-4" />
-              </Link>
+              </SmartLink>
             </div>
           </div>
         </section>
 
-        <section className="mx-auto max-w-[1400px] py-24">
+        <section id="autovideo" className="mx-auto max-w-[1400px] py-24">
           <div className="mx-auto mb-16 max-w-3xl text-center">
             <h2
               className="text-5xl font-extrabold tracking-[-0.05em] text-[var(--sf-text)]"
@@ -363,12 +459,12 @@ export function HomePage() {
               <div className="relative flex h-full flex-col justify-end">
                 <h3 className="text-2xl font-black tracking-[-0.03em]">{copy.video.syncTitle}</h3>
                 <p className="mt-4 text-sm leading-7 text-white/80">{copy.video.syncBody}</p>
-                <Link
+                <SmartLink
                   href={studioHref}
                   className="mt-6 inline-flex h-12 items-center justify-center rounded-[1rem] bg-white px-4 text-sm font-semibold text-[var(--sf-blue-strong)] transition hover:bg-slate-100"
                 >
                   {copy.video.syncAction}
-                </Link>
+                </SmartLink>
               </div>
             </BentoCard>
 
@@ -397,6 +493,59 @@ export function HomePage() {
           </div>
         </section>
 
+        <section
+          id="workflow"
+          className="mx-auto grid max-w-[1400px] gap-6 rounded-[2rem] border border-[rgba(117,132,159,0.16)] bg-white/84 px-8 py-10 shadow-[0_20px_50px_rgba(23,38,69,0.07)] lg:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)]"
+        >
+          <div>
+            <div className="storyforge-kicker">{copy.workflow.eyebrow}</div>
+            <h2
+              className="mt-6 text-4xl font-semibold leading-[1.02] tracking-[-0.05em]"
+              style={{ fontFamily: "var(--font-display)" }}
+            >
+              {copy.workflow.title}
+            </h2>
+            <p className="mt-6 max-w-2xl text-[15px] leading-8 text-[var(--sf-text-muted)] sm:text-[1rem]">
+              {copy.workflow.body}
+            </p>
+          </div>
+
+          <div className="grid gap-4">
+            <article className="rounded-[1.7rem] border border-[rgba(117,132,159,0.14)] bg-[rgba(246,249,253,0.82)] p-6">
+              <div className="inline-flex h-12 w-12 items-center justify-center rounded-full bg-sky-100 text-sky-900">
+                <Sparkles className="h-5 w-5" />
+              </div>
+              <h3 className="mt-5 text-xl font-semibold tracking-[-0.03em]">{copy.workflow.workflowTitle}</h3>
+              <p className="mt-3 text-sm leading-7 text-[var(--sf-text-muted)]">{copy.workflow.workflowBody}</p>
+              <SmartLink
+                href={studioHref}
+                className="mt-5 inline-flex items-center gap-2 text-sm font-semibold text-[var(--sf-blue-strong)] transition hover:gap-3"
+              >
+                {copy.workflow.workflowAction}
+                <ArrowRight className="h-4 w-4" />
+              </SmartLink>
+            </article>
+
+            <article
+              id="asset-library"
+              className="rounded-[1.7rem] border border-[rgba(117,132,159,0.14)] bg-[rgba(246,249,253,0.82)] p-6"
+            >
+              <div className="inline-flex h-12 w-12 items-center justify-center rounded-full bg-[rgba(201,230,255,0.78)] text-[var(--sf-blue)]">
+                <Boxes className="h-5 w-5" />
+              </div>
+              <h3 className="mt-5 text-xl font-semibold tracking-[-0.03em]">{copy.workflow.assetsTitle}</h3>
+              <p className="mt-3 text-sm leading-7 text-[var(--sf-text-muted)]">{copy.workflow.assetsBody}</p>
+              <SmartLink
+                href="/pricing"
+                className="mt-5 inline-flex items-center gap-2 text-sm font-semibold text-[var(--sf-blue-strong)] transition hover:gap-3"
+              >
+                {copy.workflow.assetsAction}
+                <ArrowRight className="h-4 w-4" />
+              </SmartLink>
+            </article>
+          </div>
+        </section>
+
         <footer className="mx-auto mt-8 max-w-[1400px] border-t border-[rgba(117,132,159,0.12)] bg-slate-50/80">
           <div className="px-8 py-16">
             <div className="mb-14 grid grid-cols-1 gap-12 md:grid-cols-12">
@@ -406,9 +555,9 @@ export function HomePage() {
                 </div>
                 <p className="max-w-xs text-sm leading-7 text-slate-500">{copy.footer.body}</p>
                 <div className="mt-8 flex gap-4">
-                  <FooterIcon icon={<Sparkles className="h-4 w-4" />} />
-                  <FooterIcon icon={<LibraryBig className="h-4 w-4" />} />
-                  <FooterIcon icon={<BookOpenText className="h-4 w-4" />} />
+                  {copy.footer.iconLinks.map((item) => (
+                    <FooterIconLink key={item.label} href={item.href} label={item.label} kind={item.icon} />
+                  ))}
                 </div>
               </div>
 
@@ -416,20 +565,21 @@ export function HomePage() {
               <FooterColumn title={copy.footer.studioTitle} items={copy.footer.studio} className="md:col-span-2" />
 
               <div className="md:col-span-4">
-                <h5 className="text-base font-bold text-slate-900">{copy.footer.subscribeHeader}</h5>
-                <p className="mt-4 text-sm leading-7 text-slate-500">{copy.footer.subscribeBody}</p>
-                <div className="mt-6 flex gap-2">
-                  <input
-                    type="email"
-                    placeholder={copy.footer.subscribePlaceholder}
-                    className="min-w-0 flex-1 rounded-[1rem] border border-transparent bg-white px-4 py-3 text-sm text-[var(--sf-text)] shadow-[0_20px_40px_rgba(23,27,42,0.04)] outline-none transition focus:border-[rgba(24,151,214,0.22)]"
-                  />
-                  <button
-                    type="button"
-                    className="storyforge-primary-button rounded-[1rem] px-6 py-3 text-sm font-semibold transition hover:-translate-y-0.5"
+                <h5 className="text-base font-bold text-slate-900">{copy.footer.updatesTitle}</h5>
+                <p className="mt-4 text-sm leading-7 text-slate-500">{copy.footer.updatesBody}</p>
+                <div className="mt-6 flex flex-wrap gap-3">
+                  <SmartLink
+                    href={studioHref}
+                    className="storyforge-primary-button inline-flex rounded-[1rem] px-5 py-3 text-sm font-semibold transition hover:-translate-y-0.5"
                   >
-                    {copy.footer.subscribeAction}
-                  </button>
+                    {copy.footer.actions.primary}
+                  </SmartLink>
+                  <SmartLink
+                    href="/contact"
+                    className="storyforge-secondary-button inline-flex rounded-[1rem] px-5 py-3 text-sm font-medium transition hover:-translate-y-0.5"
+                  >
+                    {copy.footer.actions.secondary}
+                  </SmartLink>
                 </div>
               </div>
             </div>
@@ -448,35 +598,27 @@ export function HomePage() {
   );
 }
 
-function HomeNavLink({
+function SmartLink({
   href,
   children,
+  className,
 }: {
   href: string;
   children: ReactNode;
+  className?: string;
 }) {
+  if (href.startsWith("#")) {
+    return (
+      <a href={href} className={className}>
+        {children}
+      </a>
+    );
+  }
+
   return (
-    <Link href={href} className="text-sm font-medium text-slate-500 transition-colors hover:text-[var(--sf-blue-strong)]">
+    <Link href={href} className={className}>
       {children}
     </Link>
-  );
-}
-
-function DecorativeIcon({
-  icon,
-  label,
-}: {
-  icon: ReactNode;
-  label: string;
-}) {
-  return (
-    <div
-      aria-hidden="true"
-      title={label}
-      className="hidden h-10 w-10 items-center justify-center rounded-full border border-[rgba(117,132,159,0.18)] bg-white/78 text-slate-500 shadow-[0_12px_32px_rgba(23,38,69,0.06)] md:inline-flex"
-    >
-      {icon}
-    </div>
   );
 }
 
@@ -547,7 +689,7 @@ function FooterColumn({
   className,
 }: {
   title: string;
-  items: readonly string[];
+  items: readonly FooterItem[];
   className?: string;
 }) {
   return (
@@ -555,8 +697,13 @@ function FooterColumn({
       <h5 className="text-base font-bold text-slate-900">{title}</h5>
       <ul className="mt-6 space-y-4 text-sm text-slate-400">
         {items.map((item) => (
-          <li key={item} className="cursor-default transition-colors hover:text-[var(--sf-blue-strong)]">
-            {item}
+          <li key={item.label}>
+            <SmartLink
+              href={item.href}
+              className="transition-colors hover:text-[var(--sf-blue-strong)]"
+            >
+              {item.label}
+            </SmartLink>
           </li>
         ))}
       </ul>
@@ -564,10 +711,31 @@ function FooterColumn({
   );
 }
 
-function FooterIcon({ icon }: { icon: ReactNode }) {
+function FooterIconLink({
+  href,
+  label,
+  kind,
+}: {
+  href: string;
+  label: string;
+  kind: FooterIconKind;
+}) {
+  const icon =
+    kind === "novel" ? (
+      <BookOpenText className="h-4 w-4" />
+    ) : kind === "assets" ? (
+      <LibraryBig className="h-4 w-4" />
+    ) : (
+      <Sparkles className="h-4 w-4" />
+    );
+
   return (
-    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-slate-200/50 text-slate-500 transition-colors hover:bg-[var(--sf-blue)] hover:text-white">
+    <SmartLink
+      href={href}
+      className="flex h-10 w-10 items-center justify-center rounded-full bg-slate-200/50 text-slate-500 transition-colors hover:bg-[var(--sf-blue)] hover:text-white"
+    >
+      <span className="sr-only">{label}</span>
       {icon}
-    </div>
+    </SmartLink>
   );
 }

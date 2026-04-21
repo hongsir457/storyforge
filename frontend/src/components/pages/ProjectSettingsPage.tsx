@@ -8,12 +8,13 @@ import { useAppStore } from "@/stores/app-store";
 import { ProviderModelSelect } from "@/components/ui/ProviderModelSelect";
 import { PROVIDER_NAMES } from "@/components/ui/ProviderIcon";
 import { getProviderModels, getCustomProviderModels, lookupSupportedDurations, DEFAULT_DURATIONS } from "@/utils/provider-models";
+import { buildProjectWorkspaceRoute, decodeProjectRouteParam } from "@/utils/project-routes";
 import type { CustomProviderInfo, ProviderInfo } from "@/types";
 
 export function ProjectSettingsPage() {
   const { t } = useTranslation("dashboard");
   const params = useParams<{ projectName: string }>();
-  const projectName = params.projectName || "";
+  const projectName = decodeProjectRouteParam(params.projectName) || "";
   const [, navigate] = useLocation();
 
   const [options, setOptions] = useState<{
@@ -190,7 +191,7 @@ export function ProjectSettingsPage() {
       {/* Header */}
       <div className="sticky top-0 z-10 mx-4 mt-4 flex items-center gap-3 rounded-[1.8rem] border border-[rgba(117,132,159,0.16)] bg-white/88 px-6 py-4 shadow-[0_18px_46px_rgba(23,38,69,0.08)] backdrop-blur">
         <button
-          onClick={() => guardedNavigate(`/app/projects/${projectName}`)}
+          onClick={() => guardedNavigate(buildProjectWorkspaceRoute(projectName))}
           className="storyforge-secondary-button inline-flex h-11 w-11 items-center justify-center rounded-full transition hover:-translate-y-0.5"
           aria-label={t("back_to_project")}
         >
@@ -418,7 +419,7 @@ export function ProjectSettingsPage() {
             {saving ? t("common:saving") : t("common:save")}
           </button>
           <button
-            onClick={() => guardedNavigate(`/app/projects/${projectName}`)}
+            onClick={() => guardedNavigate(buildProjectWorkspaceRoute(projectName))}
             className="storyforge-secondary-button rounded-[1rem] px-6 py-3 text-sm font-medium transition hover:-translate-y-0.5"
           >
             {t("common:cancel")}

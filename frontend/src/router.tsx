@@ -3,6 +3,7 @@ import { Redirect, Route, Switch, useSearch } from "wouter";
 import { ToastOverlay } from "@/components/layout/ToastOverlay";
 import { RouteLoadingState } from "@/components/shared/RouteLoadingState";
 import { useAuthStore } from "@/stores/auth-store";
+import { decodeProjectRouteParam } from "@/utils/project-routes";
 
 const HomePage = lazy(() => import("@/pages/HomePage").then((module) => ({ default: module.HomePage })));
 const LoginPage = lazy(() => import("@/pages/LoginPage").then((module) => ({ default: module.LoginPage })));
@@ -14,6 +15,7 @@ const NotFoundPage = lazy(() => import("@/pages/NotFoundPage").then((module) => 
 const PrivacyPage = lazy(() => import("@/pages/LegalPages").then((module) => ({ default: module.PrivacyPage })));
 const TermsPage = lazy(() => import("@/pages/LegalPages").then((module) => ({ default: module.TermsPage })));
 const ContactPage = lazy(() => import("@/pages/LegalPages").then((module) => ({ default: module.ContactPage })));
+const PricingPage = lazy(() => import("@/pages/PricingPage").then((module) => ({ default: module.PricingPage })));
 const ProjectsPage = lazy(() => import("@/components/pages/ProjectsPage").then((module) => ({ default: module.ProjectsPage })));
 const NovelWorkbenchPage = lazy(() => import("@/components/pages/NovelWorkbenchPage").then((module) => ({ default: module.NovelWorkbenchPage })));
 const SystemConfigPage = lazy(() => import("@/components/pages/SystemConfigPage").then((module) => ({ default: module.SystemConfigPage })));
@@ -145,6 +147,12 @@ export function AppRoutes() {
           </LazyRouteBoundary>
         </Route>
 
+        <Route path="/pricing">
+          <LazyRouteBoundary>
+            <PricingPage />
+          </LazyRouteBoundary>
+        </Route>
+
         <Route path="/app">
           <AuthGuard>
             <Redirect to="/app/projects" />
@@ -200,7 +208,7 @@ export function AppRoutes() {
         <Route path="/app/projects/:projectName" nest>
           {(params) => (
             <AuthGuard>
-              <WorkspaceRouteBoundary projectName={params.projectName ?? null} />
+              <WorkspaceRouteBoundary projectName={decodeProjectRouteParam(params.projectName ?? null)} />
             </AuthGuard>
           )}
         </Route>

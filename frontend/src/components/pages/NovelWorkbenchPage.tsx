@@ -306,12 +306,12 @@ function JobStatusBadge({
 }) {
   const className =
     status === "succeeded"
-      ? "bg-emerald-500/15 text-emerald-300"
+      ? "bg-emerald-500/12 text-emerald-700"
       : status === "failed"
-        ? "bg-rose-500/15 text-rose-300"
+        ? "bg-rose-500/12 text-rose-700"
         : status === "cancelled"
-          ? "bg-slate-700 text-slate-300"
-          : "bg-amber-500/15 text-amber-300";
+          ? "bg-slate-200 text-slate-700"
+          : "bg-amber-500/12 text-amber-700";
 
   return (
     <span className={`rounded-full px-2.5 py-1 text-xs font-medium ${className}`}>
@@ -330,10 +330,10 @@ function MetricCard({
   detail: string;
 }) {
   return (
-    <div className="rounded-[24px] border border-white/10 bg-black/20 p-4">
-      <div className="text-[11px] uppercase tracking-[0.24em] text-slate-500">{label}</div>
-      <div className="mt-3 text-3xl font-semibold tracking-[-0.03em] text-white">{value}</div>
-      <div className="mt-1 text-sm text-slate-400">{detail}</div>
+    <div className="rounded-[1.5rem] border border-[rgba(117,132,159,0.18)] bg-white/82 p-4 shadow-[0_18px_40px_rgba(23,38,69,0.06)]">
+      <div className="text-[11px] uppercase tracking-[0.24em] text-[var(--sf-text-soft)]">{label}</div>
+      <div className="mt-3 text-3xl font-semibold tracking-[-0.03em] text-[var(--sf-text)]">{value}</div>
+      <div className="mt-1 text-sm text-[var(--sf-text-muted)]">{detail}</div>
     </div>
   );
 }
@@ -657,33 +657,33 @@ export function NovelWorkbenchPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[radial-gradient(circle_at_top_left,rgba(56,189,248,0.14),transparent_26%),radial-gradient(circle_at_top_right,rgba(99,102,241,0.18),transparent_30%),#020617] text-slate-100">
+    <div className="sf-editorial-page min-h-screen text-[var(--sf-text)]">
       <header className="px-6 pt-6">
-        <div className="mx-auto flex max-w-7xl flex-col gap-4 rounded-[30px] border border-white/10 bg-slate-950/72 px-5 py-4 shadow-[0_20px_60px_rgba(2,6,23,0.28)] backdrop-blur lg:flex-row lg:items-center lg:justify-between">
+        <div className="storyforge-page-header mx-auto flex max-w-7xl flex-col gap-4 rounded-[2rem] px-5 py-4 lg:flex-row lg:items-center lg:justify-between">
           <div className="flex min-w-0 items-center gap-3">
             <button
               type="button"
               onClick={() => navigate("/app/projects")}
-              className="inline-flex items-center gap-1 rounded-full border border-white/10 bg-white/[0.04] px-3 py-2 text-sm text-slate-300 transition-colors hover:bg-white/[0.08] hover:text-white"
+              className="storyforge-secondary-button inline-flex items-center gap-1 rounded-full px-3 py-2 text-sm font-medium transition hover:-translate-y-0.5"
             >
               <ChevronLeft className="h-4 w-4" />
               {copy.back}
             </button>
-            <div className="h-8 w-px bg-white/10" />
+            <div className="h-8 w-px bg-[rgba(117,132,159,0.18)]" />
             <div className="min-w-0">
-              <div className="inline-flex items-center gap-2 rounded-full border border-sky-400/25 bg-sky-500/10 px-3 py-1 text-xs font-medium text-sky-100">
+              <div className="inline-flex items-center gap-2 rounded-full border border-sky-300/60 bg-sky-100 px-3 py-1 text-xs font-medium text-sky-900">
                 <BookOpen className="h-3.5 w-3.5" />
                 {copy.eyebrow}
               </div>
-              <h1 className="mt-3 text-[1.85rem] font-semibold tracking-[-0.03em] text-white">{copy.title}</h1>
-              <p className="mt-1 max-w-3xl text-sm leading-7 text-slate-400">{copy.subtitle}</p>
+              <h1 className="mt-3 text-[1.85rem] font-semibold tracking-[-0.03em] text-[var(--sf-text)]">{copy.title}</h1>
+              <p className="mt-1 max-w-3xl text-sm leading-7 text-[var(--sf-text-muted)]">{copy.subtitle}</p>
             </div>
           </div>
 
           <button
             type="button"
             onClick={() => void fetchAll(true)}
-            className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/[0.04] px-4 py-2 text-sm text-slate-200 transition-colors hover:bg-white/[0.08]"
+            className="storyforge-secondary-button inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-sm font-medium transition hover:-translate-y-0.5"
           >
             {refreshing ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
             {copy.refresh}
@@ -693,61 +693,61 @@ export function NovelWorkbenchPage() {
 
       <main className="mx-auto max-w-7xl px-6 py-6">
         {loading ? (
-          <div className="flex items-center justify-center py-24 text-slate-400">
-            <Loader2 className="mr-2 h-5 w-5 animate-spin text-sky-400" />
+          <div className="flex items-center justify-center py-24 text-[var(--sf-text-muted)]">
+            <Loader2 className="mr-2 h-5 w-5 animate-spin text-[var(--sf-blue)]" />
             {copy.loading}
           </div>
         ) : (
           <div className="space-y-6">
             <section className="grid gap-6 xl:grid-cols-[minmax(0,1.14fr)_360px]">
-              <div className="relative overflow-hidden rounded-[32px] border border-white/10 bg-[linear-gradient(180deg,rgba(15,23,42,0.92),rgba(2,6,23,0.98))] p-8 shadow-[0_30px_90px_rgba(2,6,23,0.34)]">
-                <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(56,189,248,0.15),transparent_28%),radial-gradient(circle_at_bottom_right,rgba(99,102,241,0.16),transparent_32%)]" />
+              <div className="relative overflow-hidden rounded-[2rem] border border-[rgba(117,132,159,0.18)] bg-[linear-gradient(180deg,rgba(255,255,255,0.92),rgba(244,248,252,0.98))] p-8 shadow-[0_24px_60px_rgba(23,38,69,0.08)]">
+                <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(24,151,214,0.14),transparent_28%),radial-gradient(circle_at_bottom_right,rgba(216,165,90,0.14),transparent_32%)]" />
                 <div className="relative space-y-6">
-                  <div className="inline-flex items-center gap-2 rounded-full border border-sky-400/25 bg-sky-500/10 px-3 py-1 text-xs font-medium text-sky-100">
+                  <div className="inline-flex items-center gap-2 rounded-full border border-sky-300/60 bg-sky-100 px-3 py-1 text-xs font-medium text-sky-900">
                     <Sparkles className="h-3.5 w-3.5" />
                     {copy.heroEyebrow}
                   </div>
 
                   <div className="max-w-3xl space-y-3">
-                    <h2 className="text-[2.3rem] font-semibold leading-[1.05] tracking-[-0.04em] text-white">
+                    <h2 className="text-[2.3rem] font-semibold leading-[1.05] tracking-[-0.04em] text-[var(--sf-text)]">
                       {copy.heroTitle}
                     </h2>
-                    <p className="max-w-2xl text-base leading-8 text-slate-300">{copy.heroBody}</p>
+                    <p className="max-w-2xl text-base leading-8 text-[var(--sf-text-muted)]">{copy.heroBody}</p>
                   </div>
 
                   <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_320px]">
-                    <form onSubmit={(event) => void handleCreateJob(event)} className="space-y-4 rounded-[28px] border border-white/10 bg-black/20 p-5">
+                    <form onSubmit={(event) => void handleCreateJob(event)} className="space-y-4 rounded-[1.7rem] border border-[rgba(117,132,159,0.18)] bg-[rgba(248,250,253,0.92)] p-5">
                       <label className="block">
-                        <span className="mb-2 block text-[11px] uppercase tracking-[0.22em] text-slate-500">{copy.formTitle}</span>
+                        <span className="mb-2 block text-[11px] uppercase tracking-[0.22em] text-[var(--sf-text-soft)]">{copy.formTitle}</span>
                         <input
                           id="novel-title"
                           type="text"
                           value={title}
                           onChange={(event) => setTitle(event.target.value)}
                           placeholder={copy.titlePlaceholder}
-                          className="w-full rounded-2xl border border-white/10 bg-slate-950/70 px-4 py-3.5 text-sm text-white outline-none transition focus:border-sky-400/60 focus:bg-slate-950/90"
+                          className="storyforge-input w-full rounded-2xl px-4 py-3.5 text-sm outline-none transition"
                         />
                       </label>
 
                       <label className="block">
-                        <span className="mb-2 block text-[11px] uppercase tracking-[0.22em] text-slate-500">{copy.projectName}</span>
+                        <span className="mb-2 block text-[11px] uppercase tracking-[0.22em] text-[var(--sf-text-soft)]">{copy.projectName}</span>
                         <input
                           id="project-name"
                           type="text"
                           value={projectName}
                           onChange={(event) => setProjectName(event.target.value)}
                           placeholder={copy.projectNamePlaceholder}
-                          className="w-full rounded-2xl border border-white/10 bg-slate-950/70 px-4 py-3.5 text-sm text-white outline-none transition focus:border-sky-400/60 focus:bg-slate-950/90"
+                          className="storyforge-input w-full rounded-2xl px-4 py-3.5 text-sm outline-none transition"
                         />
                       </label>
 
                       <label className="block">
-                        <span className="mb-2 block text-[11px] uppercase tracking-[0.22em] text-slate-500">{copy.writingLanguage}</span>
+                        <span className="mb-2 block text-[11px] uppercase tracking-[0.22em] text-[var(--sf-text-soft)]">{copy.writingLanguage}</span>
                         <select
                           id="writing-language"
                           value={writingLanguage}
                           onChange={(event) => setWritingLanguage(event.target.value)}
-                          className="w-full rounded-2xl border border-white/10 bg-slate-950/70 px-4 py-3.5 text-sm text-white outline-none transition focus:border-sky-400/60 focus:bg-slate-950/90"
+                          className="storyforge-input w-full rounded-2xl px-4 py-3.5 text-sm outline-none transition"
                         >
                           <option value="简体中文">{copy.writingLanguageZh}</option>
                           <option value="English">English</option>
@@ -755,36 +755,36 @@ export function NovelWorkbenchPage() {
                       </label>
 
                       <label className="block">
-                        <span className="mb-2 block text-[11px] uppercase tracking-[0.22em] text-slate-500">{copy.seedLabel}</span>
+                        <span className="mb-2 block text-[11px] uppercase tracking-[0.22em] text-[var(--sf-text-soft)]">{copy.seedLabel}</span>
                         <textarea
                           id="seed-text"
                           value={seedText}
                           onChange={(event) => setSeedText(event.target.value)}
                           rows={12}
                           placeholder={copy.seedPlaceholder}
-                          className="w-full rounded-2xl border border-white/10 bg-slate-950/70 px-4 py-3.5 text-sm text-white outline-none transition focus:border-sky-400/60 focus:bg-slate-950/90"
+                          className="storyforge-input w-full rounded-2xl px-4 py-3.5 text-sm outline-none transition"
                         />
                       </label>
 
-                      <p className="text-xs leading-6 text-slate-500">{copy.seedHint}</p>
+                      <p className="text-xs leading-6 text-[var(--sf-text-soft)]">{copy.seedHint}</p>
 
                       <button
                         type="submit"
                         disabled={!canSubmit}
-                        className="inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-sky-500 px-4 py-3 text-sm font-semibold text-slate-950 transition hover:bg-sky-400 disabled:cursor-not-allowed disabled:opacity-60"
+                        className="storyforge-primary-button inline-flex w-full items-center justify-center gap-2 rounded-2xl px-4 py-3 text-sm font-semibold transition hover:-translate-y-0.5 disabled:translate-y-0 disabled:cursor-not-allowed disabled:opacity-60"
                       >
                         {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <BookOpen className="h-4 w-4" />}
                         {submitting ? copy.submitting : copy.submit}
                       </button>
                     </form>
 
-                    <div className="rounded-[28px] border border-white/10 bg-white/[0.04] p-5">
-                      <div className="text-[11px] uppercase tracking-[0.24em] text-slate-500">{copy.flowEyebrow}</div>
-                      <h3 className="mt-3 text-xl font-semibold tracking-[-0.02em] text-white">{copy.flowTitle}</h3>
+                    <div className="rounded-[1.7rem] border border-[rgba(117,132,159,0.18)] bg-white/88 p-5">
+                      <div className="text-[11px] uppercase tracking-[0.24em] text-[var(--sf-text-soft)]">{copy.flowEyebrow}</div>
+                      <h3 className="mt-3 text-xl font-semibold tracking-[-0.02em] text-[var(--sf-text)]">{copy.flowTitle}</h3>
                       <div className="mt-4 grid gap-3">
                         {copy.flowSteps.map((step, index) => (
-                          <div key={step} className="rounded-2xl border border-white/10 bg-black/20 px-4 py-3 text-sm leading-6 text-slate-300">
-                            <span className="mr-2 text-slate-500">{index + 1}.</span>
+                          <div key={step} className="rounded-2xl border border-[rgba(117,132,159,0.18)] bg-[rgba(248,250,253,0.92)] px-4 py-3 text-sm leading-6 text-[var(--sf-text-muted)]">
+                            <span className="mr-2 text-[var(--sf-text-soft)]">{index + 1}.</span>
                             {step}
                           </div>
                         ))}
@@ -802,7 +802,7 @@ export function NovelWorkbenchPage() {
                       : "border-rose-500/20 bg-rose-500/8"
                   }`}
                 >
-                  <div className="text-[11px] uppercase tracking-[0.24em] text-slate-500">{copy.readyEyebrow}</div>
+                  <div className="text-[11px] uppercase tracking-[0.24em] text-[var(--sf-text-soft)]">{copy.readyEyebrow}</div>
                   <div className="mt-4 flex items-start gap-3">
                     {status?.requirements.all_ready ? (
                       <CheckCircle2 className="mt-0.5 h-5 w-5 text-emerald-300" />
@@ -810,10 +810,10 @@ export function NovelWorkbenchPage() {
                       <AlertCircle className="mt-0.5 h-5 w-5 text-rose-300" />
                     )}
                     <div className="space-y-2">
-                      <h3 className="text-lg font-semibold text-white">
+                      <h3 className="text-lg font-semibold text-[var(--sf-text)]">
                         {status?.requirements.all_ready ? copy.readyTitle : copy.blockedTitle}
                       </h3>
-                      <p className="text-sm leading-6 text-slate-300">
+                      <p className="text-sm leading-6 text-[var(--sf-text-muted)]">
                         {status?.requirements.all_ready
                           ? copy.readyBody
                           : missingRequiredEnv.length > 0
@@ -821,7 +821,7 @@ export function NovelWorkbenchPage() {
                             : copy.blockedBody}
                       </p>
                       {missingOptionalEnv.length > 0 && (
-                        <p className="text-sm leading-6 text-amber-100/88">
+                        <p className="text-sm leading-6 text-amber-700">
                           {copy.optionalBody} {missingOptionalEnv.join(" · ")}
                         </p>
                       )}
@@ -829,19 +829,19 @@ export function NovelWorkbenchPage() {
                   </div>
                 </section>
 
-                <section className="rounded-[32px] border border-white/10 bg-slate-950/72 p-6 shadow-[0_24px_70px_rgba(2,6,23,0.26)]">
-                  <div className="text-[11px] uppercase tracking-[0.24em] text-slate-500">{copy.latestEyebrow}</div>
+                <section className="rounded-[2rem] border border-[rgba(117,132,159,0.18)] bg-white/82 p-6 shadow-[0_18px_40px_rgba(23,38,69,0.06)]">
+                  <div className="text-[11px] uppercase tracking-[0.24em] text-[var(--sf-text-soft)]">{copy.latestEyebrow}</div>
                   {latestSuccessfulJob ? (
                     <>
-                      <h3 className="mt-3 text-xl font-semibold tracking-[-0.02em] text-white">{latestSuccessfulJob.title}</h3>
-                      <p className="mt-2 text-sm leading-7 text-slate-400">
+                      <h3 className="mt-3 text-xl font-semibold tracking-[-0.02em] text-[var(--sf-text)]">{latestSuccessfulJob.title}</h3>
+                      <p className="mt-2 text-sm leading-7 text-[var(--sf-text-muted)]">
                         {copy.latestSummary(formatTimestamp(latestSuccessfulJob.finished_at))}
                       </p>
                       {latestSuccessfulJob.imported_project_name && (
                         <button
                           type="button"
                           onClick={() => navigate(`/app/projects/${latestSuccessfulJob.imported_project_name}`)}
-                          className="mt-4 inline-flex items-center gap-2 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-4 py-2 text-sm text-emerald-200 transition-colors hover:bg-emerald-500/20"
+                          className="mt-4 inline-flex items-center gap-2 rounded-full border border-emerald-300/60 bg-emerald-100 px-4 py-2 text-sm font-medium text-emerald-900 transition hover:-translate-y-0.5"
                         >
                           <ExternalLink className="h-4 w-4" />
                           {copy.latestAction}
@@ -849,12 +849,12 @@ export function NovelWorkbenchPage() {
                       )}
                     </>
                   ) : (
-                    <p className="mt-3 text-sm leading-7 text-slate-400">{copy.latestEmpty}</p>
+                    <p className="mt-3 text-sm leading-7 text-[var(--sf-text-muted)]">{copy.latestEmpty}</p>
                   )}
                 </section>
 
-                <section className="rounded-[32px] border border-white/10 bg-slate-950/72 p-6 shadow-[0_24px_70px_rgba(2,6,23,0.26)]">
-                  <div className="text-[11px] uppercase tracking-[0.24em] text-slate-500">{copy.pulseEyebrow}</div>
+                <section className="rounded-[2rem] border border-[rgba(117,132,159,0.18)] bg-white/82 p-6 shadow-[0_18px_40px_rgba(23,38,69,0.06)]">
+                  <div className="text-[11px] uppercase tracking-[0.24em] text-[var(--sf-text-soft)]">{copy.pulseEyebrow}</div>
                   <div className="mt-4 grid gap-3">
                     <MetricCard label={copy.totalRuns} value={String(jobs.length)} detail={copy.runHistoryTitle} />
                     <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-1">
@@ -867,8 +867,8 @@ export function NovelWorkbenchPage() {
               </div>
             </section>
 
-            <details className="rounded-[32px] border border-white/10 bg-slate-950/72 p-6 shadow-[0_24px_70px_rgba(2,6,23,0.26)]">
-              <summary className="cursor-pointer list-none text-sm font-medium text-slate-200">
+            <details className="rounded-[2rem] border border-[rgba(117,132,159,0.18)] bg-white/82 p-6 shadow-[0_18px_40px_rgba(23,38,69,0.06)]">
+              <summary className="cursor-pointer list-none text-sm font-medium text-[var(--sf-text)]">
                 {copy.diagnosticsToggle}
               </summary>
 
@@ -884,34 +884,34 @@ export function NovelWorkbenchPage() {
 
                 <div className="grid gap-4 lg:grid-cols-2 xl:grid-cols-4">
                   <div>
-                    <div className="text-xs uppercase tracking-wide text-slate-500">{copy.workspaceRoot}</div>
-                    <div className="mt-2 break-all font-mono text-xs text-slate-300">{status?.workspace_root}</div>
+                    <div className="text-xs uppercase tracking-wide text-[var(--sf-text-soft)]">{copy.workspaceRoot}</div>
+                    <div className="mt-2 break-all font-mono text-xs text-[var(--sf-text-muted)]">{status?.workspace_root}</div>
                   </div>
                   <div>
-                    <div className="text-xs uppercase tracking-wide text-slate-500">{copy.autonovelSource}</div>
-                    <div className="mt-2 break-all font-mono text-xs text-slate-300">{status?.autonovel_source_dir}</div>
+                    <div className="text-xs uppercase tracking-wide text-[var(--sf-text-soft)]">{copy.autonovelSource}</div>
+                    <div className="mt-2 break-all font-mono text-xs text-[var(--sf-text-muted)]">{status?.autonovel_source_dir}</div>
                   </div>
                   <div>
-                    <div className="text-xs uppercase tracking-wide text-slate-500">{copy.importerScript}</div>
-                    <div className="mt-2 break-all font-mono text-xs text-slate-300">{status?.importer_script}</div>
+                    <div className="text-xs uppercase tracking-wide text-[var(--sf-text-soft)]">{copy.importerScript}</div>
+                    <div className="mt-2 break-all font-mono text-xs text-[var(--sf-text-muted)]">{status?.importer_script}</div>
                   </div>
                   <div>
-                    <div className="text-xs uppercase tracking-wide text-slate-500">{copy.runtimeEnv}</div>
-                    <div className="mt-2 break-all font-mono text-xs text-slate-300">{status?.autonovel_env_source}</div>
+                    <div className="text-xs uppercase tracking-wide text-[var(--sf-text-soft)]">{copy.runtimeEnv}</div>
+                    <div className="mt-2 break-all font-mono text-xs text-[var(--sf-text-muted)]">{status?.autonovel_env_source}</div>
                   </div>
                 </div>
 
                 <div className="grid gap-4 lg:grid-cols-2">
-                  <div className="rounded-[24px] border border-white/10 bg-black/20 p-4">
-                    <div className="text-xs uppercase tracking-wide text-slate-500">{copy.coreDependencies}</div>
+                  <div className="rounded-[1.5rem] border border-[rgba(117,132,159,0.18)] bg-[rgba(248,250,253,0.92)] p-4">
+                    <div className="text-xs uppercase tracking-wide text-[var(--sf-text-soft)]">{copy.coreDependencies}</div>
                     <div className="mt-3 flex flex-wrap gap-2">
                       {Object.entries(status?.env_status?.required ?? {}).map(([key, ok]) => (
                         <RequirementChip key={key} label={key} ok={ok} />
                       ))}
                     </div>
                   </div>
-                  <div className="rounded-[24px] border border-white/10 bg-black/20 p-4">
-                    <div className="text-xs uppercase tracking-wide text-slate-500">{copy.optionalExtensions}</div>
+                  <div className="rounded-[1.5rem] border border-[rgba(117,132,159,0.18)] bg-[rgba(248,250,253,0.92)] p-4">
+                    <div className="text-xs uppercase tracking-wide text-[var(--sf-text-soft)]">{copy.optionalExtensions}</div>
                     <div className="mt-3 flex flex-wrap gap-2">
                       {Object.entries(status?.env_status?.optional ?? {}).map(([key, ok]) => (
                         <RequirementChip key={key} label={key} ok={ok} />
@@ -923,18 +923,18 @@ export function NovelWorkbenchPage() {
             </details>
 
             <section className="grid gap-6 xl:grid-cols-[340px,1fr]">
-              <div className="rounded-[32px] border border-white/10 bg-slate-950/72 p-5 shadow-[0_24px_70px_rgba(2,6,23,0.26)]">
+              <div className="rounded-[32px] border border-[rgba(117,132,159,0.18)] bg-white/86 p-5 shadow-[0_18px_40px_rgba(23,38,69,0.06)]">
                 <div className="mb-4 flex items-center justify-between">
                   <div>
-                    <div className="text-[11px] uppercase tracking-[0.24em] text-slate-500">{copy.runHistoryEyebrow}</div>
-                    <h2 className="mt-2 text-base font-semibold text-white">{copy.runHistoryTitle}</h2>
+                    <div className="text-[11px] uppercase tracking-[0.24em] text-[var(--sf-text-soft)]">{copy.runHistoryEyebrow}</div>
+                    <h2 className="mt-2 text-base font-semibold text-[var(--sf-text)]">{copy.runHistoryTitle}</h2>
                   </div>
-                  <span className="text-xs text-slate-500">{jobs.length}</span>
+                  <span className="text-xs text-[var(--sf-text-soft)]">{jobs.length}</span>
                 </div>
 
                 <div className="space-y-3">
                   {jobs.length === 0 ? (
-                    <div className="rounded-[24px] border border-dashed border-white/10 px-4 py-10 text-center text-sm text-slate-500">
+                    <div className="rounded-[24px] border border-dashed border-[rgba(117,132,159,0.22)] bg-[rgba(248,250,253,0.78)] px-4 py-10 text-center text-sm text-[var(--sf-text-muted)]">
                       {copy.runHistoryEmpty}
                     </div>
                   ) : (
@@ -948,7 +948,9 @@ export function NovelWorkbenchPage() {
                         <div
                           key={job.job_id}
                           className={`rounded-[24px] border p-4 transition-colors ${
-                            selected ? "border-sky-500/40 bg-sky-500/10" : "border-white/10 bg-black/20"
+                            selected
+                              ? "border-sky-400/55 bg-sky-100/70"
+                              : "border-[rgba(117,132,159,0.18)] bg-[rgba(248,250,253,0.92)]"
                           }`}
                         >
                           <button
@@ -958,20 +960,20 @@ export function NovelWorkbenchPage() {
                           >
                             <div className="flex items-start justify-between gap-3">
                               <div className="min-w-0">
-                                <div className="truncate font-medium text-white">{job.title}</div>
-                                <div className="mt-1 text-xs text-slate-500">{job.target_project_name}</div>
+                                <div className="truncate font-medium text-[var(--sf-text)]">{job.title}</div>
+                                <div className="mt-1 text-xs text-[var(--sf-text-soft)]">{job.target_project_name}</div>
                               </div>
                               <JobStatusBadge status={job.status} locale={locale} />
                             </div>
-                            <div className="mt-2 line-clamp-2 text-xs leading-5 text-slate-400">{job.seed_excerpt}</div>
-                            <div className="mt-3 text-[11px] uppercase tracking-wide text-slate-500">{job.stage}</div>
+                            <div className="mt-2 line-clamp-2 text-xs leading-5 text-[var(--sf-text-muted)]">{job.seed_excerpt}</div>
+                            <div className="mt-3 text-[11px] uppercase tracking-wide text-[var(--sf-text-soft)]">{job.stage}</div>
                           </button>
 
                           <div className="mt-4 flex flex-wrap gap-2">
                             <button
                               type="button"
                               onClick={() => setSelectedJobId((previous) => (previous === job.job_id ? null : job.job_id))}
-                              className="inline-flex items-center gap-1.5 rounded-lg border border-white/10 bg-white/[0.04] px-2.5 py-1.5 text-xs text-slate-200 transition-colors hover:bg-white/[0.08]"
+                              className="inline-flex items-center gap-1.5 rounded-lg border border-[rgba(117,132,159,0.18)] bg-white px-2.5 py-1.5 text-xs text-[var(--sf-text)] transition-colors hover:border-[rgba(24,151,214,0.24)] hover:bg-[rgba(248,250,253,0.98)]"
                             >
                               <FileText className="h-3.5 w-3.5" />
                               {selected ? copy.collapse : copy.details}
@@ -992,7 +994,7 @@ export function NovelWorkbenchPage() {
                                 type="button"
                                 onClick={() => void handleDeleteJob(job)}
                                 disabled={deleting}
-                                className="inline-flex items-center gap-1.5 rounded-lg border border-white/10 bg-white/[0.04] px-2.5 py-1.5 text-xs text-slate-200 transition-colors hover:bg-white/[0.08] disabled:cursor-not-allowed disabled:opacity-60"
+                                className="inline-flex items-center gap-1.5 rounded-lg border border-[rgba(117,132,159,0.18)] bg-white px-2.5 py-1.5 text-xs text-[var(--sf-text)] transition-colors hover:border-[rgba(24,151,214,0.24)] hover:bg-[rgba(248,250,253,0.98)] disabled:cursor-not-allowed disabled:opacity-60"
                               >
                                 {deleting ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Trash2 className="h-3.5 w-3.5" />}
                                 {copy.delete}
@@ -1006,18 +1008,18 @@ export function NovelWorkbenchPage() {
                 </div>
               </div>
 
-              <div className="rounded-[32px] border border-white/10 bg-slate-950/72 p-5 shadow-[0_24px_70px_rgba(2,6,23,0.26)]">
+              <div className="rounded-[32px] border border-[rgba(117,132,159,0.18)] bg-white/86 p-5 shadow-[0_18px_40px_rgba(23,38,69,0.06)]">
                 {selectedJob ? (
                   <div className="space-y-5">
                     <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
                       <div>
                         <div className="flex items-center gap-2">
-                          <h2 className="text-lg font-semibold tracking-[-0.02em] text-white">{selectedJob.title}</h2>
+                          <h2 className="text-lg font-semibold tracking-[-0.02em] text-[var(--sf-text)]">{selectedJob.title}</h2>
                           <JobStatusBadge status={selectedJob.status} locale={locale} />
                         </div>
-                        <p className="mt-2 text-sm leading-6 text-slate-400">
-                          {copy.stage} <span className="text-slate-200">{selectedJob.stage}</span> · {copy.target}{" "}
-                          <span className="font-mono text-slate-200">{selectedJob.target_project_name}</span>
+                        <p className="mt-2 text-sm leading-6 text-[var(--sf-text-muted)]">
+                          {copy.stage} <span className="text-[var(--sf-text)]">{selectedJob.stage}</span> · {copy.target}{" "}
+                          <span className="font-mono text-[var(--sf-text)]">{selectedJob.target_project_name}</span>
                         </p>
                       </div>
 
@@ -1026,7 +1028,7 @@ export function NovelWorkbenchPage() {
                           <button
                             type="button"
                             onClick={() => navigate(`/app/projects/${selectedJob.imported_project_name}`)}
-                            className="inline-flex items-center gap-1.5 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-4 py-2 text-sm text-emerald-200 transition-colors hover:bg-emerald-500/20"
+                            className="inline-flex items-center gap-1.5 rounded-full border border-emerald-300/60 bg-emerald-100 px-4 py-2 text-sm text-emerald-800 transition-colors hover:bg-emerald-200"
                           >
                             <ExternalLink className="h-4 w-4" />
                             {copy.openProject}
@@ -1047,7 +1049,7 @@ export function NovelWorkbenchPage() {
                             type="button"
                             onClick={() => void handleDeleteJob(selectedJob)}
                             disabled={deletingJobId === selectedJob.job_id}
-                            className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/[0.04] px-4 py-2 text-sm text-slate-200 transition-colors hover:bg-white/[0.08] disabled:cursor-not-allowed disabled:opacity-60"
+                            className="inline-flex items-center gap-1.5 rounded-full border border-[rgba(117,132,159,0.18)] bg-white px-4 py-2 text-sm text-[var(--sf-text)] transition-colors hover:border-[rgba(24,151,214,0.24)] hover:bg-[rgba(248,250,253,0.98)] disabled:cursor-not-allowed disabled:opacity-60"
                           >
                             {deletingJobId === selectedJob.job_id ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
                             {copy.deleteRecord}
@@ -1056,26 +1058,26 @@ export function NovelWorkbenchPage() {
                       </div>
                     </div>
 
-                    <div className="grid gap-3 text-sm text-slate-400 md:grid-cols-2 xl:grid-cols-5">
+                    <div className="grid gap-3 text-sm text-[var(--sf-text-muted)] md:grid-cols-2 xl:grid-cols-5">
                       <div>
-                        <div className="text-xs uppercase tracking-wide text-slate-500">{copy.created}</div>
-                        <div className="mt-1 text-slate-200">{formatTimestamp(selectedJob.created_at)}</div>
+                        <div className="text-xs uppercase tracking-wide text-[var(--sf-text-soft)]">{copy.created}</div>
+                        <div className="mt-1 text-[var(--sf-text)]">{formatTimestamp(selectedJob.created_at)}</div>
                       </div>
                       <div>
-                        <div className="text-xs uppercase tracking-wide text-slate-500">{copy.updated}</div>
-                        <div className="mt-1 text-slate-200">{formatTimestamp(selectedJob.updated_at)}</div>
+                        <div className="text-xs uppercase tracking-wide text-[var(--sf-text-soft)]">{copy.updated}</div>
+                        <div className="mt-1 text-[var(--sf-text)]">{formatTimestamp(selectedJob.updated_at)}</div>
                       </div>
                       <div>
-                        <div className="text-xs uppercase tracking-wide text-slate-500">{copy.language}</div>
-                        <div className="mt-1 text-slate-200">{selectedJob.writing_language}</div>
+                        <div className="text-xs uppercase tracking-wide text-[var(--sf-text-soft)]">{copy.language}</div>
+                        <div className="mt-1 text-[var(--sf-text)]">{selectedJob.writing_language}</div>
                       </div>
                       <div>
-                        <div className="text-xs uppercase tracking-wide text-slate-500">{copy.started}</div>
-                        <div className="mt-1 text-slate-200">{formatTimestamp(selectedJob.started_at)}</div>
+                        <div className="text-xs uppercase tracking-wide text-[var(--sf-text-soft)]">{copy.started}</div>
+                        <div className="mt-1 text-[var(--sf-text)]">{formatTimestamp(selectedJob.started_at)}</div>
                       </div>
                       <div>
-                        <div className="text-xs uppercase tracking-wide text-slate-500">{copy.finished}</div>
-                        <div className="mt-1 text-slate-200">{formatTimestamp(selectedJob.finished_at)}</div>
+                        <div className="text-xs uppercase tracking-wide text-[var(--sf-text-soft)]">{copy.finished}</div>
+                        <div className="mt-1 text-[var(--sf-text)]">{formatTimestamp(selectedJob.finished_at)}</div>
                       </div>
                     </div>
 
@@ -1086,22 +1088,22 @@ export function NovelWorkbenchPage() {
                     )}
 
                     <div className="grid gap-4 lg:grid-cols-2">
-                      <div className="rounded-[24px] border border-white/10 bg-black/20 p-4">
-                        <div className="text-xs uppercase tracking-wide text-slate-500">{copy.seedCard}</div>
-                        <pre className="mt-3 whitespace-pre-wrap break-words text-sm leading-7 text-slate-200">
+                      <div className="rounded-[24px] border border-[rgba(117,132,159,0.18)] bg-[rgba(248,250,253,0.92)] p-4">
+                        <div className="text-xs uppercase tracking-wide text-[var(--sf-text-soft)]">{copy.seedCard}</div>
+                        <pre className="mt-3 whitespace-pre-wrap break-words text-sm leading-7 text-[var(--sf-text)]">
                           {selectedJob.seed_text}
                         </pre>
                       </div>
 
-                      <div className="rounded-[24px] border border-white/10 bg-black/20 p-4">
+                      <div className="rounded-[24px] border border-[rgba(117,132,159,0.18)] bg-[rgba(248,250,253,0.92)] p-4">
                         <div className="flex flex-wrap items-center justify-between gap-3">
-                          <div className="text-xs uppercase tracking-wide text-slate-500">{copy.workspaceCard}</div>
+                          <div className="text-xs uppercase tracking-wide text-[var(--sf-text-soft)]">{copy.workspaceCard}</div>
                           <div className="flex flex-wrap gap-2">
                             <button
                               type="button"
                               onClick={() => void handleLoadFullLog(selectedJob)}
                               disabled={fullLogLoading}
-                              className="inline-flex items-center gap-1.5 rounded-lg border border-white/10 bg-white/[0.04] px-3 py-2 text-xs text-slate-200 transition-colors hover:bg-white/[0.08] disabled:cursor-not-allowed disabled:opacity-60"
+                              className="inline-flex items-center gap-1.5 rounded-lg border border-[rgba(117,132,159,0.18)] bg-white px-3 py-2 text-xs text-[var(--sf-text)] transition-colors hover:border-[rgba(24,151,214,0.24)] hover:bg-[rgba(248,250,253,0.98)] disabled:cursor-not-allowed disabled:opacity-60"
                             >
                               {fullLogLoading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Eye className="h-3.5 w-3.5" />}
                               {copy.viewFullLog}
@@ -1110,7 +1112,7 @@ export function NovelWorkbenchPage() {
                               type="button"
                               onClick={() => void handleDownloadLog(selectedJob)}
                               disabled={downloadingKey === "log"}
-                              className="inline-flex items-center gap-1.5 rounded-lg border border-white/10 bg-white/[0.04] px-3 py-2 text-xs text-slate-200 transition-colors hover:bg-white/[0.08] disabled:cursor-not-allowed disabled:opacity-60"
+                              className="inline-flex items-center gap-1.5 rounded-lg border border-[rgba(117,132,159,0.18)] bg-white px-3 py-2 text-xs text-[var(--sf-text)] transition-colors hover:border-[rgba(24,151,214,0.24)] hover:bg-[rgba(248,250,253,0.98)] disabled:cursor-not-allowed disabled:opacity-60"
                             >
                               {downloadingKey === "log" ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Download className="h-3.5 w-3.5" />}
                               {copy.downloadLog}
@@ -1119,28 +1121,28 @@ export function NovelWorkbenchPage() {
                               type="button"
                               onClick={() => void handleDownloadWorkspace(selectedJob)}
                               disabled={downloadingKey === "workspace"}
-                              className="inline-flex items-center gap-1.5 rounded-lg border border-sky-500/30 bg-sky-500/10 px-3 py-2 text-xs text-sky-100 transition-colors hover:bg-sky-500/20 disabled:cursor-not-allowed disabled:opacity-60"
+                              className="inline-flex items-center gap-1.5 rounded-lg border border-sky-300/60 bg-sky-100 px-3 py-2 text-xs text-sky-800 transition-colors hover:bg-sky-200 disabled:cursor-not-allowed disabled:opacity-60"
                             >
                               {downloadingKey === "workspace" ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Archive className="h-3.5 w-3.5" />}
                               {copy.exportWorkspace}
                             </button>
                           </div>
                         </div>
-                        <div className="mt-4 text-xs uppercase tracking-wide text-slate-500">{copy.workspacePath}</div>
-                        <div className="mt-2 break-all font-mono text-xs text-slate-300">{selectedJob.workspace_dir}</div>
-                        <div className="mt-4 text-xs uppercase tracking-wide text-slate-500">{copy.logFile}</div>
-                        <div className="mt-2 break-all font-mono text-xs text-slate-300">{selectedJob.log_path}</div>
+                        <div className="mt-4 text-xs uppercase tracking-wide text-[var(--sf-text-soft)]">{copy.workspacePath}</div>
+                        <div className="mt-2 break-all font-mono text-xs text-[var(--sf-text-muted)]">{selectedJob.workspace_dir}</div>
+                        <div className="mt-4 text-xs uppercase tracking-wide text-[var(--sf-text-soft)]">{copy.logFile}</div>
+                        <div className="mt-2 break-all font-mono text-xs text-[var(--sf-text-muted)]">{selectedJob.log_path}</div>
                       </div>
                     </div>
 
-                    <div className="rounded-[24px] border border-white/10 bg-black/20 p-4">
+                    <div className="rounded-[24px] border border-[rgba(117,132,159,0.18)] bg-[rgba(248,250,253,0.92)] p-4">
                       <div className="mb-2 flex items-center justify-between gap-3">
-                        <div className="text-xs uppercase tracking-wide text-slate-500">
+                        <div className="text-xs uppercase tracking-wide text-[var(--sf-text-soft)]">
                           {fullLog ? copy.fullLog : copy.logTail}
                         </div>
                         <div className="flex items-center gap-3">
                           {fullLog && (
-                            <span className="text-xs text-slate-500">
+                            <span className="text-xs text-[var(--sf-text-soft)]">
                               {formatFileSize(fullLog.size_bytes)} · {formatTimestamp(fullLog.modified_at)}
                             </span>
                           )}
@@ -1152,7 +1154,7 @@ export function NovelWorkbenchPage() {
                           )}
                         </div>
                       </div>
-                      <pre className="max-h-[32rem] overflow-auto whitespace-pre-wrap break-words rounded-xl bg-slate-950/80 p-3 font-mono text-xs text-slate-200">
+                      <pre className="max-h-[32rem] overflow-auto whitespace-pre-wrap break-words rounded-xl border border-[rgba(117,132,159,0.18)] bg-[rgba(240,245,250,0.95)] p-3 font-mono text-xs text-[var(--sf-text)]">
                         {fullLog?.content || selectedJob.log_tail || copy.noLogsYet}
                       </pre>
                       {fullLog?.truncated && (
@@ -1160,11 +1162,11 @@ export function NovelWorkbenchPage() {
                       )}
                     </div>
 
-                    <div className="rounded-[24px] border border-white/10 bg-black/20 p-4">
+                    <div className="rounded-[24px] border border-[rgba(117,132,159,0.18)] bg-[rgba(248,250,253,0.92)] p-4">
                       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
                         <div>
-                          <div className="text-xs uppercase tracking-wide text-slate-500">{copy.artifactsTitle}</div>
-                          <div className="mt-1 text-sm text-slate-400">
+                          <div className="text-xs uppercase tracking-wide text-[var(--sf-text-soft)]">{copy.artifactsTitle}</div>
+                          <div className="mt-1 text-sm text-[var(--sf-text-muted)]">
                             {artifacts
                               ? copy.artifactsSummary(artifacts.summary.available_count, artifacts.summary.chapter_count)
                               : copy.artifactsLoading}
@@ -1182,8 +1184,8 @@ export function NovelWorkbenchPage() {
                         <div className="space-y-4">
                           {artifactGroups.length > 0 ? (
                             artifactGroups.map(([group, groupArtifacts]) => (
-                              <div key={group} className="rounded-[24px] border border-white/10 bg-slate-950/55 p-3">
-                                <div className="mb-2 text-xs uppercase tracking-wide text-slate-500">
+                              <div key={group} className="rounded-[24px] border border-[rgba(117,132,159,0.18)] bg-white/82 p-3">
+                                <div className="mb-2 text-xs uppercase tracking-wide text-[var(--sf-text-soft)]">
                                   {copy.groupLabels[group as keyof typeof copy.groupLabels] ?? group}
                                 </div>
                                 <div className="space-y-2">
@@ -1193,7 +1195,7 @@ export function NovelWorkbenchPage() {
                                       className={`rounded-xl border px-3 py-2 ${
                                         selectedArtifactPath === artifact.path
                                           ? "border-sky-500/40 bg-sky-500/10"
-                                          : "border-white/10 bg-black/20"
+                                          : "border-[rgba(117,132,159,0.18)] bg-[rgba(248,250,253,0.92)]"
                                       }`}
                                     >
                                       <div className="flex items-start justify-between gap-3">
@@ -1206,11 +1208,11 @@ export function NovelWorkbenchPage() {
                                           }}
                                           className="min-w-0 text-left"
                                         >
-                                          <div className="truncate text-sm font-medium text-white">{artifact.label}</div>
-                                          <div className="mt-1 truncate font-mono text-[11px] text-slate-500">
+                                          <div className="truncate text-sm font-medium text-[var(--sf-text)]">{artifact.label}</div>
+                                          <div className="mt-1 truncate font-mono text-[11px] text-[var(--sf-text-soft)]">
                                             {artifact.path}
                                           </div>
-                                          <div className="mt-1 text-[11px] text-slate-400">
+                                          <div className="mt-1 text-[11px] text-[var(--sf-text-muted)]">
                                             {formatFileSize(artifact.size_bytes)} · {formatTimestamp(artifact.modified_at)}
                                           </div>
                                         </button>
@@ -1218,7 +1220,7 @@ export function NovelWorkbenchPage() {
                                           type="button"
                                           onClick={() => void handleDownloadArtifact(selectedJob, artifact)}
                                           disabled={downloadingKey === `artifact:${artifact.path}`}
-                                          className="inline-flex items-center gap-1 rounded-lg border border-white/10 bg-white/[0.04] px-2 py-1 text-xs text-slate-200 transition-colors hover:bg-white/[0.08] disabled:cursor-not-allowed disabled:opacity-60"
+                                          className="inline-flex items-center gap-1 rounded-lg border border-[rgba(117,132,159,0.18)] bg-white px-2 py-1 text-xs text-[var(--sf-text)] transition-colors hover:border-[rgba(24,151,214,0.24)] hover:bg-[rgba(248,250,253,0.98)] disabled:cursor-not-allowed disabled:opacity-60"
                                         >
                                           {downloadingKey === `artifact:${artifact.path}` ? (
                                             <Loader2 className="h-3.5 w-3.5 animate-spin" />
@@ -1234,33 +1236,33 @@ export function NovelWorkbenchPage() {
                               </div>
                             ))
                           ) : (
-                            <div className="rounded-[24px] border border-dashed border-white/10 px-4 py-10 text-sm text-slate-500">
+                            <div className="rounded-[24px] border border-dashed border-[rgba(117,132,159,0.22)] bg-[rgba(248,250,253,0.78)] px-4 py-10 text-sm text-[var(--sf-text-muted)]">
                               {copy.artifactsEmpty}
                             </div>
                           )}
                         </div>
 
-                        <div className="rounded-[24px] border border-white/10 bg-slate-950/55 p-4">
-                          <div className="mb-2 flex items-center gap-2 text-xs uppercase tracking-wide text-slate-500">
+                        <div className="rounded-[24px] border border-[rgba(117,132,159,0.18)] bg-white/82 p-4">
+                          <div className="mb-2 flex items-center gap-2 text-xs uppercase tracking-wide text-[var(--sf-text-soft)]">
                             <FileText className="h-3.5 w-3.5" />
                             {copy.previewTitle}
                           </div>
                           {selectedArtifact ? (
                             <div className="space-y-3">
                               <div>
-                                <div className="text-sm font-medium text-white">{selectedArtifact.label}</div>
-                                <div className="mt-1 break-all font-mono text-[11px] text-slate-500">
+                                <div className="text-sm font-medium text-[var(--sf-text)]">{selectedArtifact.label}</div>
+                                <div className="mt-1 break-all font-mono text-[11px] text-[var(--sf-text-soft)]">
                                   {selectedArtifact.path}
                                 </div>
                               </div>
                               {artifactPreviewLoading ? (
-                                <div className="flex items-center gap-2 rounded-xl border border-white/10 bg-slate-950/80 px-4 py-8 text-sm text-slate-400">
+                                <div className="flex items-center gap-2 rounded-xl border border-[rgba(117,132,159,0.18)] bg-[rgba(240,245,250,0.95)] px-4 py-8 text-sm text-[var(--sf-text-muted)]">
                                   <Loader2 className="h-4 w-4 animate-spin" />
                                   {copy.loadingPreview}
                                 </div>
                               ) : artifactPreview ? (
                                 <>
-                                  <pre className="max-h-[38rem] overflow-auto whitespace-pre-wrap break-words rounded-xl bg-slate-950/80 p-3 font-mono text-xs text-slate-200">
+                                  <pre className="max-h-[38rem] overflow-auto whitespace-pre-wrap break-words rounded-xl border border-[rgba(117,132,159,0.18)] bg-[rgba(240,245,250,0.95)] p-3 font-mono text-xs text-[var(--sf-text)]">
                                     {artifactPreview.content}
                                   </pre>
                                   {artifactPreview.truncated && (
@@ -1268,13 +1270,13 @@ export function NovelWorkbenchPage() {
                                   )}
                                 </>
                               ) : (
-                                <div className="rounded-xl border border-dashed border-white/10 px-4 py-10 text-sm text-slate-500">
+                                <div className="rounded-xl border border-dashed border-[rgba(117,132,159,0.22)] bg-[rgba(248,250,253,0.78)] px-4 py-10 text-sm text-[var(--sf-text-muted)]">
                                   {copy.previewUnsupported}
                                 </div>
                               )}
                             </div>
                           ) : (
-                            <div className="rounded-xl border border-dashed border-white/10 px-4 py-10 text-sm text-slate-500">
+                            <div className="rounded-xl border border-dashed border-[rgba(117,132,159,0.22)] bg-[rgba(248,250,253,0.78)] px-4 py-10 text-sm text-[var(--sf-text-muted)]">
                               {copy.previewEmpty}
                             </div>
                           )}
@@ -1283,7 +1285,7 @@ export function NovelWorkbenchPage() {
                     </div>
                   </div>
                 ) : (
-                  <div className="flex h-full min-h-[24rem] items-center justify-center rounded-[24px] border border-dashed border-white/10 text-sm text-slate-500">
+                  <div className="flex h-full min-h-[24rem] items-center justify-center rounded-[24px] border border-dashed border-[rgba(117,132,159,0.22)] bg-[rgba(248,250,253,0.78)] text-sm text-[var(--sf-text-muted)]">
                     {copy.detailsEmpty}
                   </div>
                 )}

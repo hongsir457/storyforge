@@ -58,17 +58,20 @@ export function RegisterPage() {
   return (
     <PublicShell
       eyebrow={t("dashboard:app_title")}
-      title={t("create_account")}
-      description={t("home_hero_body")}
+      title="为你的叙事工作间建立一个清晰入口。"
+      description="注册完成后，Storyforge 会把小说工作台、项目库和工作区都收进同一品牌系统里。"
     >
-      <div className="mb-6">
+      <div className="mb-7">
+        <div className="storyforge-kicker">Create Workspace</div>
         <h2
-          className="text-[2rem] font-semibold tracking-[-0.02em] text-white"
+          className="mt-4 text-[2rem] font-semibold tracking-[-0.04em] text-[var(--sf-text)]"
           style={{ fontFamily: "var(--font-display)" }}
         >
           {t("create_account")}
         </h2>
-        <p className="mt-2 text-sm leading-7 text-slate-300">{t("dashboard:app_subtitle")}</p>
+        <p className="mt-2 text-sm leading-7 text-[var(--sf-text-muted)]">
+          创建后即可从 seed 启动小说流程，或直接进入项目库继续做视觉资产。
+        </p>
       </div>
 
       <form onSubmit={(e) => void handleSubmit(e)} className="space-y-4">
@@ -78,21 +81,21 @@ export function RegisterPage() {
         <Field label={t("password")} value={form.password} onChange={(value) => setForm((curr) => ({ ...curr, password: value }))} type="password" />
         <Field label={t("confirm_password")} value={form.confirm_password} onChange={(value) => setForm((curr) => ({ ...curr, confirm_password: value }))} type="password" />
 
-        {error && <p className="rounded-xl border border-rose-400/30 bg-rose-500/10 px-3 py-2 text-sm text-rose-200">{error}</p>}
-        {notice && <p className="rounded-xl border border-amber-400/30 bg-amber-500/10 px-3 py-2 text-sm text-amber-100">{notice}</p>}
+        {error && <Notice tone="error">{error}</Notice>}
+        {notice && <Notice tone="success">{notice}</Notice>}
 
         <button
           type="submit"
           disabled={loading}
-          className="w-full rounded-2xl bg-sky-500 px-4 py-3 text-sm font-semibold text-slate-950 transition hover:bg-sky-400 disabled:opacity-60"
+          className="storyforge-primary-button w-full rounded-[1rem] px-4 py-3 text-sm font-semibold transition hover:-translate-y-0.5 disabled:translate-y-0 disabled:opacity-60"
         >
           {loading ? t("registering") : t("create_account")}
         </button>
       </form>
 
-      <div className="mt-6 flex items-center justify-between text-sm text-slate-400">
+      <div className="mt-6 flex items-center justify-between text-sm text-[var(--sf-text-muted)]">
         <span>{t("have_account")}</span>
-        <Link href="/login" className="font-medium text-sky-300 transition hover:text-sky-200">
+        <Link href="/login" className="font-semibold text-[var(--sf-blue)] transition hover:text-[var(--sf-blue-strong)]">
           {t("go_to_login")}
         </Link>
       </div>
@@ -113,14 +116,30 @@ function Field({
 }) {
   return (
     <label className="block">
-      <span className="mb-2 block text-[11px] font-medium uppercase tracking-[0.18em] text-slate-400">{label}</span>
+      <span className="mb-2 block text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--sf-text-soft)]">
+        {label}
+      </span>
       <input
         type={type}
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="w-full rounded-2xl border border-white/10 bg-slate-950/65 px-4 py-3.5 text-[15px] text-white outline-none transition focus:border-sky-400/70 focus:bg-slate-950/80"
+        className="storyforge-input w-full rounded-[1rem] px-4 py-3.5 text-[15px] outline-none transition"
         required
       />
     </label>
   );
+}
+
+function Notice({
+  children,
+  tone,
+}: {
+  children: string;
+  tone: "error" | "success";
+}) {
+  const className = tone === "error"
+    ? "border-rose-300/55 bg-rose-100/72 text-rose-900"
+    : "border-emerald-300/55 bg-emerald-100/72 text-emerald-900";
+
+  return <p className={`rounded-[1rem] border px-4 py-3 text-sm ${className}`}>{children}</p>;
 }

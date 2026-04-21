@@ -3,35 +3,77 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 @theme {
-    --color-ink-950: #060a0f;
-    --color-ink-900: #0b1320;
-    --color-ink-800: #132034;
-    --color-ink-700: #22344f;
-    --color-neon-500: #38a8f5;
-    --color-neon-400: #62b6ff;
-    --color-neon-300: #9fd6ff;
+    --color-paper-50: #fbfcff;
+    --color-paper-100: #f3f6fb;
+    --color-paper-200: #e7edf6;
+    --color-paper-300: #d8e1ee;
+    --color-ink-950: #0f1b37;
+    --color-ink-900: #172444;
+    --color-ink-800: #25375d;
+    --color-ink-700: #50617f;
+    --color-neon-500: #1897d6;
+    --color-neon-400: #34ade9;
+    --color-neon-300: #7ecdf3;
     --color-amberx-500: #d8a55a;
-    --color-amberx-400: #e6bc79;
-    --color-amberx-300: #f3d9ab;
-    --shadow-glow: 0 0 0 1px rgba(56, 168, 245, 0.22), 0 18px 40px rgba(8, 15, 25, 0.45);
-    --color-brand-sky-500: #38a8f5;
-    --color-brand-indigo-500: #5b5ce6;
+    --color-amberx-400: #e7be7e;
+    --color-amberx-300: #f4dec0;
+    --shadow-glow: 0 0 0 1px rgba(24, 151, 214, 0.12), 0 24px 60px rgba(28, 46, 84, 0.12);
+    --color-brand-sky-500: #1897d6;
+    --color-brand-indigo-500: #2d7fbe;
     --color-brand-metal-500: #d8a55a;
 
-    /* Studio theme colors — 工作台主题色 */
-    --color-studio-bg: #030712;
-    --color-studio-panel: #111827;
-    --color-studio-border: #1f2937;
-    --color-accent-start: #38a8f5;
-    --color-accent-end: #5b5ce6;
-
-    /* Font families — 字体定义 */
     --font-sans: "Manrope", "Noto Sans SC", system-ui, sans-serif;
     --font-display: "Space Grotesk", "Noto Sans SC", system-ui, sans-serif;
     --font-mono: "IBM Plex Mono", "Fira Code", "Noto Sans Mono", monospace;
 }
 
-/* 统一焦点指示（a11y）—— 所有可聚焦元素共用；比旧 .focus-ring（studio.css）的 ring-indigo-500/40 更明显 */
+:root {
+  --sf-bg: #eef3f9;
+  --sf-bg-soft: #f7f9fc;
+  --sf-surface: rgba(255, 255, 255, 0.82);
+  --sf-surface-strong: rgba(255, 255, 255, 0.94);
+  --sf-surface-muted: rgba(242, 246, 251, 0.88);
+  --sf-line: rgba(117, 132, 159, 0.18);
+  --sf-line-strong: rgba(24, 151, 214, 0.22);
+  --sf-text: #172444;
+  --sf-text-muted: #5b6983;
+  --sf-text-soft: #7d889d;
+  --sf-blue: #1897d6;
+  --sf-blue-strong: #0e7db8;
+  --sf-amber: #d8a55a;
+  --sf-shadow: 0 24px 70px rgba(25, 40, 71, 0.1);
+  --sf-shadow-soft: 0 18px 46px rgba(25, 40, 71, 0.08);
+}
+
+html {
+  color-scheme: light;
+}
+
+body {
+  margin: 0;
+  background:
+    radial-gradient(circle at 12% 10%, rgba(24, 151, 214, 0.12), transparent 28%),
+    radial-gradient(circle at 92% 6%, rgba(216, 165, 90, 0.14), transparent 22%),
+    linear-gradient(180deg, #fbfcff 0%, #f3f6fb 42%, #e9eff7 100%);
+  color: var(--sf-text);
+  font-family: var(--font-sans);
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+::selection {
+  background: rgba(24, 151, 214, 0.18);
+  color: #0f1b37;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
 @utility focus-ring {
-  @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-400;
+  @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 focus-visible:ring-offset-2 focus-visible:ring-offset-white;
 }

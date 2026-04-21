@@ -59,9 +59,19 @@ export function ForgotPasswordPage() {
   return (
     <PublicShell
       eyebrow={t("dashboard:app_title")}
-      title={t("forgot_password")}
+      title="重置入口保持清晰，不让用户在认证流程里迷路。"
       description={t("forgot_password_hint")}
     >
+      <div className="mb-7">
+        <div className="storyforge-kicker">Password Reset</div>
+        <h2
+          className="mt-4 text-[2rem] font-semibold tracking-[-0.04em] text-[var(--sf-text)]"
+          style={{ fontFamily: "var(--font-display)" }}
+        >
+          {t("forgot_password")}
+        </h2>
+      </div>
+
       {step === "request" ? (
         <form onSubmit={(e) => void requestCode(e)} className="space-y-4">
           <Field label={t("email")} value={email} onChange={setEmail} />
@@ -70,7 +80,7 @@ export function ForgotPasswordPage() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full rounded-xl bg-sky-500 px-4 py-3 text-sm font-semibold text-slate-950 transition hover:bg-sky-400 disabled:opacity-60"
+            className="storyforge-primary-button w-full rounded-[1rem] px-4 py-3 text-sm font-semibold transition hover:-translate-y-0.5 disabled:translate-y-0 disabled:opacity-60"
           >
             {loading ? t("sending_code") : t("send_reset_code")}
           </button>
@@ -86,15 +96,15 @@ export function ForgotPasswordPage() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full rounded-xl bg-sky-500 px-4 py-3 text-sm font-semibold text-slate-950 transition hover:bg-sky-400 disabled:opacity-60"
+            className="storyforge-primary-button w-full rounded-[1rem] px-4 py-3 text-sm font-semibold transition hover:-translate-y-0.5 disabled:translate-y-0 disabled:opacity-60"
           >
             {loading ? t("resetting_password") : t("reset_password")}
           </button>
         </form>
       )}
 
-      <div className="mt-6 text-center text-sm text-slate-400">
-        <Link href="/login" className="text-sky-300 transition hover:text-sky-200">
+      <div className="mt-6 text-center text-sm text-[var(--sf-text-muted)]">
+        <Link href="/login" className="font-semibold text-[var(--sf-blue)] transition hover:text-[var(--sf-blue-strong)]">
           {t("go_to_login")}
         </Link>
       </div>
@@ -115,12 +125,14 @@ function Field({
 }) {
   return (
     <label className="block">
-      <span className="mb-2 block text-sm text-slate-300">{label}</span>
+      <span className="mb-2 block text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--sf-text-soft)]">
+        {label}
+      </span>
       <input
         type={type}
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white outline-none transition focus:border-sky-400/60 focus:bg-white/8"
+        className="storyforge-input w-full rounded-[1rem] px-4 py-3.5 text-[15px] outline-none transition"
         required
       />
     </label>
@@ -129,7 +141,7 @@ function Field({
 
 function Notice({ children, tone }: { children: string; tone: "error" | "success" }) {
   const className = tone === "error"
-    ? "border-rose-400/30 bg-rose-500/10 text-rose-200"
-    : "border-emerald-400/30 bg-emerald-500/10 text-emerald-100";
-  return <p className={`rounded-xl border px-3 py-2 text-sm ${className}`}>{children}</p>;
+    ? "border-rose-300/55 bg-rose-100/72 text-rose-900"
+    : "border-emerald-300/55 bg-emerald-100/72 text-emerald-900";
+  return <p className={`rounded-[1rem] border px-4 py-3 text-sm ${className}`}>{children}</p>;
 }

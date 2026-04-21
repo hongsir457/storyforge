@@ -75,7 +75,7 @@ export function SourceFileViewer({ projectName, filename }: SourceFileViewerProp
 
   if (loading) {
     return (
-      <div className="flex h-full items-center justify-center text-gray-500">
+      <div className="flex h-full items-center justify-center text-[var(--sf-text-muted)]">
         {t("loading_file")}
       </div>
     );
@@ -83,7 +83,7 @@ export function SourceFileViewer({ projectName, filename }: SourceFileViewerProp
 
   if (content === null) {
     return (
-      <div className="flex h-full items-center justify-center text-gray-500">
+      <div className="flex h-full items-center justify-center text-[var(--sf-text-muted)]">
         {t("cannot_load_file", { filename })}
       </div>
     );
@@ -92,10 +92,10 @@ export function SourceFileViewer({ projectName, filename }: SourceFileViewerProp
   return (
     <div className="flex h-full flex-col">
       {/* Toolbar */}
-      <div className="flex items-center justify-between border-b border-gray-800 px-4 py-2">
+      <div className="flex items-center justify-between border-b border-[rgba(117,132,159,0.18)] bg-white/76 px-4 py-3">
         <div className="flex items-center gap-2">
-          <FileText className="h-4 w-4 text-gray-400" />
-          <h2 id={filenameHeadingId} className="text-sm font-medium text-gray-200">{filename}</h2>
+          <FileText className="h-4 w-4 text-[var(--sf-text-soft)]" />
+          <h2 id={filenameHeadingId} className="text-sm font-medium text-[var(--sf-text)]">{filename}</h2>
         </div>
         <div className="flex items-center gap-1">
           {editing ? (
@@ -104,7 +104,7 @@ export function SourceFileViewer({ projectName, filename }: SourceFileViewerProp
                 type="button"
                 onClick={handleSave}
                 disabled={saving}
-                className="flex items-center gap-1 rounded px-2 py-1 text-xs text-green-400 transition-colors hover:bg-gray-800 disabled:opacity-50"
+                className="flex items-center gap-1 rounded-lg border border-emerald-300/60 bg-emerald-100 px-2.5 py-1.5 text-xs text-emerald-700 transition-colors hover:bg-emerald-200 disabled:opacity-50"
               >
                 <Save className="h-3.5 w-3.5" />
                 {saving ? t("common:saving") : t("common:save")}
@@ -112,7 +112,7 @@ export function SourceFileViewer({ projectName, filename }: SourceFileViewerProp
               <button
                 type="button"
                 onClick={() => { setEditing(false); setEditContent(content); }}
-                className="flex items-center gap-1 rounded px-2 py-1 text-xs text-gray-400 transition-colors hover:bg-gray-800"
+                className="storyforge-secondary-button flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-xs transition-colors"
               >
                 <X className="h-3.5 w-3.5" />
                 {t("common:cancel")}
@@ -123,7 +123,7 @@ export function SourceFileViewer({ projectName, filename }: SourceFileViewerProp
               <button
                 type="button"
                 onClick={() => setEditing(true)}
-                className="flex items-center gap-1 rounded px-2 py-1 text-xs text-gray-400 transition-colors hover:bg-gray-800 hover:text-gray-200"
+                className="storyforge-secondary-button flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-xs transition-colors"
               >
                 <Edit3 className="h-3.5 w-3.5" />
                 {t("common:edit")}
@@ -131,7 +131,7 @@ export function SourceFileViewer({ projectName, filename }: SourceFileViewerProp
               <button
                 type="button"
                 onClick={handleDelete}
-                className="flex items-center gap-1 rounded px-2 py-1 text-xs text-gray-400 transition-colors hover:bg-gray-800 hover:text-red-400"
+                className="flex items-center gap-1 rounded-lg border border-rose-300/60 bg-rose-100 px-2.5 py-1.5 text-xs text-rose-700 transition-colors hover:bg-rose-200"
               >
                 <Trash2 className="h-3.5 w-3.5" />
                 {t("common:delete")}
@@ -148,10 +148,10 @@ export function SourceFileViewer({ projectName, filename }: SourceFileViewerProp
             aria-labelledby={filenameHeadingId}
             value={editContent}
             onChange={(e) => setEditContent(e.target.value)}
-            className="h-full w-full resize-none rounded-lg border border-gray-700 bg-gray-800 p-4 font-mono text-sm leading-relaxed text-gray-200 outline-none focus:border-indigo-500"
+            className="h-full w-full resize-none rounded-[1.5rem] border border-[rgba(117,132,159,0.18)] bg-[rgba(248,250,253,0.96)] p-4 font-mono text-sm leading-relaxed text-[var(--sf-text)] outline-none focus:border-[rgba(24,151,214,0.36)]"
           />
         ) : (
-          <pre className="whitespace-pre-wrap font-mono text-sm leading-relaxed text-gray-300">
+          <pre className="whitespace-pre-wrap rounded-[1.5rem] border border-[rgba(117,132,159,0.18)] bg-[rgba(248,250,253,0.92)] p-4 font-mono text-sm leading-relaxed text-[var(--sf-text)]">
             {content}
           </pre>
         )}

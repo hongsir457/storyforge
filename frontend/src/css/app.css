@@ -1,38 +1,23 @@
 :root {
-    --ink-950: #05080d;
-    --ink-900: #0b1320;
-    --ink-850: #111b2e;
-    --ink-800: #16243a;
-    --line-soft: rgba(255, 255, 255, 0.1);
-    --line-strong: rgba(52, 231, 197, 0.35);
-    --brand: #11d3ac;
-    --brand-soft: rgba(17, 211, 172, 0.15);
-    --warn: #f0a93e;
+    --ink-950: #0f1b37;
+    --ink-900: #172444;
+    --ink-800: #25375d;
+    --line-soft: rgba(117, 132, 159, 0.18);
+    --line-strong: rgba(24, 151, 214, 0.22);
+    --brand: #1897d6;
+    --brand-soft: rgba(24, 151, 214, 0.12);
+    --warn: #d8a55a;
 }
 
 * {
     box-sizing: border-box;
 }
 
-body {
-    margin: 0;
-    font-family: var(--font-sans);
-    color: #d9dfe8;
-    background: #060b14;
-}
-
-button,
-input,
-select,
-textarea {
-    font: inherit;
-}
-
 .app-shell {
     background:
-        radial-gradient(circle at 8% 10%, rgba(56, 168, 245, 0.12), transparent 30%),
-        radial-gradient(circle at 100% 100%, rgba(216, 165, 90, 0.08), transparent 34%),
-        linear-gradient(160deg, #060b14, #0b1320 52%, #101826);
+        radial-gradient(circle at 10% 8%, rgba(24, 151, 214, 0.12), transparent 28%),
+        radial-gradient(circle at 92% 10%, rgba(216, 165, 90, 0.14), transparent 22%),
+        linear-gradient(180deg, #fbfcff 0%, #f4f7fb 46%, #ebf1f8 100%);
 }
 
 .app-title,
@@ -46,26 +31,32 @@ textarea {
     min-height: 100vh;
 }
 
-.app-sidebar {
+.app-sidebar,
+.storyforge-workspace-rail {
     border-right: 1px solid var(--line-soft);
-    background: linear-gradient(185deg, rgba(8, 16, 29, 0.95), rgba(7, 12, 23, 0.8));
-    backdrop-filter: blur(10px);
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.86), rgba(246, 249, 253, 0.92));
+    backdrop-filter: blur(14px);
 }
 
-.app-panel {
+.app-panel,
+.sf-panel {
     border: 1px solid var(--line-soft);
-    background: linear-gradient(180deg, rgba(19, 32, 52, 0.72), rgba(12, 20, 33, 0.62));
-    backdrop-filter: blur(8px);
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.84), rgba(247, 250, 253, 0.92));
+    backdrop-filter: blur(14px);
+    box-shadow: var(--sf-shadow-soft);
 }
 
-.app-panel-strong {
-    border: 1px solid var(--line-strong);
-    background: linear-gradient(180deg, rgba(19, 32, 52, 0.92), rgba(10, 20, 32, 0.84));
-    box-shadow: 0 20px 40px rgba(4, 10, 17, 0.45);
+.app-panel-strong,
+.sf-panel-strong,
+.sf-glass-shell {
+    border: 1px solid rgba(24, 151, 214, 0.12);
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.92), rgba(247, 250, 253, 0.96));
+    box-shadow: var(--sf-shadow);
+    backdrop-filter: blur(18px);
 }
 
 .app-menu-item {
-    transition: all 0.18s ease;
+    transition: transform 0.18s ease, background-color 0.18s ease, color 0.18s ease;
 }
 
 .app-menu-item:hover {
@@ -76,16 +67,130 @@ textarea {
     position: relative;
 }
 
-.app-grid-bg::before {
+.app-grid-bg::before,
+.sf-subtle-grid::before {
     content: "";
     position: absolute;
     inset: 0;
     background-image:
-        linear-gradient(to right, rgba(255, 255, 255, 0.04) 1px, transparent 1px),
-        linear-gradient(to bottom, rgba(255, 255, 255, 0.04) 1px, transparent 1px);
-    background-size: 28px 28px;
-    opacity: 0.25;
+        linear-gradient(to right, rgba(15, 27, 55, 0.04) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(15, 27, 55, 0.04) 1px, transparent 1px);
+    background-size: 32px 32px;
+    opacity: 0.32;
     pointer-events: none;
+}
+
+.sf-subtle-grid {
+    position: relative;
+}
+
+.sf-app-bg,
+.sf-editorial-page,
+.storyforge-admin-shell,
+.storyforge-workspace-shell {
+    background:
+        radial-gradient(circle at 12% 0%, rgba(24, 151, 214, 0.14), transparent 28%),
+        radial-gradient(circle at 96% 6%, rgba(216, 165, 90, 0.16), transparent 24%),
+        linear-gradient(180deg, #fbfcff 0%, #f3f6fb 42%, #e9eff7 100%);
+    color: var(--sf-text);
+}
+
+.sf-top-shell,
+.storyforge-page-header,
+.storyforge-workspace-header {
+    border: 1px solid rgba(24, 151, 214, 0.1);
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.88), rgba(247, 250, 253, 0.94));
+    box-shadow: var(--sf-shadow-soft);
+    backdrop-filter: blur(20px);
+}
+
+.storyforge-public-shell {
+    background:
+        radial-gradient(circle at 8% 8%, rgba(24, 151, 214, 0.16), transparent 26%),
+        radial-gradient(circle at 94% 10%, rgba(216, 165, 90, 0.16), transparent 24%),
+        linear-gradient(180deg, #fbfcff 0%, #f5f8fc 44%, #edf2f8 100%);
+    color: var(--sf-text);
+}
+
+.storyforge-public-shell .storyforge-stage-card {
+    border: 1px solid rgba(24, 151, 214, 0.1);
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.9), rgba(246, 249, 253, 0.94));
+    box-shadow: 0 28px 72px rgba(23, 38, 69, 0.1);
+}
+
+.storyforge-public-shell .storyforge-form-card {
+    border: 1px solid rgba(117, 132, 159, 0.18);
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.94), rgba(249, 251, 254, 0.98));
+    box-shadow: 0 24px 60px rgba(23, 38, 69, 0.08);
+}
+
+.storyforge-public-shell .storyforge-kicker,
+.storyforge-kicker {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    border-radius: 999px;
+    border: 1px solid rgba(24, 151, 214, 0.16);
+    background: rgba(24, 151, 214, 0.08);
+    padding: 0.375rem 0.875rem;
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: #0e7db8;
+}
+
+.storyforge-primary-button {
+    background: linear-gradient(135deg, #1897d6 0%, #26abe8 100%);
+    color: #ffffff;
+    box-shadow: 0 18px 38px rgba(24, 151, 214, 0.22);
+}
+
+.storyforge-secondary-button {
+    border: 1px solid rgba(117, 132, 159, 0.18);
+    background: rgba(255, 255, 255, 0.82);
+    color: var(--sf-text);
+}
+
+.storyforge-input {
+    border: 1px solid rgba(117, 132, 159, 0.18);
+    background: rgba(248, 250, 253, 0.92);
+    color: var(--sf-text);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.58);
+}
+
+.storyforge-input::placeholder {
+    color: var(--sf-text-soft);
+}
+
+.storyforge-input:focus {
+    border-color: rgba(24, 151, 214, 0.42);
+    background: rgba(255, 255, 255, 0.98);
+}
+
+.storyforge-workspace-shell {
+    color: var(--sf-text);
+}
+
+.storyforge-workspace-shell .storyforge-shell-main {
+    background: rgba(255, 255, 255, 0.18);
+}
+
+.storyforge-workspace-shell .storyforge-assistant-rail {
+    border-left: 1px solid rgba(117, 132, 159, 0.16);
+    background: linear-gradient(180deg, rgba(250, 251, 254, 0.92), rgba(244, 248, 252, 0.96));
+    box-shadow: -18px 0 42px rgba(23, 38, 69, 0.04);
+}
+
+.storyforge-workspace-shell .storyforge-rail-button {
+    border: 1px solid rgba(117, 132, 159, 0.16);
+    background: rgba(255, 255, 255, 0.9);
+    color: var(--sf-text-muted);
+}
+
+.storyforge-workspace-shell .storyforge-rail-button:hover {
+    background: rgba(255, 255, 255, 0.98);
+    color: var(--sf-text);
 }
 
 .toast-enter {
@@ -99,8 +204,15 @@ textarea {
 }
 
 @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(6px); }
-    to { opacity: 1; transform: translateY(0); }
+    from {
+        opacity: 0;
+        transform: translateY(6px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 @keyframes slide-down {
@@ -117,56 +229,41 @@ textarea {
 
 .landing-shell {
     background:
-        radial-gradient(circle at 14% 11%, rgba(56, 168, 245, 0.16), transparent 34%),
-        radial-gradient(circle at 88% 16%, rgba(216, 165, 90, 0.12), transparent 30%),
-        linear-gradient(180deg, #060913, #0b1320);
+        radial-gradient(circle at 12% 8%, rgba(24, 151, 214, 0.16), transparent 28%),
+        radial-gradient(circle at 92% 10%, rgba(216, 165, 90, 0.16), transparent 22%),
+        linear-gradient(180deg, #fbfcff 0%, #f5f8fc 48%, #edf2f8 100%);
 }
 
 .landing-grid {
     position: absolute;
     inset: 0;
     background-image:
-        linear-gradient(to right, rgba(255, 255, 255, 0.045) 1px, transparent 1px),
-        linear-gradient(to bottom, rgba(255, 255, 255, 0.045) 1px, transparent 1px);
-    background-size: 50px 50px;
-    mask-image: radial-gradient(circle at 50% 42%, #000 26%, transparent 86%);
-    opacity: 0.22;
-}
-
-.landing-curve {
-    position: absolute;
-    inset: 0;
-    background-image:
-        linear-gradient(to right, rgba(255, 255, 255, 0.06) 1px, transparent 1px),
-        linear-gradient(to bottom, rgba(255, 255, 255, 0.06) 1px, transparent 1px);
-    background-size: 96px 96px;
-    transform: perspective(1000px) rotateX(42deg) translateY(42%);
-    transform-origin: center bottom;
-    opacity: 0.16;
-    mask-image: radial-gradient(circle at center, #000 44%, transparent 86%);
+        linear-gradient(to right, rgba(15, 27, 55, 0.045) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(15, 27, 55, 0.045) 1px, transparent 1px);
+    background-size: 54px 54px;
+    mask-image: radial-gradient(circle at 50% 42%, #000 24%, transparent 86%);
+    opacity: 0.3;
 }
 
 .landing-slogan {
     letter-spacing: 0.01em;
     text-wrap: balance;
-    color: #f8fafc;
-    text-shadow:
-        0 1px 0 rgba(255, 255, 255, 0.08),
-        0 14px 32px rgba(0, 0, 0, 0.5);
+    color: #0f1b37;
+    text-shadow: 0 12px 32px rgba(91, 105, 131, 0.08);
 }
 
 .landing-orb {
     position: absolute;
     border-radius: 9999px;
-    filter: blur(40px);
-    opacity: 0.5;
+    filter: blur(44px);
+    opacity: 0.55;
     pointer-events: none;
 }
 
 .landing-orb-a {
     width: 380px;
     height: 380px;
-    background: rgba(56, 168, 245, 0.26);
+    background: rgba(24, 151, 214, 0.18);
     top: 22%;
     left: 8%;
     animation: float-a 8s ease-in-out infinite;
@@ -175,7 +272,7 @@ textarea {
 .landing-orb-b {
     width: 320px;
     height: 320px;
-    background: rgba(216, 165, 90, 0.22);
+    background: rgba(216, 165, 90, 0.18);
     right: 10%;
     top: 14%;
     animation: float-b 9s ease-in-out infinite;
@@ -209,4 +306,105 @@ textarea {
         opacity: 0.35;
         transform: scale(0.7);
     }
+}
+
+.sf-editorial-page [class*="bg-gray-950"],
+.sf-editorial-page [class*="bg-slate-950"],
+.storyforge-admin-shell [class*="bg-gray-950"],
+.storyforge-admin-shell [class*="bg-slate-950"],
+.storyforge-workspace-shell [class*="bg-gray-950"],
+.storyforge-workspace-shell [class*="bg-slate-950"] {
+    background-color: rgba(244, 248, 252, 0.96) !important;
+}
+
+.sf-editorial-page [class*="bg-gray-900"],
+.sf-editorial-page [class*="bg-slate-900"],
+.storyforge-admin-shell [class*="bg-gray-900"],
+.storyforge-admin-shell [class*="bg-slate-900"],
+.storyforge-workspace-shell [class*="bg-gray-900"],
+.storyforge-workspace-shell [class*="bg-slate-900"] {
+    background-color: rgba(247, 250, 253, 0.94) !important;
+}
+
+.sf-editorial-page [class*="bg-gray-800"],
+.sf-editorial-page [class*="bg-slate-800"],
+.storyforge-admin-shell [class*="bg-gray-800"],
+.storyforge-admin-shell [class*="bg-slate-800"],
+.storyforge-workspace-shell [class*="bg-gray-800"],
+.storyforge-workspace-shell [class*="bg-slate-800"] {
+    background-color: rgba(240, 245, 250, 0.94) !important;
+}
+
+.sf-editorial-page [class*="bg-black/20"],
+.storyforge-admin-shell [class*="bg-black/20"],
+.storyforge-workspace-shell [class*="bg-black/20"],
+.sf-editorial-page [class*="bg-white/[0.04]"],
+.storyforge-admin-shell [class*="bg-white/[0.04]"],
+.storyforge-workspace-shell [class*="bg-white/[0.04]"] {
+    background-color: rgba(248, 250, 253, 0.92) !important;
+}
+
+.sf-editorial-page [class*="border-gray-"],
+.sf-editorial-page [class*="border-slate-"],
+.sf-editorial-page [class*="border-white/10"],
+.storyforge-admin-shell [class*="border-gray-"],
+.storyforge-admin-shell [class*="border-slate-"],
+.storyforge-admin-shell [class*="border-white/10"],
+.storyforge-workspace-shell [class*="border-gray-"],
+.storyforge-workspace-shell [class*="border-slate-"],
+.storyforge-workspace-shell [class*="border-white/10"] {
+    border-color: rgba(117, 132, 159, 0.18) !important;
+}
+
+.sf-editorial-page [class*="text-gray-100"],
+.sf-editorial-page [class*="text-slate-100"],
+.sf-editorial-page [class*="text-gray-200"],
+.sf-editorial-page [class*="text-slate-200"],
+.storyforge-admin-shell [class*="text-gray-100"],
+.storyforge-admin-shell [class*="text-slate-100"],
+.storyforge-admin-shell [class*="text-gray-200"],
+.storyforge-admin-shell [class*="text-slate-200"],
+.storyforge-workspace-shell [class*="text-gray-100"],
+.storyforge-workspace-shell [class*="text-slate-100"],
+.storyforge-workspace-shell [class*="text-gray-200"],
+.storyforge-workspace-shell [class*="text-slate-200"] {
+    color: var(--sf-text) !important;
+}
+
+.sf-editorial-page [class*="text-gray-300"],
+.sf-editorial-page [class*="text-slate-300"],
+.sf-editorial-page [class*="text-gray-400"],
+.sf-editorial-page [class*="text-slate-400"],
+.sf-editorial-page [class*="text-gray-500"],
+.sf-editorial-page [class*="text-slate-500"],
+.storyforge-admin-shell [class*="text-gray-300"],
+.storyforge-admin-shell [class*="text-slate-300"],
+.storyforge-admin-shell [class*="text-gray-400"],
+.storyforge-admin-shell [class*="text-slate-400"],
+.storyforge-admin-shell [class*="text-gray-500"],
+.storyforge-admin-shell [class*="text-slate-500"],
+.storyforge-workspace-shell [class*="text-gray-300"],
+.storyforge-workspace-shell [class*="text-slate-300"],
+.storyforge-workspace-shell [class*="text-gray-400"],
+.storyforge-workspace-shell [class*="text-slate-400"],
+.storyforge-workspace-shell [class*="text-gray-500"],
+.storyforge-workspace-shell [class*="text-slate-500"] {
+    color: var(--sf-text-muted) !important;
+}
+
+.sf-editorial-page [class*="shadow-black"],
+.sf-editorial-page [class*="shadow-2xl"],
+.storyforge-admin-shell [class*="shadow-black"],
+.storyforge-admin-shell [class*="shadow-2xl"],
+.storyforge-workspace-shell [class*="shadow-black"],
+.storyforge-workspace-shell [class*="shadow-2xl"] {
+    box-shadow: 0 22px 54px rgba(23, 38, 69, 0.1) !important;
+}
+
+.sf-editorial-page pre,
+.storyforge-admin-shell pre,
+.storyforge-workspace-shell pre {
+    border: 1px solid rgba(117, 132, 159, 0.18);
+    background: rgba(240, 245, 250, 0.92);
+    color: var(--sf-text);
 }

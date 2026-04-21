@@ -50,11 +50,11 @@ function CollapsibleSection({
 
   return (
     <div className="flex flex-col">
-      <div className="group flex items-center justify-between px-3 py-2 text-xs font-semibold uppercase tracking-wider text-gray-500 transition-colors hover:text-gray-300">
+      <div className="group flex items-center justify-between px-3 py-2 text-xs font-semibold uppercase tracking-wider text-[var(--sf-text-soft)] transition-colors hover:text-[var(--sf-text)]">
         <button
           type="button"
           onClick={() => setIsOpen(!isOpen)}
-          className="flex flex-1 items-center gap-2 focus-ring rounded"
+          className="flex flex-1 items-center gap-2 rounded-xl px-1 py-1 text-[var(--sf-text-soft)] focus-ring"
         >
           {isOpen ? (
             <ChevronDown className="h-3 w-3 shrink-0" />
@@ -105,7 +105,7 @@ function AssetThumbnail({
 
   if (!sheetPath || imgError) {
     return (
-      <span className={`flex h-6 w-6 shrink-0 items-center justify-center ${roundedClass} bg-gray-700 text-gray-400`}>
+      <span className={`flex h-6 w-6 shrink-0 items-center justify-center ${roundedClass} bg-[rgba(24,151,214,0.08)] text-[var(--sf-blue-strong)]`}>
         <FallbackIcon className="h-3.5 w-3.5" />
       </span>
     );
@@ -127,7 +127,7 @@ function AssetThumbnail({
 
 function EmptyState({ text }: { text: string }) {
   return (
-    <div className="px-8 py-3 text-[11px] italic text-gray-600">
+    <div className="px-8 py-3 text-[11px] italic text-[var(--sf-text-soft)]">
       {text}
     </div>
   );
@@ -222,24 +222,24 @@ export function AssetSidebar({ className }: AssetSidebarProps) {
 
   return (
     <aside
-      className={`flex flex-col overflow-y-auto bg-gray-900 ${className ?? ""}`}
+      className={`flex flex-col overflow-y-auto p-3 ${className ?? ""}`}
     >
       {/* ---- Project Overview nav item ---- */}
       <button
         type="button"
         onClick={() => setLocation("/")}
-        className={`flex w-full items-center gap-2 px-3 py-2.5 text-sm transition-colors focus-ring ${
+        className={`flex w-full items-center gap-2 rounded-[1.1rem] px-3 py-2.5 text-sm transition-colors focus-ring ${
           isActive("/")
-            ? "bg-gray-800 text-white"
-            : "text-gray-300 hover:bg-gray-800/50 hover:text-white"
+            ? "bg-[rgba(24,151,214,0.1)] text-[var(--sf-blue-strong)]"
+            : "text-[var(--sf-text-muted)] hover:bg-white hover:text-[var(--sf-text)]"
         }`}
       >
-        <LayoutDashboard className="h-4 w-4 shrink-0 text-indigo-400" />
+        <LayoutDashboard className="h-4 w-4 shrink-0 text-[var(--sf-blue)]" />
         <span className="font-medium">{t("dashboard:project_overview")}</span>
       </button>
 
       {/* ---- Divider ---- */}
-      <div className="mx-3 border-t border-gray-800" />
+      <div className="mx-3 my-2 border-t border-[rgba(117,132,159,0.14)]" />
 
       {/* ---- Section 1: Source Files ---- */}
       <CollapsibleSection
@@ -250,7 +250,7 @@ export function AssetSidebar({ className }: AssetSidebarProps) {
             <button
               type="button"
               onClick={() => fileInputRef.current?.click()}
-              className="rounded p-1 text-gray-500 transition-colors hover:bg-gray-800 hover:text-gray-300 focus-ring"
+              className="rounded-full p-1.5 text-[var(--sf-text-soft)] transition-colors hover:bg-white hover:text-[var(--sf-text)] focus-ring"
               title={t("dashboard:upload_source_files")}
             >
               <Upload className="h-3.5 w-3.5" />
@@ -278,22 +278,22 @@ export function AssetSidebar({ className }: AssetSidebarProps) {
                   <div
                     className={`group flex w-full items-center gap-2 px-3 py-1.5 text-sm transition-colors ${
                       active
-                        ? "bg-gray-800 text-white"
-                        : "text-gray-300 hover:bg-gray-800/50 hover:text-white"
+                        ? "bg-[rgba(24,151,214,0.1)] text-[var(--sf-blue-strong)]"
+                        : "text-[var(--sf-text-muted)] hover:bg-white hover:text-[var(--sf-text)]"
                     }`}
                   >
                     <button
                       type="button"
                       onClick={() => setLocation(filePath)}
-                      className="flex flex-1 items-center gap-2 truncate text-left focus-ring rounded"
+                      className="flex flex-1 items-center gap-2 truncate rounded text-left focus-ring"
                     >
-                      <FileText className="h-3.5 w-3.5 shrink-0 text-gray-500" />
+                      <FileText className="h-3.5 w-3.5 shrink-0 text-[var(--sf-text-soft)]" />
                       <span className="truncate">{name}</span>
                     </button>
                     <button
                       type="button"
                       onClick={(e) => { e.stopPropagation(); handleDeleteFile(name); }}
-                      className="shrink-0 rounded p-0.5 text-gray-600 opacity-0 transition-opacity hover:text-red-400 group-hover:opacity-100 focus-ring focus-visible:opacity-100"
+                      className="shrink-0 rounded p-0.5 text-[var(--sf-text-soft)] opacity-0 transition-opacity hover:text-red-500 group-hover:opacity-100 focus-ring focus-visible:opacity-100"
                       title={t("dashboard:delete_file")}
                     >
                       <X className="h-3 w-3" />
@@ -307,13 +307,13 @@ export function AssetSidebar({ className }: AssetSidebarProps) {
       </CollapsibleSection>
 
       {/* ---- Divider ---- */}
-      <div className="mx-3 border-t border-gray-800" />
+      <div className="mx-3 my-2 border-t border-[rgba(117,132,159,0.14)]" />
 
       {/* ---- Section 2: Lorebook (Characters + Clues) ---- */}
       <CollapsibleSection title={t("dashboard:lorebook")} icon={Users} defaultOpen={true}>
         {/* Characters sub-section */}
         <div className="mb-1">
-          <div className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold uppercase tracking-wider text-gray-600">
+          <div className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold uppercase tracking-wider text-[var(--sf-text-soft)]">
             <Users className="h-3 w-3" />
             <span>{t("dashboard:characters")}</span>
           </div>
@@ -328,8 +328,8 @@ export function AssetSidebar({ className }: AssetSidebarProps) {
                     onClick={() => setLocation("/characters")}
                     className={`flex w-full items-center gap-2 px-3 py-1.5 text-sm transition-colors focus-ring ${
                       isActive("/characters")
-                        ? "bg-gray-800 text-white"
-                        : "text-gray-300 hover:bg-gray-800/50 hover:text-white"
+                        ? "bg-[rgba(24,151,214,0.1)] text-[var(--sf-blue-strong)]"
+                        : "text-[var(--sf-text-muted)] hover:bg-white hover:text-[var(--sf-text)]"
                     }`}
                   >
                     <AssetThumbnail
@@ -349,7 +349,7 @@ export function AssetSidebar({ className }: AssetSidebarProps) {
 
         {/* Clues sub-section */}
         <div>
-          <div className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold uppercase tracking-wider text-gray-600">
+          <div className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold uppercase tracking-wider text-[var(--sf-text-soft)]">
             <Puzzle className="h-3 w-3" />
             <span>{t("dashboard:clues")}</span>
           </div>
@@ -364,8 +364,8 @@ export function AssetSidebar({ className }: AssetSidebarProps) {
                     onClick={() => setLocation("/clues")}
                     className={`flex w-full items-center gap-2 px-3 py-1.5 text-sm transition-colors focus-ring ${
                       isActive("/clues")
-                        ? "bg-gray-800 text-white"
-                        : "text-gray-300 hover:bg-gray-800/50 hover:text-white"
+                        ? "bg-[rgba(24,151,214,0.1)] text-[var(--sf-blue-strong)]"
+                        : "text-[var(--sf-text-muted)] hover:bg-white hover:text-[var(--sf-text)]"
                     }`}
                   >
                     <AssetThumbnail
@@ -385,7 +385,7 @@ export function AssetSidebar({ className }: AssetSidebarProps) {
       </CollapsibleSection>
 
       {/* ---- Divider ---- */}
-      <div className="mx-3 border-t border-gray-800" />
+      <div className="mx-3 my-2 border-t border-[rgba(117,132,159,0.14)]" />
 
       {/* ---- Section 3: Episodes ---- */}
       <CollapsibleSection title={t("dashboard:episodes")} icon={Film}>
@@ -408,8 +408,8 @@ export function AssetSidebar({ className }: AssetSidebarProps) {
                     onClick={() => setLocation(episodePath)}
                     className={`flex w-full items-center gap-2 px-3 py-1.5 text-sm transition-colors focus-ring ${
                       active
-                        ? "bg-gray-800 text-white"
-                        : "text-gray-300 hover:bg-gray-800/50 hover:text-white"
+                        ? "bg-[rgba(24,151,214,0.1)] text-[var(--sf-blue-strong)]"
+                        : "text-[var(--sf-text-muted)] hover:bg-white hover:text-[var(--sf-text)]"
                     }`}
                   >
                     <Circle

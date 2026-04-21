@@ -185,24 +185,27 @@ export function ProjectSettingsPage() {
   }, [videoBackend, imageBackend, audioOverride, textScript, textOverview, textStyle, aspectRatio, generationMode, defaultDuration, projectName, t]);
 
   return (
-    <div className="fixed inset-0 z-50 bg-gray-950 overflow-y-auto">
+    <div className="storyforge-admin-shell fixed inset-0 z-50 overflow-y-auto">
       {/* Header */}
-      <div className="sticky top-0 z-10 flex items-center gap-3 border-b border-gray-800 bg-gray-950/95 px-6 py-4 backdrop-blur">
+      <div className="sticky top-0 z-10 mx-4 mt-4 flex items-center gap-3 rounded-[1.8rem] border border-[rgba(117,132,159,0.16)] bg-white/88 px-6 py-4 shadow-[0_18px_46px_rgba(23,38,69,0.08)] backdrop-blur">
         <button
           onClick={() => guardedNavigate(`/app/projects/${projectName}`)}
-          className="rounded-lg p-1.5 text-gray-400 hover:bg-gray-800 hover:text-gray-200 focus-ring"
+          className="storyforge-secondary-button inline-flex h-11 w-11 items-center justify-center rounded-full transition hover:-translate-y-0.5"
           aria-label={t("back_to_project")}
         >
           <ArrowLeft className="h-5 w-5" />
         </button>
-        <h1 className="text-lg font-semibold text-gray-100">{t("project_settings")}</h1>
+        <div>
+          <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[var(--sf-text-soft)]">Project Controls</div>
+          <h1 className="text-lg font-semibold text-[var(--sf-text)]">{t("project_settings")}</h1>
+        </div>
       </div>
 
       {/* Content */}
       <div className="mx-auto max-w-2xl px-6 py-8 space-y-6">
         <div>
-          <h2 className="text-lg font-semibold text-gray-100">{t("model_config")}</h2>
-          <p className="mt-1 text-sm text-gray-500">
+          <h2 className="text-lg font-semibold text-[var(--sf-text)]">{t("model_config")}</h2>
+          <p className="mt-1 text-sm text-[var(--sf-text-muted)]">
             {t("model_config_project_desc")}
           </p>
         </div>
@@ -210,8 +213,8 @@ export function ProjectSettingsPage() {
         {options && (
           <>
             {/* Video model override */}
-            <div className="rounded-xl border border-gray-800 bg-gray-950/40 p-4">
-              <div className="mb-3 text-sm font-medium text-gray-100">{t("video_model")}</div>
+            <div className="sf-panel rounded-[1.5rem] p-4">
+              <div className="mb-3 text-sm font-medium text-[var(--sf-text)]">{t("video_model")}</div>
               <ProviderModelSelect
                 value={videoBackend}
                 options={options.video_backends}
@@ -225,17 +228,17 @@ export function ProjectSettingsPage() {
             </div>
 
             {/* Aspect ratio */}
-            <div className="rounded-xl border border-gray-800 bg-gray-950/40 p-4">
+            <div className="sf-panel rounded-[1.5rem] p-4">
               <fieldset>
-                <legend className="mb-3 text-sm font-medium text-gray-100">{t("aspect_ratio_label")}</legend>
+                <legend className="mb-3 text-sm font-medium text-[var(--sf-text)]">{t("aspect_ratio_label")}</legend>
                 <div className="flex gap-3">
                   {(["9:16", "16:9"] as const).map((ar) => (
                     <label
                       key={ar}
-                      className={`flex-1 cursor-pointer rounded-lg border px-3 py-2 text-center text-sm transition-colors has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-indigo-500 ${
+                      className={`flex-1 cursor-pointer rounded-[1rem] border px-3 py-2 text-center text-sm transition-colors has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-sky-400 ${
                         aspectRatio === ar
-                          ? "border-indigo-500 bg-indigo-500/10 text-indigo-300"
-                          : "border-gray-700 bg-gray-800 text-gray-400 hover:border-gray-600"
+                          ? "border-sky-300 bg-sky-100 text-sky-900"
+                          : "border-[rgba(117,132,159,0.16)] bg-white text-[var(--sf-text-muted)] hover:border-[rgba(24,151,214,0.2)]"
                       }`}
                     >
                       <input
@@ -262,10 +265,10 @@ export function ProjectSettingsPage() {
             </div>
 
             {/* Generation mode */}
-            <div className="rounded-xl border border-gray-800 bg-gray-950/40 p-4">
+            <div className="sf-panel rounded-[1.5rem] p-4">
               <fieldset>
-                <legend className="mb-1 text-sm font-medium text-gray-100">{t("generation_mode")}</legend>
-                <p className="mb-3 text-xs text-gray-500">
+                <legend className="mb-1 text-sm font-medium text-[var(--sf-text)]">{t("generation_mode")}</legend>
+                <p className="mb-3 text-xs text-[var(--sf-text-soft)]">
                   {t("generation_mode_desc")}
                 </p>
                 <div className="flex gap-3">
@@ -275,10 +278,10 @@ export function ProjectSettingsPage() {
                   ]).map((opt) => (
                     <label
                       key={opt.value}
-                      className={`flex-1 cursor-pointer rounded-lg border px-3 py-2 text-center text-sm transition-colors has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-indigo-500 ${
+                      className={`flex-1 cursor-pointer rounded-[1rem] border px-3 py-2 text-center text-sm transition-colors has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-sky-400 ${
                         generationMode === opt.value
-                          ? "border-indigo-500 bg-indigo-500/10 text-indigo-300"
-                          : "border-gray-700 bg-gray-800 text-gray-400 hover:border-gray-600"
+                          ? "border-sky-300 bg-sky-100 text-sky-900"
+                          : "border-[rgba(117,132,159,0.16)] bg-white text-[var(--sf-text-muted)] hover:border-[rgba(24,151,214,0.2)]"
                       }`}
                     >
                       <input
@@ -297,9 +300,9 @@ export function ProjectSettingsPage() {
             </div>
 
             {/* Default duration */}
-            <div className="rounded-xl border border-gray-800 bg-gray-950/40 p-4">
-              <div className="mb-3 text-sm font-medium text-gray-100">{t("default_duration_label")}</div>
-              <p className="mb-2 text-xs text-gray-500">
+            <div className="sf-panel rounded-[1.5rem] p-4">
+              <div className="mb-3 text-sm font-medium text-[var(--sf-text)]">{t("default_duration_label")}</div>
+              <p className="mb-2 text-xs text-[var(--sf-text-soft)]">
                 {t("default_duration_project_desc")}
               </p>
               <div className="flex flex-wrap gap-2" role="radiogroup" aria-label={t("duration_selection")}>
@@ -308,10 +311,10 @@ export function ProjectSettingsPage() {
                   role="radio"
                   aria-checked={effectiveDefaultDuration === null}
                   onClick={() => setDefaultDuration(null)}
-                  className={`rounded-lg border px-3 py-1.5 text-sm transition-colors focus-ring ${
+                  className={`rounded-[1rem] border px-3 py-1.5 text-sm transition-colors focus-ring ${
                     effectiveDefaultDuration === null
-                      ? "border-indigo-500 bg-indigo-500/10 text-indigo-300"
-                      : "border-gray-700 bg-gray-800 text-gray-400 hover:border-gray-600"
+                      ? "border-sky-300 bg-sky-100 text-sky-900"
+                      : "border-[rgba(117,132,159,0.16)] bg-white text-[var(--sf-text-muted)] hover:border-[rgba(24,151,214,0.2)]"
                   }`}
                 >
                   {t("auto_label")}
@@ -323,10 +326,10 @@ export function ProjectSettingsPage() {
                     role="radio"
                     aria-checked={effectiveDefaultDuration === d}
                     onClick={() => setDefaultDuration(d)}
-                    className={`rounded-lg border px-3 py-1.5 text-sm transition-colors focus-ring ${
+                    className={`rounded-[1rem] border px-3 py-1.5 text-sm transition-colors focus-ring ${
                       effectiveDefaultDuration === d
-                        ? "border-indigo-500 bg-indigo-500/10 text-indigo-300"
-                        : "border-gray-700 bg-gray-800 text-gray-400 hover:border-gray-600"
+                        ? "border-sky-300 bg-sky-100 text-sky-900"
+                        : "border-[rgba(117,132,159,0.16)] bg-white text-[var(--sf-text-muted)] hover:border-[rgba(24,151,214,0.2)]"
                     }`}
                   >
                     {d}s
@@ -336,8 +339,8 @@ export function ProjectSettingsPage() {
             </div>
 
             {/* Image model override */}
-            <div className="rounded-xl border border-gray-800 bg-gray-950/40 p-4">
-              <div className="mb-3 text-sm font-medium text-gray-100">{t("image_model")}</div>
+            <div className="sf-panel rounded-[1.5rem] p-4">
+              <div className="mb-3 text-sm font-medium text-[var(--sf-text)]">{t("image_model")}</div>
               <ProviderModelSelect
                 value={imageBackend}
                 options={options.image_backends}
@@ -351,21 +354,21 @@ export function ProjectSettingsPage() {
             </div>
 
             {/* Audio override */}
-            <div className="rounded-xl border border-gray-800 bg-gray-950/40 p-4">
-              <div className="mb-3 text-sm font-medium text-gray-100">{t("generate_audio_label")}</div>
+            <div className="sf-panel rounded-[1.5rem] p-4">
+              <div className="mb-3 text-sm font-medium text-[var(--sf-text)]">{t("generate_audio_label")}</div>
               <fieldset className="flex gap-4">
                 <legend className="sr-only">{t("audio_settings_sr_label")}</legend>
-                <label className="flex items-center gap-2 text-sm text-gray-300">
+                <label className="flex items-center gap-2 text-sm text-[var(--sf-text-muted)]">
                   <input type="radio" name="audio" value="" checked={audioOverride === null}
                     onChange={() => setAudioOverride(null)} />
                   {t("follow_global_default")}
                 </label>
-                <label className="flex items-center gap-2 text-sm text-gray-300">
+                <label className="flex items-center gap-2 text-sm text-[var(--sf-text-muted)]">
                   <input type="radio" name="audio" value="true" checked={audioOverride === true}
                     onChange={() => setAudioOverride(true)} />
                   {t("enabled_label")}
                 </label>
-                <label className="flex items-center gap-2 text-sm text-gray-300">
+                <label className="flex items-center gap-2 text-sm text-[var(--sf-text-muted)]">
                   <input type="radio" name="audio" value="false" checked={audioOverride === false}
                     onChange={() => setAudioOverride(false)} />
                   {t("disabled_label")}
@@ -373,9 +376,9 @@ export function ProjectSettingsPage() {
               </fieldset>
             </div>
             {/* Text model overrides */}
-            <div className="rounded-xl border border-gray-800 bg-gray-950/40 p-4">
-              <div className="mb-3 text-sm font-medium text-gray-100">{t("text_models")}</div>
-              <p className="mb-2 text-xs text-gray-500">{t("text_model_override_desc")}</p>
+            <div className="sf-panel rounded-[1.5rem] p-4">
+              <div className="mb-3 text-sm font-medium text-[var(--sf-text)]">{t("text_models")}</div>
+              <p className="mb-2 text-xs text-[var(--sf-text-soft)]">{t("text_model_override_desc")}</p>
               <div className="space-y-3">
                 {([
                   { value: textScript, setter: setTextScript, labelKey: "script_generation" },
@@ -383,7 +386,7 @@ export function ProjectSettingsPage() {
                   { value: textStyle, setter: setTextStyle, labelKey: "style_analysis" },
                 ] as const).map(({ value, setter, labelKey }) => (
                   <div key={labelKey}>
-                    <div className="mb-1 text-xs text-gray-400">{t(labelKey)}</div>
+                    <div className="mb-1 text-xs text-[var(--sf-text-soft)]">{t(labelKey)}</div>
                     <ProviderModelSelect
                       value={value}
                       options={options.text_backends}
@@ -401,7 +404,7 @@ export function ProjectSettingsPage() {
         )}
 
         {!options && (
-          <div className="text-sm text-gray-500">{t("loading_config")}</div>
+          <div className="text-sm text-[var(--sf-text-soft)]">{t("loading_config")}</div>
         )}
 
         {/* Actions */}
@@ -409,13 +412,13 @@ export function ProjectSettingsPage() {
           <button
             onClick={handleSave}
             disabled={saving}
-            className="rounded-lg bg-indigo-600 px-6 py-2 text-sm text-white hover:bg-indigo-500 disabled:opacity-50 focus-ring focus-visible:ring-offset-2 focus-visible:ring-offset-gray-950"
+            className="storyforge-primary-button rounded-[1rem] px-6 py-3 text-sm font-semibold transition hover:-translate-y-0.5 disabled:translate-y-0 disabled:opacity-50"
           >
             {saving ? t("common:saving") : t("common:save")}
           </button>
           <button
             onClick={() => guardedNavigate(`/app/projects/${projectName}`)}
-            className="rounded-lg border border-gray-700 px-6 py-2 text-sm text-gray-300 hover:bg-gray-800 focus-ring focus-visible:ring-offset-2 focus-visible:ring-offset-gray-950"
+            className="storyforge-secondary-button rounded-[1rem] px-6 py-3 text-sm font-medium transition hover:-translate-y-0.5"
           >
             {t("common:cancel")}
           </button>

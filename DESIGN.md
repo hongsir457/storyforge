@@ -4,7 +4,7 @@
 - **What this is:** Storyforge is a story-to-visual-IP production studio. It turns a novel seed into a reusable world, then into characters, clues, storyboards, assets, and short-form video output.
 - **Who it is for:** There are two primary users. Creators move a story from idea to production. Operators manage providers, models, accounts, costs, and system health.
 - **Space / industry:** AI-assisted narrative production, novel-to-video tooling, creator workflow software.
-- **Project type:** Dark-first web app with public landing/auth surfaces, creator workspaces, and an admin console.
+- **Project type:** Light-first editorial web app with public landing/auth surfaces, creator workspaces, and an admin console.
 
 ## Design Thesis
 - **Core thesis:** This product should feel like a narrative studio, not a cloud dashboard.
@@ -12,13 +12,13 @@
 - **Mental-model split:** Creator surfaces should feel guided and confident. Admin surfaces should feel precise, denser, and more operational, while still belonging to the same brand world.
 
 ## Aesthetic Direction
-- **Direction:** Narrative Studio / Cinematic Editorial Utility
+- **Direction:** Narrative Studio / Editorial Light Utility
 - **Decoration level:** intentional
-- **Mood:** calm, credible, dark, and slightly editorial. Public pages should feel like a title sequence or brand booklet. Creator pages should feel like a studio desk. Admin pages should feel like a control rack, not a marketing site.
+- **Mood:** calm, credible, airy, and slightly editorial. Public pages should feel like a brand booklet with production intent. Creator pages should feel like a studio desk under daylight. Admin pages should feel operational, but still belong to the same lighter Storyforge world.
 - **Reference basis:** This pass is based on the current codebase, existing Storyforge product framing, and current screenshots. No external competitive research was used in this iteration.
 
 ### Safe Choices
-- **Dark-first studio shell:** The product has to hold images, video, timelines, logs, and long text. A dark shell gives media and state colors room to breathe.
+- **Light editorial shell:** The brand reads more distinctive and more trustworthy on pale paper-like surfaces than on a generic dark SaaS shell.
 - **Creator / admin split:** These users have different goals. Separate mental models are not a polish pass; they are core product structure.
 - **Restrained accent strategy:** Accent color should signal progress and focus. Success, warning, and error states should stay strictly semantic.
 
@@ -26,6 +26,7 @@
 - **Editorial display typography:** Public and key creator moments should feel more like a real narrative brand and less like a generic SaaS starter.
 - **Warm metal accent inside a cool system:** A small amount of amber-gold warmth helps shift the product from "tooling" toward "studio."
 - **Asymmetric public composition:** Public pages should avoid symmetrical SaaS-template hero layouts. Story on the left and action on the right is more memorable and more brand-specific.
+- **Code-native logo system:** The brand mark should be rendered consistently from SVG or component code, not mixed bitmap variants.
 
 ## Information Architecture
 - **Public:** `/`, `/login`, `/register`, `/verify-email`, `/forgot-password`
@@ -39,10 +40,10 @@
 - **Trust-critical surfaces:** Home, auth, email verification, long-running jobs, and destructive actions must feel calm, explicit, and legitimate.
 
 ## Typography
-- **Display / hero:** `Space Grotesk`
-  Why: strong structure, modern but not generic, better brand character than `Inter`.
-- **Body / UI:** `Manrope`
-  Why: good small-size readability on dark surfaces and less template-feeling than the default SaaS stack.
+- **Display / hero:** `Manrope`
+  Why: it keeps the wordmark and major headlines compact, friendly, and editorial without drifting into startup-template typography.
+- **Body / UI:** `Inter`
+  Why: it gives the product denser operational readability once the overall layout and brand tokens carry the distinctiveness.
 - **CJK companion:** `Noto Sans SC`
   Why: stable coverage for Chinese UI text without changing the overall tone.
 - **Data / tables:** `Manrope` with `font-variant-numeric: tabular-nums`
@@ -70,9 +71,9 @@
 - Keep long-form text around `66ch` when possible.
 
 ## Color
-- **Approach:** balanced, dark-first, restrained public glow plus denser studio surfaces
-- **Primary:** `#38A8F5` - trust, forward motion, public CTA, creator entry actions
-- **Secondary:** `#5B5CE6` - active selection, in-studio actions, focused workflow state
+- **Approach:** pale editorial surfaces, restrained blue brand signal, warm amber secondary warmth
+- **Primary:** `#1897D6` - trust, forward motion, creator entry actions, brand mark
+- **Secondary:** `#26ABE8` - hover, emphasis, public CTA lift
 - **Accent metal:** `#D8A55A` - editorial warmth, trust callouts, empty-state warmth, diagnostics framing
 - **Semantic success:** `#2BCB90`
 - **Semantic warning:** `#E2A446`
@@ -80,33 +81,34 @@
 - **Semantic info:** `#62B6FF`
 
 ### Neutrals
-- `#F7F8FB` text-high
-- `#D9DFE8` text
-- `#9AA5B5` text-muted
-- `#657184` text-faint
-- `#273247` line-strong
-- `#1A2334` surface-raised
-- `#101826` surface
-- `#060B14` canvas
+- `#FBFCFF` canvas
+- `#F4F7FB` surface
+- `#ECF1F7` surface-raised
+- `#0F1B37` text-high
+- `#49566F` text
+- `#7A8598` text-muted
+- `#A4ADBC` text-faint
+- `rgba(117,132,159,0.18)` line-soft
+- `rgba(24,151,214,0.22)` line-strong
 
 ### Color Rules
-- Public CTA defaults to sky. In-studio active and generate actions default to indigo. Do not use both as equal co-primary colors inside the same region.
+- Public CTA defaults to Storyforge blue. Secondary emphasis may move slightly brighter blue, but not into purple.
 - Amber is for diagnostics, guided warnings, and warmth. It is not the default main button color.
 - Rose is only for blocked or destructive states.
-- Large backgrounds should be deep ink and subtle atmospheric light, not blue-purple AI gradients.
+- Large backgrounds should feel like paper, fogged glass, and subtle editorial lighting. Avoid dark AI-cloud gradients.
 
 ### Suggested Tokens
-- `--sf-canvas: #060B14`
-- `--sf-surface: #101826`
-- `--sf-surface-raised: #1A2334`
-- `--sf-surface-glass: rgba(18, 25, 38, 0.76)`
-- `--sf-line-subtle: rgba(154, 165, 181, 0.12)`
-- `--sf-line-strong: rgba(154, 165, 181, 0.24)`
-- `--sf-text: #D9DFE8`
-- `--sf-text-muted: #9AA5B5`
-- `--sf-text-faint: #657184`
-- `--sf-primary: #38A8F5`
-- `--sf-secondary: #5B5CE6`
+- `--sf-bg: #FBFCFF`
+- `--sf-surface: rgba(255,255,255,0.88)`
+- `--sf-surface-raised: rgba(248,250,253,0.96)`
+- `--sf-surface-glass: rgba(255,255,255,0.82)`
+- `--sf-line-subtle: rgba(117,132,159,0.18)`
+- `--sf-line-strong: rgba(24,151,214,0.22)`
+- `--sf-text: #0F1B37`
+- `--sf-text-muted: #49566F`
+- `--sf-text-faint: #7A8598`
+- `--sf-primary: #1897D6`
+- `--sf-secondary: #26ABE8`
 - `--sf-accent-metal: #D8A55A`
 - `--sf-success: #2BCB90`
 - `--sf-warning: #E2A446`
@@ -180,7 +182,7 @@
 ### Buttons
 - Each region gets one obvious primary action.
 - Primary: filled. Secondary: tinted or outlined. Danger: rose only.
-- Public pages may use sky for primary. Studio actions prefer indigo.
+- Public pages and creator entry flows use Storyforge blue for primary. Do not reintroduce indigo as a co-primary without a product reason.
 
 ### Cards
 - Every card needs one dominant signal: phase, asset coverage, next step, status, or hero media.
@@ -200,7 +202,7 @@
 - Minimum interactive target: `44x44`
 - All buttons, cards, tabs, menus, and dismiss controls need visible `focus-visible`
 - Color is never the only status signal
-- Body contrast must meet AA on dark surfaces
+- Body contrast must meet AA on pale surfaces and tinted panels
 - Long-running status and toasts should use `aria-live`
 
 ## Anti-Slop Rules
@@ -212,11 +214,11 @@
 - No vague `AI-powered` or `all-in-one solution` marketing copy
 
 ## Immediate Design Priorities
-1. Unify the font stack and remove `Inter`, `Avenir Next`, and `Trebuchet MS` drift.
-2. Make public pages feel more story-led and less template-led.
-3. Turn `/app/projects` into a true creator home instead of a tool cluster.
-4. Tighten the workspace header and rail hierarchy so phase, project, and actions read clearly.
-5. Land design tokens into CSS variables and utility patterns.
+1. Keep the new Storyforge spark logo and wordmark consistent across public, creator, and admin surfaces.
+2. Make every entry surface feel lighter, more editorial, and less like a generic dark AI console.
+3. Keep `/app/projects` as the creator home and `/app/novel-workbench` as the focused narrative intake surface.
+4. Use one visual system for admin, account, project settings, and workspace internals instead of treating them as separate mini-products.
+5. Let global design tokens absorb legacy dark components until each deep canvas is fully rewritten.
 
 ## Decisions Log
 | Date | Decision | Rationale |

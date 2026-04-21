@@ -66,14 +66,14 @@ function PhaseStepper({
         let labelClass = "text-xs whitespace-nowrap transition-colors";
 
         if (isCompleted) {
-          circleClass += " bg-emerald-600 text-white";
-          labelClass += " text-emerald-400";
+          circleClass += " bg-emerald-500 text-white";
+          labelClass += " text-emerald-700";
         } else if (isCurrent) {
-          circleClass += " bg-indigo-600 text-white";
-          labelClass += " text-indigo-300 font-medium";
+          circleClass += " bg-sky-500 text-white";
+          labelClass += " text-sky-700 font-medium";
         } else {
-          circleClass += " bg-gray-700 text-gray-400";
-          labelClass += " text-gray-500";
+          circleClass += " bg-slate-200 text-slate-500";
+          labelClass += " text-slate-400";
         }
 
         return (
@@ -82,7 +82,7 @@ function PhaseStepper({
             {idx > 0 && (
               <div
                 className={`h-px w-4 shrink-0 ${
-                  isCompleted ? "bg-emerald-600" : "bg-gray-700"
+                  isCompleted ? "bg-emerald-500" : "bg-slate-200"
                 }`}
               />
             )}
@@ -232,17 +232,17 @@ export function GlobalHeader({ onNavigateBack }: GlobalHeaderProps) {
 
   return (
     <>
-    <header className="flex h-12 shrink-0 items-center justify-between border-b border-gray-800 bg-gray-900/80 px-4 backdrop-blur-sm">
+    <header className="storyforge-workspace-header flex min-h-[4.4rem] shrink-0 items-center justify-between rounded-[1.8rem] px-5 py-3">
       {/* ---- Left section ---- */}
-      <div className="flex items-center gap-3">
+      <div className="flex min-w-0 items-center gap-4">
         {/* Logo */}
-        <BrandLogo alt={t("dashboard:app_title")} variant="mark" className="h-7 w-7 rounded-lg" />
+        <BrandLogo alt={t("dashboard:app_title")} variant="mark" className="h-10 w-10" />
 
         {/* Back to projects */}
         <button
           type="button"
           onClick={onNavigateBack}
-          className="flex items-center gap-1 text-sm text-gray-400 transition-colors hover:text-gray-200"
+          className="storyforge-rail-button flex items-center gap-1 rounded-full px-3 py-2 text-sm font-medium transition hover:-translate-y-0.5"
           aria-label={t("dashboard:projects")}
         >
           <ChevronLeft className="h-4 w-4" />
@@ -250,43 +250,48 @@ export function GlobalHeader({ onNavigateBack }: GlobalHeaderProps) {
         </button>
 
         {/* Divider */}
-        <div className="h-4 w-px bg-gray-700" />
+        <div className="hidden h-8 w-px bg-[rgba(117,132,159,0.18)] lg:block" />
 
         {/* Project name */}
-        <span className="max-w-48 truncate text-sm font-medium text-gray-200">
-          {displayProjectTitle}
-        </span>
+        <div className="min-w-0">
+          <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[var(--sf-text-soft)]">
+            Storyforge Workspace
+          </div>
+          <span className="block max-w-56 truncate text-sm font-semibold text-[var(--sf-text)]">
+            {displayProjectTitle}
+          </span>
+        </div>
 
         {/* Content mode badge */}
         {contentMode && (
-          <span className="rounded-full bg-gray-800 px-2 py-0.5 text-xs text-gray-400">
+          <span className="rounded-full bg-[rgba(24,151,214,0.08)] px-3 py-1 text-xs font-medium text-[var(--sf-blue-strong)]">
             {modeBadgeText}
           </span>
         )}
       </div>
 
       {/* ---- Center section ---- */}
-      <div className="hidden md:flex">
+      <div className="hidden xl:flex">
         <PhaseStepper currentPhase={currentPhase} />
       </div>
 
       {/* ---- Right section ---- */}
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-2">
         <div className="relative" ref={notificationAnchorRef}>
           <button
             type="button"
             onClick={() => setNotificationDrawerOpen(!notificationDrawerOpen)}
-            className={`relative flex items-center gap-1 rounded-md px-2 py-1 text-xs transition-colors ${
+            className={`relative flex items-center gap-1 rounded-full px-3 py-2 text-xs font-medium transition ${
               notificationDrawerOpen
-                ? "bg-amber-500/20 text-amber-200"
-                : "text-gray-400 hover:bg-gray-800 hover:text-gray-200"
+                ? "border border-amber-300/60 bg-amber-100 text-amber-900"
+                : "storyforge-rail-button"
             }`}
             title={t("dashboard:notification_tooltip", { count: workspaceNotifications.length })}
             aria-label={t("dashboard:open_notification_center")}
           >
             <Bell className="h-3.5 w-3.5" />
             {unreadNotificationCount > 0 && (
-              <span className="absolute -right-1.5 -top-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-amber-400 px-1 text-[10px] font-bold text-slate-950">
+              <span className="absolute -right-1 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-amber-400 px-1 text-[10px] font-bold text-white">
                 {unreadNotificationCount > 9 ? "9+" : unreadNotificationCount}
               </span>
             )}
@@ -304,14 +309,14 @@ export function GlobalHeader({ onNavigateBack }: GlobalHeaderProps) {
           <button
             type="button"
             onClick={() => setUsageDrawerOpen(!usageDrawerOpen)}
-            className={`flex items-center gap-1 rounded-md px-2 py-1 text-xs transition-colors ${
+            className={`flex items-center gap-1 rounded-full px-3 py-2 text-xs font-medium transition ${
               usageDrawerOpen
-                ? "bg-indigo-500/20 text-indigo-400"
-                : "text-gray-400 hover:bg-gray-800 hover:text-gray-200"
+                ? "border border-sky-300/60 bg-sky-100 text-sky-900"
+                : "storyforge-rail-button"
             }`}
             title={t("dashboard:cost_tooltip", { cost: costText })}
           >
-            <span className="font-mono">{costText}</span>
+            <span className="font-mono tabular-nums">{costText}</span>
           </button>
           <UsageDrawer
             open={usageDrawerOpen}
@@ -326,10 +331,10 @@ export function GlobalHeader({ onNavigateBack }: GlobalHeaderProps) {
           <button
             type="button"
             onClick={() => setTaskHudOpen(!taskHudOpen)}
-            className={`relative rounded-md p-1.5 transition-colors ${
+            className={`relative rounded-full p-2.5 transition ${
               taskHudOpen
-                ? "bg-indigo-500/20 text-indigo-400"
-                : "text-gray-400 hover:bg-gray-800 hover:text-gray-200"
+                ? "border border-sky-300/60 bg-sky-100 text-sky-900"
+                : "storyforge-rail-button"
             }`}
             title={t("dashboard:task_status_tooltip", { running: stats.running, queued: stats.queued })}
             aria-label={t("dashboard:toggle_task_panel")}
@@ -339,7 +344,7 @@ export function GlobalHeader({ onNavigateBack }: GlobalHeaderProps) {
             />
             {/* Running task count badge */}
             {runningCount > 0 && (
-              <span className="absolute -right-1 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-indigo-500 px-1 text-[10px] font-bold text-white">
+              <span className="absolute -right-1 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-[var(--sf-blue)] px-1 text-[10px] font-bold text-white">
                 {runningCount}
               </span>
             )}
@@ -353,7 +358,7 @@ export function GlobalHeader({ onNavigateBack }: GlobalHeaderProps) {
             type="button"
             onClick={() => setExportDialogOpen(!exportDialogOpen)}
             disabled={!currentProjectName || exportingProject}
-            className="inline-flex items-center gap-1 rounded-md border border-gray-700 px-2 py-1 text-xs text-gray-300 transition-colors hover:border-gray-500 hover:bg-gray-800 hover:text-gray-100 disabled:cursor-not-allowed disabled:opacity-50"
+            className="storyforge-rail-button inline-flex items-center gap-1 rounded-full px-3 py-2 text-xs font-medium transition hover:-translate-y-0.5 disabled:translate-y-0 disabled:cursor-not-allowed disabled:opacity-50"
             title={t("dashboard:export_project_zip")}
             aria-label={t("dashboard:export_project_zip")}
           >
@@ -381,7 +386,7 @@ export function GlobalHeader({ onNavigateBack }: GlobalHeaderProps) {
         <button
           type="button"
           onClick={() => setLocation("/app/account")}
-          className="rounded-md px-2 py-1 text-xs text-gray-300 transition-colors hover:bg-gray-800 hover:text-white"
+          className="storyforge-rail-button rounded-full px-4 py-2 text-xs font-medium transition hover:-translate-y-0.5"
           title={user?.display_name || user?.username || t("auth:account_settings")}
         >
           {user?.display_name || user?.username || t("auth:account_settings")}
@@ -391,10 +396,10 @@ export function GlobalHeader({ onNavigateBack }: GlobalHeaderProps) {
           type="button"
           onClick={() => setLocation(
             currentProjectName
-              ? `~/app/projects/${encodeURIComponent(currentProjectName)}/settings`
-              : "~/app/settings"
+              ? `/app/projects/${encodeURIComponent(currentProjectName)}/settings`
+              : "/app/settings"
           )}
-          className="relative rounded-md p-1.5 text-gray-400 transition-colors hover:bg-gray-800 hover:text-gray-200"
+          className="storyforge-rail-button relative rounded-full p-2.5 transition hover:-translate-y-0.5"
           title={t("settings")}
           aria-label={t("settings")}
         >
@@ -410,7 +415,7 @@ export function GlobalHeader({ onNavigateBack }: GlobalHeaderProps) {
             logout();
             setLocation("/login");
           }}
-          className="rounded-md px-2 py-1 text-xs text-rose-200 transition-colors hover:bg-rose-500/10 hover:text-rose-100"
+          className="rounded-full border border-rose-300/55 bg-rose-100/72 px-4 py-2 text-xs font-medium text-rose-900 transition hover:-translate-y-0.5"
         >
           {t("auth:logout")}
         </button>

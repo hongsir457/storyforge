@@ -22,5 +22,50 @@ export default defineConfig({
     build: {
         outDir: "dist",
         emptyOutDir: true,
+        rollupOptions: {
+            output: {
+                manualChunks(id) {
+                    if (!id.includes("node_modules")) return;
+
+                    if (
+                        id.includes("/react/") ||
+                        id.includes("/react-dom/") ||
+                        id.includes("/scheduler/") ||
+                        id.includes("/wouter/") ||
+                        id.includes("/zustand/")
+                    ) {
+                        return "framework";
+                    }
+
+                    if (id.includes("/i18next") || id.includes("/react-i18next/")) {
+                        return "i18n";
+                    }
+
+                    if (id.includes("/framer-motion/")) {
+                        return "motion";
+                    }
+
+                    if (id.includes("/@dnd-kit/")) {
+                        return "dnd-kit";
+                    }
+
+                    if (id.includes("/@tanstack/react-virtual/")) {
+                        return "tanstack";
+                    }
+
+                    if (id.includes("/lucide-react/") || id.includes("/@lobehub/icons/")) {
+                        return "icons";
+                    }
+
+                    if (
+                        id.includes("/streamdown/") ||
+                        id.includes("/mermaid/") ||
+                        id.includes("/highlight.js/")
+                    ) {
+                        return "content";
+                    }
+                },
+            },
+        },
     },
 });

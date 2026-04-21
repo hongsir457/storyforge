@@ -1,20 +1,34 @@
-import { useState, useCallback, useMemo, useEffect, useRef } from "react";
+import { lazy, Suspense, useState, useCallback, useMemo, useEffect, useRef } from "react";
 import { Route, Switch, Redirect, useLocation } from "wouter";
 import { useTranslation } from "react-i18next";
 import { useProjectsStore } from "@/stores/projects-store";
 import { useAppStore } from "@/stores/app-store";
 import { useTasksStore } from "@/stores/tasks-store";
-import { LorebookGallery } from "./lorebook/LorebookGallery";
-import { TimelineCanvas } from "./timeline/TimelineCanvas";
-import { OverviewCanvas } from "./OverviewCanvas";
-import { SourceFileViewer } from "./SourceFileViewer";
-import { AddCharacterForm } from "./lorebook/AddCharacterForm";
-import { AddClueForm } from "./lorebook/AddClueForm";
+import { RouteLoadingState } from "@/components/shared/RouteLoadingState";
 import { API } from "@/api";
 import { buildEntityRevisionKey } from "@/utils/project-changes";
 import { getProviderModels, getCustomProviderModels, lookupSupportedDurations } from "@/utils/provider-models";
 import type { Clue, CustomProviderInfo, ProviderInfo } from "@/types";
 import type { EpisodeScript } from "@/types/script";
+
+const LorebookGallery = lazy(() =>
+  import("./lorebook/LorebookGallery").then((module) => ({ default: module.LorebookGallery })),
+);
+const TimelineCanvas = lazy(() =>
+  import("./timeline/TimelineCanvas").then((module) => ({ default: module.TimelineCanvas })),
+);
+const OverviewCanvas = lazy(() =>
+  import("./OverviewCanvas").then((module) => ({ default: module.OverviewCanvas })),
+);
+const SourceFileViewer = lazy(() =>
+  import("./SourceFileViewer").then((module) => ({ default: module.SourceFileViewer })),
+);
+const AddCharacterForm = lazy(() =>
+  import("./lorebook/AddCharacterForm").then((module) => ({ default: module.AddCharacterForm })),
+);
+const AddClueForm = lazy(() =>
+  import("./lorebook/AddClueForm").then((module) => ({ default: module.AddClueForm })),
+);
 
 // ---------------------------------------------------------------------------
 // resolveSegmentPrompt — shared segment lookup for generate storyboard/video
@@ -313,6 +327,7 @@ export function StudioCanvasRouter() {
   }, [refreshProject]);
 
   const [location] = useLocation();
+  const embeddedFallback = <RouteLoadingState embedded message={t("loading_placeholder")} />;
 
   if (!currentProjectName) {
     return (
@@ -325,10 +340,12 @@ export function StudioCanvasRouter() {
   return (
     <Switch>
       <Route path="/">
-        <OverviewCanvas
-          projectName={currentProjectName}
-          projectData={currentProjectData}
-        />
+        <Suspense fallback={embeddedFallback}>
+          <OverviewCanvas
+            projectName={currentProjectName}
+            projectData={currentProjectData}
+          />
+        </Suspense>
       </Route>
 
       <Route path="/lorebook">
@@ -338,43 +355,47 @@ export function StudioCanvasRouter() {
       {/* Characters & Clues share one LorebookGallery to avoid remount flash */}
       {(location === "/characters" || location === "/clues") && (
         <div className="p-4">
-          <LorebookGallery
-            projectName={currentProjectName}
-            characters={currentProjectData?.characters ?? {}}
-            clues={currentProjectData?.clues ?? {}}
-            mode={location === "/clues" ? "clues" : "characters"}
-            onSaveCharacter={handleSaveCharacter}
-            onUpdateClue={handleUpdateClue}
-            onGenerateCharacter={handleGenerateCharacter}
-            onGenerateClue={handleGenerateClue}
-            onRestoreCharacterVersion={handleRestoreAsset}
-            onRestoreClueVersion={handleRestoreAsset}
-            generatingCharacterNames={generatingCharacterNames}
-            generatingClueNames={generatingClueNames}
-            onAddCharacter={() => setAddingCharacter(true)}
-            onAddClue={() => setAddingClue(true)}
-          />
-          {addingCharacter && (
-            <AddCharacterForm
-              onSubmit={handleAddCharacterSubmit}
-              onCancel={() => setAddingCharacter(false)}
+          <Suspense fallback={embeddedFallback}>
+            <LorebookGallery
+              projectName={currentProjectName}
+              characters={currentProjectData?.characters ?? {}}
+              clues={currentProjectData?.clues ?? {}}
+              mode={location === "/clues" ? "clues" : "characters"}
+              onSaveCharacter={handleSaveCharacter}
+              onUpdateClue={handleUpdateClue}
+              onGenerateCharacter={handleGenerateCharacter}
+              onGenerateClue={handleGenerateClue}
+              onRestoreCharacterVersion={handleRestoreAsset}
+              onRestoreClueVersion={handleRestoreAsset}
+              generatingCharacterNames={generatingCharacterNames}
+              generatingClueNames={generatingClueNames}
+              onAddCharacter={() => setAddingCharacter(true)}
+              onAddClue={() => setAddingClue(true)}
             />
-          )}
-          {addingClue && (
-            <AddClueForm
-              onSubmit={handleAddClueSubmit}
-              onCancel={() => setAddingClue(false)}
-            />
-          )}
+            {addingCharacter && (
+              <AddCharacterForm
+                onSubmit={handleAddCharacterSubmit}
+                onCancel={() => setAddingCharacter(false)}
+              />
+            )}
+            {addingClue && (
+              <AddClueForm
+                onSubmit={handleAddClueSubmit}
+                onCancel={() => setAddingClue(false)}
+              />
+            )}
+          </Suspense>
         </div>
       )}
 
       <Route path="/source/:filename">
         {(params) => (
-          <SourceFileViewer
-            projectName={currentProjectName}
-            filename={decodeURIComponent(params.filename)}
-          />
+          <Suspense fallback={embeddedFallback}>
+            <SourceFileViewer
+              projectName={currentProjectName}
+              filename={decodeURIComponent(params.filename)}
+            />
+          </Suspense>
         )}
       </Route>
 
@@ -392,23 +413,25 @@ export function StudioCanvasRouter() {
           const hasDraft = episode?.script_status === "segmented" || episode?.script_status === "generated";
 
           return (
-            <TimelineCanvas
-              key={epNum}
-              projectName={currentProjectName}
-              episode={epNum}
-              episodeTitle={episode?.title}
-              hasDraft={hasDraft}
-              episodeScript={script}
-              scriptFile={scriptFile ?? undefined}
-              projectData={currentProjectData}
-              durationOptions={durationOptions}
-              onUpdatePrompt={handleUpdatePrompt}
-              onGenerateStoryboard={handleGenerateStoryboard}
-              onGenerateVideo={handleGenerateVideo}
-              onGenerateGrid={handleGenerateGrid}
-              onRestoreStoryboard={handleRestoreAsset}
-              onRestoreVideo={handleRestoreAsset}
-            />
+            <Suspense fallback={embeddedFallback}>
+              <TimelineCanvas
+                key={epNum}
+                projectName={currentProjectName}
+                episode={epNum}
+                episodeTitle={episode?.title}
+                hasDraft={hasDraft}
+                episodeScript={script}
+                scriptFile={scriptFile ?? undefined}
+                projectData={currentProjectData}
+                durationOptions={durationOptions}
+                onUpdatePrompt={handleUpdatePrompt}
+                onGenerateStoryboard={handleGenerateStoryboard}
+                onGenerateVideo={handleGenerateVideo}
+                onGenerateGrid={handleGenerateGrid}
+                onRestoreStoryboard={handleRestoreAsset}
+                onRestoreVideo={handleRestoreAsset}
+              />
+            </Suspense>
           );
         }}
       </Route>

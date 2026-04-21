@@ -1,7 +1,9 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { useLocation } from "wouter";
+import { ArrowLeft, ShieldCheck } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { API } from "@/api";
+import { BrandLogo } from "@/components/brand/BrandLogo";
 import { useAuthStore } from "@/stores/auth-store";
 
 export function AccountPage() {
@@ -65,9 +67,7 @@ export function AccountPage() {
   };
 
   const resendVerification = async () => {
-    if (!user?.email) {
-      return;
-    }
+    if (!user?.email) return;
     setSendingVerification(true);
     setError("");
     setVerificationNotice("");
@@ -82,19 +82,38 @@ export function AccountPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-950 px-6 py-10 text-gray-100">
-      <div className="mx-auto max-w-4xl space-y-8">
-        <div className="flex flex-wrap items-center justify-between gap-4">
-          <div>
-            <p className="text-sm tracking-[0.22em] text-sky-300/70">{t("dashboard:app_title")}</p>
-            <h1 className="mt-2 text-3xl font-semibold">{t("account_settings")}</h1>
-            <p className="mt-2 text-sm text-slate-400">{t("dashboard:app_subtitle")}</p>
-          </div>
-          <div className="flex gap-3">
+    <div className="sf-editorial-page min-h-screen px-6 py-8 text-[var(--sf-text)]">
+      <div className="mx-auto max-w-6xl space-y-6">
+        <header className="storyforge-page-header flex flex-col gap-5 rounded-[2rem] px-6 py-5 lg:flex-row lg:items-center lg:justify-between">
+          <div className="flex items-start gap-4">
             <button
               type="button"
               onClick={() => setLocation("/app/projects")}
-              className="rounded-xl border border-white/12 bg-white/5 px-4 py-2 text-sm text-white transition hover:bg-white/10"
+              className="storyforge-secondary-button inline-flex h-11 w-11 items-center justify-center rounded-full transition hover:-translate-y-0.5"
+              aria-label={t("enter_studio")}
+            >
+              <ArrowLeft className="h-5 w-5" />
+            </button>
+            <div className="space-y-2">
+              <BrandLogo alt={t("dashboard:app_title")} className="h-14 w-auto max-w-[17rem]" />
+              <div>
+                <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[var(--sf-text-soft)]">
+                  Account Surface
+                </p>
+                <h1 className="mt-2 text-[2rem] font-semibold tracking-[-0.04em]" style={{ fontFamily: "var(--font-display)" }}>
+                  {t("account_settings")}
+                </h1>
+                <p className="mt-2 max-w-2xl text-sm leading-7 text-[var(--sf-text-muted)]">
+                  账号信息、邮箱验证和密码管理统一放在一个清晰的品牌页面里。
+                </p>
+              </div>
+            </div>
+          </div>
+          <div className="flex flex-wrap gap-3">
+            <button
+              type="button"
+              onClick={() => setLocation("/app/projects")}
+              className="storyforge-secondary-button rounded-full px-4 py-2.5 text-sm font-medium transition hover:-translate-y-0.5"
             >
               {t("enter_studio")}
             </button>
@@ -104,36 +123,42 @@ export function AccountPage() {
                 logout();
                 setLocation("/login");
               }}
-              className="rounded-xl border border-rose-400/25 bg-rose-500/10 px-4 py-2 text-sm text-rose-100 transition hover:bg-rose-500/20"
+              className="rounded-full border border-rose-300/55 bg-rose-100/72 px-4 py-2.5 text-sm font-medium text-rose-900 transition hover:-translate-y-0.5"
             >
               {t("logout")}
             </button>
           </div>
-        </div>
+        </header>
 
-        {error && <p className="rounded-xl border border-rose-400/30 bg-rose-500/10 px-4 py-3 text-sm text-rose-200">{error}</p>}
+        {error && <Notice tone="error">{error}</Notice>}
 
-        <div className="grid gap-6 lg:grid-cols-2">
-          <section className="rounded-3xl border border-white/10 bg-white/5 p-6">
-            <h2 className="text-xl font-semibold text-white">{t("save_profile")}</h2>
-            <div className="mt-4 grid gap-4 text-sm text-slate-300">
-              <div>
-                <div className="text-xs uppercase tracking-[0.22em] text-slate-500">{t("username")}</div>
-                <div className="mt-2 rounded-xl border border-white/10 bg-slate-950/50 px-4 py-3">{user?.username}</div>
+        <div className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
+          <section className="sf-panel-strong rounded-[2rem] p-6">
+            <div className="flex items-center gap-3">
+              <div className="flex h-11 w-11 items-center justify-center rounded-full bg-[rgba(24,151,214,0.08)] text-[var(--sf-blue)]">
+                <ShieldCheck className="h-5 w-5" />
               </div>
               <div>
-                <div className="text-xs uppercase tracking-[0.22em] text-slate-500">{t("email")}</div>
-                <div className="mt-2 rounded-xl border border-white/10 bg-slate-950/50 px-4 py-3">{user?.email}</div>
+                <h2 className="text-xl font-semibold text-[var(--sf-text)]">{t("save_profile")}</h2>
+                <p className="text-sm text-[var(--sf-text-muted)]">基础身份信息与邮箱信任状态。</p>
               </div>
-              <div className="rounded-2xl border border-white/10 bg-slate-950/35 p-4">
+            </div>
+
+            <div className="mt-5 grid gap-4 text-sm text-[var(--sf-text-muted)]">
+              <DetailBlock label={t("username")} value={user?.username ?? "-"} />
+              <DetailBlock label={t("email")} value={user?.email ?? "-"} />
+
+              <div className="rounded-[1.4rem] border border-[rgba(117,132,159,0.18)] bg-[rgba(248,250,253,0.92)] p-4">
                 <div className="flex flex-wrap items-center justify-between gap-3">
                   <div>
-                    <div className="text-xs uppercase tracking-[0.22em] text-slate-500">{t("email_verification_status")}</div>
+                    <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[var(--sf-text-soft)]">
+                      {t("email_verification_status")}
+                    </div>
                     <div
-                      className={`mt-2 inline-flex rounded-full px-3 py-1 text-xs font-medium ${
+                      className={`mt-2 inline-flex rounded-full px-3 py-1 text-xs font-semibold ${
                         user?.is_email_verified
-                          ? "bg-emerald-500/10 text-emerald-200"
-                          : "bg-amber-500/10 text-amber-100"
+                          ? "bg-emerald-100 text-emerald-900"
+                          : "bg-amber-100 text-amber-900"
                       }`}
                     >
                       {user?.is_email_verified ? t("verified") : t("unverified")}
@@ -144,56 +169,51 @@ export function AccountPage() {
                       type="button"
                       onClick={() => void resendVerification()}
                       disabled={sendingVerification}
-                      className="rounded-xl border border-amber-400/30 bg-amber-500/10 px-4 py-2 text-sm text-amber-100 transition hover:bg-amber-500/15 disabled:opacity-60"
+                      className="storyforge-secondary-button rounded-full px-4 py-2 text-sm font-medium transition hover:-translate-y-0.5 disabled:translate-y-0 disabled:opacity-60"
                     >
                       {sendingVerification ? t("sending_code") : t("resend_verification_code")}
                     </button>
                   )}
                 </div>
                 {!user?.is_email_verified && (
-                  <p className="mt-3 text-sm text-slate-300">{t("verification_required_notice")}</p>
+                  <p className="mt-3 text-sm leading-6 text-[var(--sf-text-muted)]">{t("verification_required_notice")}</p>
                 )}
-                {verificationNotice && (
-                  <p className="mt-3 rounded-xl border border-emerald-400/30 bg-emerald-500/10 px-3 py-2 text-sm text-emerald-100">
-                    {verificationNotice}
-                  </p>
-                )}
+                {verificationNotice && <Notice tone="success" className="mt-3">{verificationNotice}</Notice>}
               </div>
             </div>
 
-            <form onSubmit={(e) => void saveProfile(e)} className="mt-5 space-y-4">
-              <label className="block">
-                <span className="mb-2 block text-sm text-slate-300">{t("display_name")}</span>
-                <input
-                  type="text"
-                  value={displayName}
-                  onChange={(e) => setDisplayName(e.target.value)}
-                  className="w-full rounded-xl border border-white/10 bg-slate-950/50 px-4 py-3 text-white outline-none transition focus:border-sky-400/60"
-                  required
-                />
-              </label>
-              {profileNotice && <p className="rounded-xl border border-emerald-400/30 bg-emerald-500/10 px-3 py-2 text-sm text-emerald-100">{profileNotice}</p>}
+            <form onSubmit={(e) => void saveProfile(e)} className="mt-6 space-y-4">
+              <Field
+                label={t("display_name")}
+                value={displayName}
+                onChange={setDisplayName}
+                type="text"
+              />
+              {profileNotice && <Notice tone="success">{profileNotice}</Notice>}
               <button
                 type="submit"
                 disabled={savingProfile}
-                className="rounded-xl bg-sky-500 px-4 py-3 text-sm font-semibold text-slate-950 transition hover:bg-sky-400 disabled:opacity-60"
+                className="storyforge-primary-button rounded-[1rem] px-5 py-3 text-sm font-semibold transition hover:-translate-y-0.5 disabled:translate-y-0 disabled:opacity-60"
               >
                 {savingProfile ? t("saving") : t("save_profile")}
               </button>
             </form>
           </section>
 
-          <section className="rounded-3xl border border-white/10 bg-white/5 p-6">
-            <h2 className="text-xl font-semibold text-white">{t("change_password")}</h2>
-            <form onSubmit={(e) => void savePassword(e)} className="mt-5 space-y-4">
-              <PasswordField label={t("current_password")} value={currentPassword} onChange={setCurrentPassword} />
-              <PasswordField label={t("new_password")} value={newPassword} onChange={setNewPassword} />
-              <PasswordField label={t("confirm_password")} value={confirmPassword} onChange={setConfirmPassword} />
-              {passwordNotice && <p className="rounded-xl border border-emerald-400/30 bg-emerald-500/10 px-3 py-2 text-sm text-emerald-100">{passwordNotice}</p>}
+          <section className="sf-panel rounded-[2rem] p-6">
+            <h2 className="text-xl font-semibold text-[var(--sf-text)]">{t("change_password")}</h2>
+            <p className="mt-2 text-sm leading-7 text-[var(--sf-text-muted)]">
+              这里保留最必要的安全动作，不额外塞入系统级配置。
+            </p>
+            <form onSubmit={(e) => void savePassword(e)} className="mt-6 space-y-4">
+              <Field label={t("current_password")} value={currentPassword} onChange={setCurrentPassword} type="password" />
+              <Field label={t("new_password")} value={newPassword} onChange={setNewPassword} type="password" />
+              <Field label={t("confirm_password")} value={confirmPassword} onChange={setConfirmPassword} type="password" />
+              {passwordNotice && <Notice tone="success">{passwordNotice}</Notice>}
               <button
                 type="submit"
                 disabled={savingPassword}
-                className="rounded-xl bg-sky-500 px-4 py-3 text-sm font-semibold text-slate-950 transition hover:bg-sky-400 disabled:opacity-60"
+                className="storyforge-primary-button rounded-[1rem] px-5 py-3 text-sm font-semibold transition hover:-translate-y-0.5 disabled:translate-y-0 disabled:opacity-60"
               >
                 {savingPassword ? t("saving") : t("change_password")}
               </button>
@@ -205,25 +225,61 @@ export function AccountPage() {
   );
 }
 
-function PasswordField({
+function DetailBlock({
+  label,
+  value,
+}: {
+  label: string;
+  value: string;
+}) {
+  return (
+    <div>
+      <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[var(--sf-text-soft)]">{label}</div>
+      <div className="mt-2 rounded-[1rem] border border-[rgba(117,132,159,0.18)] bg-[rgba(248,250,253,0.92)] px-4 py-3 text-[var(--sf-text)]">
+        {value}
+      </div>
+    </div>
+  );
+}
+
+function Field({
   label,
   value,
   onChange,
+  type,
 }: {
   label: string;
   value: string;
   onChange: (value: string) => void;
+  type: string;
 }) {
   return (
     <label className="block">
-      <span className="mb-2 block text-sm text-slate-300">{label}</span>
+      <span className="mb-2 block text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--sf-text-soft)]">
+        {label}
+      </span>
       <input
-        type="password"
+        type={type}
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="w-full rounded-xl border border-white/10 bg-slate-950/50 px-4 py-3 text-white outline-none transition focus:border-sky-400/60"
+        className="storyforge-input w-full rounded-[1rem] px-4 py-3.5 text-[15px] outline-none transition"
         required
       />
     </label>
   );
+}
+
+function Notice({
+  children,
+  tone,
+  className,
+}: {
+  children: string;
+  tone: "error" | "success";
+  className?: string;
+}) {
+  const base = tone === "error"
+    ? "border-rose-300/55 bg-rose-100/72 text-rose-900"
+    : "border-emerald-300/55 bg-emerald-100/72 text-emerald-900";
+  return <p className={`rounded-[1rem] border px-4 py-3 text-sm ${base} ${className ?? ""}`}>{children}</p>;
 }

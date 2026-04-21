@@ -40,17 +40,20 @@ export function LoginPage() {
   return (
     <PublicShell
       eyebrow={t("dashboard:app_title")}
-      title={t("auth:home_hero_title")}
-      description={t("auth:home_hero_body")}
+      title="从故事入口回到你的工作台。"
+      description="登录后继续推进 seed、项目库、角色资产和分镜生成。认证页保持直接、可信，不再塞入假社交入口。"
     >
-      <div className="mb-6">
+      <div className="mb-7">
+        <div className="storyforge-kicker">Welcome Back</div>
         <h2
-          className="text-[2rem] font-semibold tracking-[-0.02em] text-white"
+          className="mt-4 text-[2rem] font-semibold tracking-[-0.04em] text-[var(--sf-text)]"
           style={{ fontFamily: "var(--font-display)" }}
         >
           {t("auth:login")}
         </h2>
-        <p className="mt-2 text-sm leading-7 text-slate-300">{t("dashboard:app_subtitle")}</p>
+        <p className="mt-2 text-sm leading-7 text-[var(--sf-text-muted)]">
+          {t("dashboard:app_subtitle")}
+        </p>
       </div>
 
       <form onSubmit={(e) => void handleSubmit(e)} className="space-y-4">
@@ -62,11 +65,11 @@ export function LoginPage() {
         />
         <Field label={t("auth:password")} value={password} onChange={setPassword} type="password" />
 
-        {error && <p className="rounded-xl border border-rose-400/30 bg-rose-500/10 px-3 py-2 text-sm text-rose-200">{error}</p>}
+        {error && <Notice tone="error">{error}</Notice>}
         {verificationEmail && (
           <Link
             href={`/verify-email?email=${encodeURIComponent(verificationEmail)}`}
-            className="block rounded-xl border border-amber-400/30 bg-amber-500/10 px-3 py-2 text-sm text-amber-100 transition hover:bg-amber-500/15"
+            className="block rounded-[1rem] border border-amber-300/55 bg-amber-100/65 px-4 py-3 text-sm font-medium text-amber-900 transition hover:bg-amber-100"
           >
             {t("auth:verify_email_now")}
           </Link>
@@ -75,20 +78,20 @@ export function LoginPage() {
         <button
           type="submit"
           disabled={loading}
-          className="w-full rounded-2xl bg-sky-500 px-4 py-3 text-sm font-semibold text-slate-950 transition hover:bg-sky-400 disabled:opacity-60"
+          className="storyforge-primary-button w-full rounded-[1rem] px-4 py-3 text-sm font-semibold transition hover:-translate-y-0.5 disabled:translate-y-0 disabled:opacity-60"
         >
           {loading ? t("auth:logging_in") : t("auth:login")}
         </button>
       </form>
 
-      <div className="mt-6 flex items-center justify-between text-sm text-slate-400">
+      <div className="mt-6 flex items-center justify-between text-sm text-[var(--sf-text-muted)]">
         <span>{t("auth:no_account")}</span>
-        <Link href="/register" className="font-medium text-sky-300 transition hover:text-sky-200">
+        <Link href="/register" className="font-semibold text-[var(--sf-blue)] transition hover:text-[var(--sf-blue-strong)]">
           {t("auth:go_to_register")}
         </Link>
       </div>
       <div className="mt-3 text-right text-sm">
-        <Link href="/forgot-password" className="text-slate-300 transition hover:text-white">
+        <Link href="/forgot-password" className="text-[var(--sf-text-muted)] transition hover:text-[var(--sf-text)]">
           {t("auth:forgot_password")}
         </Link>
       </div>
@@ -109,14 +112,34 @@ function Field({
 }) {
   return (
     <label className="block">
-      <span className="mb-2 block text-[11px] font-medium uppercase tracking-[0.18em] text-slate-400">{label}</span>
+      <span className="mb-2 block text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--sf-text-soft)]">
+        {label}
+      </span>
       <input
         type={type}
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="w-full rounded-2xl border border-white/10 bg-slate-950/65 px-4 py-3.5 text-[15px] text-white outline-none transition focus:border-sky-400/70 focus:bg-slate-950/80"
+        className="storyforge-input w-full rounded-[1rem] px-4 py-3.5 text-[15px] outline-none transition"
         required
       />
     </label>
   );
+}
+
+function Notice({
+  children,
+  tone,
+}: {
+  children: string;
+  tone: "error";
+}) {
+  if (tone === "error") {
+    return (
+      <p className="rounded-[1rem] border border-rose-300/55 bg-rose-100/72 px-4 py-3 text-sm text-rose-900">
+        {children}
+      </p>
+    );
+  }
+
+  return null;
 }

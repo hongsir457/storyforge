@@ -136,7 +136,7 @@ export function WelcomeCanvas({
   if (phase === "loading") {
     return (
       <div className="flex h-full items-center justify-center">
-        <Loader2 className="h-6 w-6 text-gray-500 animate-spin" />
+        <Loader2 className="h-6 w-6 animate-spin text-[var(--sf-blue)]" />
       </div>
     );
   }
@@ -146,11 +146,11 @@ export function WelcomeCanvas({
       <div className="max-w-lg text-center space-y-6">
         {/* Welcome heading */}
         <div>
-          <Sparkles className="mx-auto mb-3 h-10 w-10 text-indigo-400" />
-          <h1 className="text-2xl font-bold text-gray-100">
+          <Sparkles className="mx-auto mb-3 h-10 w-10 text-[var(--sf-blue)]" />
+          <h1 className="text-2xl font-bold text-[var(--sf-text)]">
             {t("welcome_to_project", { title: displayProjectTitle })}
           </h1>
-          <p className="mt-2 text-sm text-gray-400">
+          <p className="mt-2 text-sm text-[var(--sf-text-muted)]">
             {phase === "idle" && t("welcome_idle_desc")}
             {phase === "has_sources" && t("welcome_has_sources_desc")}
             {phase === "uploading" && t("uploading_file", { name: fileName })}
@@ -169,15 +169,15 @@ export function WelcomeCanvas({
             onClick={() => fileInputRef.current?.click()}
             className={`w-full cursor-pointer rounded-xl border-2 border-dashed p-12 transition-colors text-center ${
               isDragging
-                ? "border-indigo-500 bg-indigo-500/10"
-                : "border-gray-700 hover:border-gray-600 hover:bg-gray-900/50"
+                ? "border-sky-400 bg-sky-100/60"
+                : "border-[rgba(117,132,159,0.18)] bg-white/70 hover:border-[rgba(24,151,214,0.22)] hover:bg-white"
             }`}
           >
             <Upload
-              className={`mx-auto h-8 w-8 ${isDragging ? "text-indigo-400" : "text-gray-500"}`}
+              className={`mx-auto h-8 w-8 ${isDragging ? "text-[var(--sf-blue)]" : "text-[var(--sf-text-soft)]"}`}
             />
-            <p className="mt-3 text-sm text-gray-300">{t("drop_files_here")}</p>
-            <p className="mt-1 text-xs text-gray-500">
+            <p className="mt-3 text-sm text-[var(--sf-text)]">{t("drop_files_here")}</p>
+            <p className="mt-1 text-xs text-[var(--sf-text-soft)]">
               {t("click_to_select_files")}
             </p>
             <input
@@ -195,14 +195,14 @@ export function WelcomeCanvas({
         {phase === "has_sources" && (
           <div className="space-y-4">
             {/* Source file list */}
-            <div className="rounded-xl border border-gray-800 bg-gray-900 p-4 text-left">
-              <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">
+            <div className="rounded-[1.4rem] border border-[rgba(117,132,159,0.18)] bg-white/80 p-4 text-left shadow-[0_18px_40px_rgba(23,38,69,0.06)]">
+              <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-[var(--sf-text-soft)]">
                 {t("uploaded_source_files")}
               </p>
               <div className="space-y-1.5">
                 {sourceFiles.map((f) => (
-                  <div key={f} className="flex items-center gap-2 text-sm text-gray-300">
-                    <FileText className="h-4 w-4 text-gray-500 shrink-0" />
+                  <div key={f} className="flex items-center gap-2 text-sm text-[var(--sf-text)]">
+                    <FileText className="h-4 w-4 shrink-0 text-[var(--sf-text-soft)]" />
                     <span className="truncate">{f.replace(/^source\//, "")}</span>
                   </div>
                 ))}
@@ -211,7 +211,7 @@ export function WelcomeCanvas({
               <button
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
-                className="mt-3 flex items-center gap-1.5 text-xs text-gray-400 hover:text-gray-300 transition-colors"
+                className="mt-3 flex items-center gap-1.5 text-xs text-[var(--sf-text-muted)] transition-colors hover:text-[var(--sf-text)]"
               >
                 <Plus className="h-3.5 w-3.5" />
                 {t("add_more_files")}
@@ -234,8 +234,8 @@ export function WelcomeCanvas({
               onDrop={handleDrop}
               className={`w-full rounded-lg border border-dashed p-4 text-xs transition-colors ${
                 isDragging
-                  ? "border-indigo-500 bg-indigo-500/10 text-indigo-400"
-                  : "border-gray-700 text-gray-500 hover:border-gray-600"
+                  ? "border-sky-400 bg-sky-100/60 text-[var(--sf-blue)]"
+                  : "border-[rgba(117,132,159,0.18)] bg-white/70 text-[var(--sf-text-soft)] hover:border-[rgba(24,151,214,0.22)]"
               }`}
             >
               {t("drop_more_files_here")}
@@ -245,8 +245,8 @@ export function WelcomeCanvas({
             <button
               type="button"
               onClick={startAnalysis}
-              className="w-full rounded-xl bg-indigo-600 px-6 py-3 text-sm font-medium text-white hover:bg-indigo-500 transition-colors"
-            >
+            className="storyforge-primary-button w-full rounded-[1rem] px-6 py-3 text-sm font-medium transition hover:-translate-y-0.5"
+          >
               <Sparkles className="inline-block h-4 w-4 mr-2 -mt-0.5" />
               {t("start_ai_analysis")}
             </button>
@@ -255,51 +255,51 @@ export function WelcomeCanvas({
 
         {/* ---- UPLOADING ---- */}
         {phase === "uploading" && (
-          <div className="rounded-xl border border-gray-700 bg-gray-900/50 p-12">
-            <Loader2 className="mx-auto h-8 w-8 text-indigo-400 animate-spin" />
-            <p className="mt-3 text-sm text-gray-300">{t("uploading")}</p>
-            <p className="mt-1 text-xs text-gray-500">{fileName}</p>
+          <div className="rounded-[1.4rem] border border-[rgba(117,132,159,0.18)] bg-white/80 p-12">
+            <Loader2 className="mx-auto h-8 w-8 animate-spin text-[var(--sf-blue)]" />
+            <p className="mt-3 text-sm text-[var(--sf-text)]">{t("uploading")}</p>
+            <p className="mt-1 text-xs text-[var(--sf-text-soft)]">{fileName}</p>
           </div>
         )}
 
         {/* ---- ANALYZING ---- */}
         {phase === "analyzing" && (
-          <div className="rounded-xl border border-indigo-500/30 bg-indigo-500/5 p-12">
-            <Sparkles className="mx-auto h-10 w-10 text-indigo-400 animate-pulse" />
-            <p className="mt-3 text-sm text-indigo-300 font-medium">{t("ai_analyzing")}</p>
-            <p className="mt-1 text-xs text-gray-400">{t("extracting_metadata_desc")}</p>
-            <div className="mt-4 mx-auto w-48 h-1 rounded-full bg-gray-800 overflow-hidden">
-              <div className="h-full rounded-full bg-indigo-600 animate-progress" />
+          <div className="rounded-[1.4rem] border border-sky-200 bg-sky-50/80 p-12">
+            <Sparkles className="mx-auto h-10 w-10 animate-pulse text-[var(--sf-blue)]" />
+            <p className="mt-3 text-sm font-medium text-[var(--sf-blue-strong)]">{t("ai_analyzing")}</p>
+            <p className="mt-1 text-xs text-[var(--sf-text-muted)]">{t("extracting_metadata_desc")}</p>
+            <div className="mt-4 mx-auto h-1 w-48 overflow-hidden rounded-full bg-sky-100">
+              <div className="animate-progress h-full rounded-full bg-[var(--sf-blue)]" />
             </div>
           </div>
         )}
 
         {/* ---- DONE ---- */}
         {phase === "done" && (
-          <div className="rounded-xl border border-green-500/30 bg-green-500/5 p-12">
-            <CheckCircle2 className="mx-auto h-8 w-8 text-green-400" />
-            <p className="mt-3 text-sm text-green-300">{t("analysis_complete")}</p>
+          <div className="rounded-[1.4rem] border border-emerald-200 bg-emerald-50/80 p-12">
+            <CheckCircle2 className="mx-auto h-8 w-8 text-emerald-600" />
+            <p className="mt-3 text-sm text-emerald-800">{t("analysis_complete")}</p>
           </div>
         )}
 
         {/* Error message */}
         {error && (
-          <p className="text-sm text-red-400">{error}</p>
+          <p className="text-sm text-rose-700">{error}</p>
         )}
 
         {/* Quick tips — only in idle state */}
         {phase === "idle" && (
           <div className="text-left space-y-2">
-            <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
+            <p className="text-xs font-semibold uppercase tracking-wider text-[var(--sf-text-soft)]">
               {t("what_happens_next")}
             </p>
-            <div className="space-y-1.5 text-xs text-gray-400">
+            <div className="space-y-1.5 text-xs text-[var(--sf-text-muted)]">
               <div className="flex items-start gap-2">
-                <FileText className="mt-0.5 h-3.5 w-3.5 text-gray-500 shrink-0" />
+                <FileText className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[var(--sf-text-soft)]" />
                 <span>{t("ai_will_analyze_desc")}</span>
               </div>
               <div className="flex items-start gap-2">
-                <Sparkles className="mt-0.5 h-3.5 w-3.5 text-gray-500 shrink-0" />
+                <Sparkles className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[var(--sf-blue)]" />
                 <span>{t("overview_gen_desc")}</span>
               </div>
             </div>

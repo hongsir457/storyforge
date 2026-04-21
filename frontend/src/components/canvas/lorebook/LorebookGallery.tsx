@@ -100,7 +100,7 @@ export function LorebookGallery({
     <div className="flex flex-col gap-4">
       {/* ---- Tab bar (hidden when mode is specified) ---- */}
       {showTabs && (
-      <div className="flex border-b border-gray-800">
+      <div className="flex border-b border-[rgba(117,132,159,0.18)]">
         <TabButton
           active={activeTab === "characters"}
           onClick={() => setActiveTab("characters")}
@@ -121,7 +121,7 @@ export function LorebookGallery({
         <>
           {charCount === 0 ? (
             <EmptyState
-              icon={<User className="h-12 w-12 text-gray-600" />}
+              icon={<User className="h-12 w-12 text-[var(--sf-text-soft)]" />}
               message="暂无角色，点击下方按钮添加"
             />
           ) : (
@@ -153,7 +153,7 @@ export function LorebookGallery({
         <>
           {clueCount === 0 ? (
             <EmptyState
-              icon={<Puzzle className="h-12 w-12 text-gray-600" />}
+              icon={<Puzzle className="h-12 w-12 text-[var(--sf-text-soft)]" />}
               message="暂无线索，点击下方按钮添加"
             />
           ) : (
@@ -200,8 +200,8 @@ function TabButton({
       onClick={onClick}
       className={`px-4 py-2 text-sm font-medium transition-colors ${
         active
-          ? "border-b-2 border-indigo-500 text-white"
-          : "text-gray-400 hover:text-gray-200"
+          ? "border-b-2 border-[var(--sf-blue)] text-[var(--sf-text)]"
+          : "text-[var(--sf-text-muted)] hover:text-[var(--sf-text)]"
       }`}
     >
       {children}
@@ -217,7 +217,7 @@ function EmptyState({
   message: string;
 }) {
   return (
-    <div className="flex flex-col items-center justify-center gap-3 py-16 text-gray-500">
+    <div className="flex flex-col items-center justify-center gap-3 py-16 text-[var(--sf-text-muted)]">
       {icon}
       <p className="text-sm">{message}</p>
     </div>
@@ -235,7 +235,7 @@ function AddButton({
     <button
       type="button"
       onClick={onClick}
-      className="mx-auto flex items-center gap-1.5 rounded-lg border border-gray-700 px-4 py-2 text-sm font-medium text-gray-400 hover:border-gray-500 hover:text-gray-200 transition-colors"
+      className="mx-auto flex items-center gap-1.5 rounded-full border border-[rgba(117,132,159,0.18)] bg-white px-4 py-2 text-sm font-medium text-[var(--sf-text-muted)] transition-colors hover:border-[rgba(24,151,214,0.24)] hover:text-[var(--sf-text)]"
     >
       <Plus className="h-4 w-4" />
       {children}

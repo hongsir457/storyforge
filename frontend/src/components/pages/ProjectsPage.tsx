@@ -208,10 +208,10 @@ function SurfaceMetric({
   toneClass?: string;
 }) {
   return (
-    <div className="rounded-[24px] border border-white/10 bg-black/20 p-4 shadow-[0_18px_40px_rgba(2,6,23,0.18)]">
-      <div className="text-[11px] uppercase tracking-[0.24em] text-slate-500">{label}</div>
-      <div className={`mt-3 text-3xl font-semibold tracking-[-0.03em] text-white ${toneClass ?? ""}`}>{value}</div>
-      <div className="mt-1 text-sm text-slate-400">{detail}</div>
+    <div className="rounded-[1.5rem] border border-[rgba(117,132,159,0.18)] bg-white/82 p-4 shadow-[0_18px_40px_rgba(23,38,69,0.06)]">
+      <div className="text-[11px] uppercase tracking-[0.24em] text-[var(--sf-text-soft)]">{label}</div>
+      <div className={`mt-3 text-3xl font-semibold tracking-[-0.03em] text-[var(--sf-text)] ${toneClass ?? ""}`}>{value}</div>
+      <div className="mt-1 text-sm text-[var(--sf-text-muted)]">{detail}</div>
     </div>
   );
 }
@@ -250,24 +250,24 @@ function ProjectCard({ project, onDelete }: { project: ProjectSummary; onDelete:
           navigate(`/app/projects/${project.name}`);
         }
       }}
-      className="group relative overflow-hidden rounded-[32px] border border-slate-800/90 bg-[linear-gradient(180deg,rgba(15,23,42,0.94),rgba(2,6,23,0.98))] p-5 text-left transition-all duration-300 hover:-translate-y-0.5 hover:border-sky-400/35 hover:shadow-[0_32px_90px_rgba(2,6,23,0.48)]"
+      className="group relative overflow-hidden rounded-[2rem] border border-[rgba(117,132,159,0.18)] bg-[linear-gradient(180deg,rgba(255,255,255,0.92),rgba(244,248,252,0.98))] p-5 text-left shadow-[0_18px_48px_rgba(23,38,69,0.08)] transition-all duration-300 hover:-translate-y-0.5 hover:border-[rgba(24,151,214,0.24)] hover:shadow-[0_28px_70px_rgba(23,38,69,0.12)]"
     >
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(56,189,248,0.12),transparent_32%),radial-gradient(circle_at_bottom_right,rgba(99,102,241,0.14),transparent_30%)] opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(24,151,214,0.12),transparent_32%),radial-gradient(circle_at_bottom_right,rgba(216,165,90,0.12),transparent_30%)] opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
 
       <div className="relative">
         <div className="flex items-start justify-between gap-4">
           <div className="min-w-0 space-y-2">
             <div className="flex flex-wrap items-center gap-2">
-              <span className="rounded-full border border-sky-400/25 bg-sky-500/10 px-2.5 py-1 text-[11px] font-medium text-sky-100">
+              <span className="rounded-full border border-sky-300/60 bg-sky-100 px-2.5 py-1 text-[11px] font-medium text-sky-900">
                 {phaseLabel}
               </span>
-              <span className="rounded-full border border-white/10 bg-white/[0.04] px-2.5 py-1 text-[11px] text-slate-400">
+              <span className="rounded-full border border-[rgba(117,132,159,0.18)] bg-white/90 px-2.5 py-1 text-[11px] text-[var(--sf-text-soft)]">
                 {project.style || t("dashboard:style_not_set")}
               </span>
             </div>
             <div>
-              <h3 className="truncate text-[1.35rem] font-semibold tracking-[-0.02em] text-white">{project.title}</h3>
-              <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-400">
+              <h3 className="truncate text-[1.35rem] font-semibold tracking-[-0.02em] text-[var(--sf-text)]">{project.title}</h3>
+              <p className="mt-2 max-w-2xl text-sm leading-6 text-[var(--sf-text-muted)]">
                 {getProjectSummaryText(locale, summary)}
               </p>
             </div>
@@ -281,14 +281,14 @@ function ProjectCard({ project, onDelete }: { project: ProjectSummary; onDelete:
               event.stopPropagation();
               setMenuOpen((value) => !value);
             }}
-            className="rounded-full border border-white/10 bg-white/[0.04] p-2 text-slate-400 transition-colors hover:border-white/20 hover:bg-white/[0.08] hover:text-white"
+            className="rounded-full border border-[rgba(117,132,159,0.18)] bg-white/90 p-2 text-[var(--sf-text-soft)] transition-colors hover:border-[rgba(24,151,214,0.22)] hover:text-[var(--sf-text)]"
           >
             <EllipsisVertical className="h-4 w-4" />
           </button>
         </div>
 
         <div className="mt-5 grid gap-4 xl:grid-cols-[minmax(0,1.15fr)_260px]">
-          <div className="overflow-hidden rounded-[28px] border border-white/10 bg-slate-900/80">
+          <div className="overflow-hidden rounded-[1.7rem] border border-[rgba(117,132,159,0.18)] bg-[rgba(242,246,251,0.92)]">
             {project.thumbnail ? (
               <img
                 src={project.thumbnail}
@@ -296,8 +296,8 @@ function ProjectCard({ project, onDelete }: { project: ProjectSummary; onDelete:
                 className="h-full min-h-[220px] w-full object-cover transition-transform duration-300 group-hover:scale-[1.015]"
               />
             ) : (
-              <div className="flex min-h-[220px] items-center justify-center bg-[radial-gradient(circle_at_top,rgba(56,189,248,0.18),transparent_45%),linear-gradient(180deg,rgba(15,23,42,0.96),rgba(2,6,23,1))]">
-                <div className="flex flex-col items-center gap-3 text-slate-500">
+              <div className="flex min-h-[220px] items-center justify-center bg-[radial-gradient(circle_at_top,rgba(24,151,214,0.16),transparent_45%),linear-gradient(180deg,rgba(251,252,255,0.98),rgba(238,243,249,1))]">
+                <div className="flex flex-col items-center gap-3 text-[var(--sf-text-soft)]">
                   <FolderOpen className="h-10 w-10" />
                   <span className="text-sm">{copy.waitCover}</span>
                 </div>
@@ -310,7 +310,7 @@ function ProjectCard({ project, onDelete }: { project: ProjectSummary; onDelete:
               label={copy.storyPhase}
               value={`${progress}%`}
               detail={phaseLabel}
-              toneClass="text-sky-100"
+              toneClass="text-[var(--sf-blue-strong)]"
             />
             <SurfaceMetric
               label={copy.assetCoverage}
@@ -325,8 +325,8 @@ function ProjectCard({ project, onDelete }: { project: ProjectSummary; onDelete:
           </div>
         </div>
 
-        <div className="mt-4 rounded-[24px] border border-white/10 bg-black/20 p-4">
-          <div className="flex items-center justify-between text-xs text-slate-500">
+        <div className="mt-4 rounded-[1.5rem] border border-[rgba(117,132,159,0.18)] bg-[rgba(248,250,253,0.92)] p-4">
+          <div className="flex items-center justify-between text-xs text-[var(--sf-text-soft)]">
             <span>{copy.currentProgress}</span>
             <span>{progress}%</span>
           </div>
@@ -334,8 +334,8 @@ function ProjectCard({ project, onDelete }: { project: ProjectSummary; onDelete:
             <ProgressBar value={progress} barClassName="bg-sky-500" />
           </div>
           <div className="mt-4 flex items-center justify-between gap-4 text-sm">
-            <span className="text-slate-400">{getRecentStatusText(locale, summary)}</span>
-            <span className="font-medium text-sky-100 transition-colors group-hover:text-white">
+            <span className="text-[var(--sf-text-muted)]">{getRecentStatusText(locale, summary)}</span>
+            <span className="font-medium text-[var(--sf-blue-strong)] transition-colors group-hover:text-[var(--sf-blue)]">
               {copy.continueProject}
             </span>
           </div>
@@ -348,7 +348,7 @@ function ProjectCard({ project, onDelete }: { project: ProjectSummary; onDelete:
         anchorRef={menuAnchorRef}
         width="w-44"
         align="end"
-        className="rounded-2xl border border-slate-700 py-1 shadow-xl"
+        className="rounded-2xl border border-[rgba(117,132,159,0.18)] bg-white py-1 shadow-xl"
       >
         <div onClick={(event) => event.stopPropagation()} onKeyDown={(event) => event.stopPropagation()}>
           <button
@@ -357,7 +357,7 @@ function ProjectCard({ project, onDelete }: { project: ProjectSummary; onDelete:
               setMenuOpen(false);
               onDelete();
             }}
-            className="flex w-full items-center gap-2 px-3 py-2 text-sm text-red-400 transition-colors hover:bg-slate-800"
+            className="flex w-full items-center gap-2 px-3 py-2 text-sm text-rose-700 transition-colors hover:bg-rose-50"
           >
             <Trash2 className="h-4 w-4" />
             {t("dashboard:delete_project")}
@@ -381,14 +381,14 @@ function EmptyProjectsState({
   const copy = useProjectsPageCopy();
 
   return (
-    <section className="space-y-6 rounded-[32px] border border-slate-800/90 bg-[linear-gradient(180deg,rgba(15,23,42,0.94),rgba(2,6,23,0.98))] p-8 shadow-[0_30px_90px_rgba(2,6,23,0.4)]">
+    <section className="space-y-6 rounded-[2rem] border border-[rgba(117,132,159,0.18)] bg-[linear-gradient(180deg,rgba(255,255,255,0.92),rgba(244,248,252,0.98))] p-8 shadow-[0_24px_60px_rgba(23,38,69,0.08)]">
       <div className="max-w-3xl space-y-3">
-        <div className="inline-flex items-center gap-2 rounded-full border border-sky-400/25 bg-sky-500/10 px-3 py-1 text-xs font-medium text-sky-100">
+        <div className="inline-flex items-center gap-2 rounded-full border border-sky-300/60 bg-sky-100 px-3 py-1 text-xs font-medium text-sky-900">
           <Sparkles className="h-3.5 w-3.5" />
           {copy.emptyEyebrow}
         </div>
-        <h2 className="text-[2rem] font-semibold tracking-[-0.03em] text-white">{copy.emptyTitle}</h2>
-        <p className="max-w-2xl text-base leading-7 text-slate-400">{copy.emptyBody}</p>
+        <h2 className="text-[2rem] font-semibold tracking-[-0.03em] text-[var(--sf-text)]">{copy.emptyTitle}</h2>
+        <p className="max-w-2xl text-base leading-7 text-[var(--sf-text-muted)]">{copy.emptyBody}</p>
       </div>
 
       <div className="grid gap-5 lg:grid-cols-2">
@@ -396,40 +396,40 @@ function EmptyProjectsState({
           type="button"
           aria-label={copy.startNovelTitle}
           onClick={onStartNovel}
-          className="group rounded-[28px] border border-sky-400/30 bg-[linear-gradient(180deg,rgba(14,165,233,0.16),rgba(12,74,110,0.34))] p-6 text-left transition-all hover:-translate-y-0.5 hover:border-sky-300/45"
+          className="group rounded-[1.7rem] border border-sky-300/60 bg-[linear-gradient(180deg,rgba(233,246,253,0.92),rgba(244,248,252,0.96))] p-6 text-left transition-all hover:-translate-y-0.5 hover:border-sky-400/60"
         >
-          <div className="flex items-center gap-3 text-sky-100">
+          <div className="flex items-center gap-3 text-[var(--sf-blue-strong)]">
             <BookOpen className="h-5 w-5" />
             <span className="text-sm font-medium">{copy.startFromNovel}</span>
           </div>
-          <h3 className="mt-4 text-2xl font-semibold tracking-[-0.02em] text-white">{copy.startNovelTitle}</h3>
-          <p className="mt-3 text-sm leading-6 text-sky-100/82">{copy.startNovelBody}</p>
-          <div className="mt-6 text-sm font-medium text-sky-50">{copy.startNovelAction}</div>
+          <h3 className="mt-4 text-2xl font-semibold tracking-[-0.02em] text-[var(--sf-text)]">{copy.startNovelTitle}</h3>
+          <p className="mt-3 text-sm leading-6 text-[var(--sf-text-muted)]">{copy.startNovelBody}</p>
+          <div className="mt-6 text-sm font-medium text-[var(--sf-blue-strong)]">{copy.startNovelAction}</div>
         </button>
 
         <button
           type="button"
           aria-label={t("dashboard:create_project")}
           onClick={onCreateProject}
-          className="group rounded-[28px] border border-white/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.05),rgba(15,23,42,0.42))] p-6 text-left transition-all hover:-translate-y-0.5 hover:border-white/18"
+          className="group rounded-[28px] border border-[rgba(117,132,159,0.18)] bg-[linear-gradient(180deg,rgba(255,255,255,0.9),rgba(243,247,252,0.96))] p-6 text-left transition-all hover:-translate-y-0.5 hover:border-[rgba(24,151,214,0.22)]"
         >
-          <div className="flex items-center gap-3 text-indigo-100">
+          <div className="flex items-center gap-3 text-[var(--sf-blue-strong)]">
             <Plus className="h-5 w-5" />
             <span className="text-sm font-medium">{copy.startProject}</span>
           </div>
-          <h3 className="mt-4 text-2xl font-semibold tracking-[-0.02em] text-white">{copy.startProjectTitle}</h3>
-          <p className="mt-3 text-sm leading-6 text-slate-300">{copy.startProjectBody}</p>
-          <div className="mt-6 text-sm font-medium text-indigo-100">{copy.startProjectAction}</div>
+          <h3 className="mt-4 text-2xl font-semibold tracking-[-0.02em] text-[var(--sf-text)]">{copy.startProjectTitle}</h3>
+          <p className="mt-3 text-sm leading-6 text-[var(--sf-text-muted)]">{copy.startProjectBody}</p>
+          <div className="mt-6 text-sm font-medium text-[var(--sf-blue-strong)]">{copy.startProjectAction}</div>
         </button>
       </div>
 
-      <div className="flex flex-wrap items-center gap-3 rounded-[24px] border border-dashed border-white/10 bg-black/20 px-4 py-4 text-sm text-slate-400">
-        <Upload className="h-4 w-4 text-slate-500" />
+      <div className="flex flex-wrap items-center gap-3 rounded-[24px] border border-dashed border-[rgba(117,132,159,0.22)] bg-[rgba(248,250,253,0.92)] px-4 py-4 text-sm text-[var(--sf-text-muted)]">
+        <Upload className="h-4 w-4 text-[var(--sf-text-soft)]" />
         <span>{copy.importBody}</span>
         <button
           type="button"
           onClick={onImportZip}
-          className="inline-flex items-center gap-2 rounded-full border border-slate-700 px-3 py-1.5 text-sm text-slate-200 transition-colors hover:border-slate-500 hover:text-white"
+          className="storyforge-secondary-button inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-sm font-medium transition hover:-translate-y-0.5"
         >
           <Upload className="h-4 w-4" />
           {copy.importAction}
@@ -561,19 +561,19 @@ export function ProjectsPage() {
   const featuredProject = projects[0] ?? null;
 
   return (
-    <div className="min-h-screen bg-[radial-gradient(circle_at_top_left,rgba(14,165,233,0.16),transparent_28%),radial-gradient(circle_at_top_right,rgba(99,102,241,0.18),transparent_32%),#020617] text-slate-100">
+    <div className="sf-editorial-page min-h-screen text-[var(--sf-text)]">
       <header className="px-6 pt-6">
-        <div className="mx-auto flex max-w-7xl flex-col gap-4 rounded-[30px] border border-white/10 bg-slate-950/72 px-5 py-4 shadow-[0_20px_60px_rgba(2,6,23,0.28)] backdrop-blur xl:flex-row xl:items-center xl:justify-between">
+        <div className="storyforge-page-header mx-auto flex max-w-7xl flex-col gap-4 rounded-[2rem] px-5 py-4 xl:flex-row xl:items-center xl:justify-between">
           <div className="flex items-center gap-4">
             <BrandLogo
               alt={t("dashboard:app_title")}
-              className="h-14 w-auto max-w-[11rem] rounded-2xl bg-white/95 p-1.5 shadow-[0_18px_45px_rgba(15,23,42,0.22)]"
+              className="h-14 w-auto max-w-[17rem]"
             />
-            <div className="h-12 w-px bg-white/10" />
+            <div className="h-12 w-px bg-[rgba(117,132,159,0.18)]" />
             <div className="space-y-1">
-              <p className="text-[11px] uppercase tracking-[0.28em] text-slate-500">{t("dashboard:app_subtitle")}</p>
-              <h1 className="text-[1.8rem] font-semibold tracking-[-0.03em] text-white">{t("dashboard:projects")}</h1>
-              <p className="text-sm text-slate-400">
+              <p className="text-[11px] uppercase tracking-[0.28em] text-[var(--sf-text-soft)]">{t("dashboard:app_subtitle")}</p>
+              <h1 className="text-[1.8rem] font-semibold tracking-[-0.03em] text-[var(--sf-text)]">{t("dashboard:projects")}</h1>
+              <p className="text-sm text-[var(--sf-text-muted)]">
                 {locale === "zh"
                   ? "把故事、资产和分镜进度收拢到同一个创作主页。"
                   : "Keep the story, assets, and storyboard progress inside one creator-focused home."}
@@ -585,7 +585,7 @@ export function ProjectsPage() {
             <button
               type="button"
               onClick={() => navigate("/app/account")}
-              className="rounded-full border border-white/10 bg-white/[0.04] px-4 py-2 text-sm text-slate-300 transition-colors hover:bg-white/[0.08] hover:text-white"
+              className="storyforge-secondary-button rounded-full px-4 py-2 text-sm font-medium transition hover:-translate-y-0.5"
               title={user?.display_name || user?.username || t("auth:account_settings")}
             >
               {user?.display_name || user?.username || t("auth:account_settings")}
@@ -594,7 +594,7 @@ export function ProjectsPage() {
             <button
               type="button"
               onClick={() => setShowOpenClaw(true)}
-              className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.04] px-4 py-2 text-sm text-slate-300 transition-colors hover:bg-white/[0.08] hover:text-white"
+              className="storyforge-secondary-button inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium transition hover:-translate-y-0.5"
               title="OpenClaw"
               aria-label="OpenClaw"
             >
@@ -606,7 +606,7 @@ export function ProjectsPage() {
               <button
                 type="button"
                 onClick={() => navigate("/app/admin")}
-                className="relative inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.04] px-4 py-2 text-sm text-slate-300 transition-colors hover:bg-white/[0.08] hover:text-white"
+                className="storyforge-secondary-button relative inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium transition hover:-translate-y-0.5"
                 title={locale === "zh" ? "管理控制台" : "Admin Console"}
                 aria-label={locale === "zh" ? "管理控制台" : "Admin Console"}
               >
@@ -624,7 +624,7 @@ export function ProjectsPage() {
                 logout();
                 navigate("/login");
               }}
-              className="rounded-full border border-rose-400/18 bg-rose-500/10 px-4 py-2 text-sm text-rose-100 transition-colors hover:bg-rose-500/18"
+              className="rounded-full border border-rose-300/55 bg-rose-100/72 px-4 py-2 text-sm font-medium text-rose-900 transition hover:-translate-y-0.5"
             >
               {t("auth:logout")}
             </button>
@@ -643,8 +643,8 @@ export function ProjectsPage() {
 
       <main className="mx-auto max-w-7xl px-6 py-6">
         {projectsLoading ? (
-          <div className="flex items-center justify-center py-24 text-slate-400">
-            <Loader2 className="mr-2 h-5 w-5 animate-spin text-sky-400" />
+          <div className="flex items-center justify-center py-24 text-[var(--sf-text-muted)]">
+            <Loader2 className="mr-2 h-5 w-5 animate-spin text-[var(--sf-blue)]" />
             {copy.loading}
           </div>
         ) : projects.length === 0 ? (
@@ -656,26 +656,26 @@ export function ProjectsPage() {
         ) : (
           <div className="space-y-6">
             <section className="grid gap-6 xl:grid-cols-[minmax(0,1.18fr)_360px]">
-              <div className="relative overflow-hidden rounded-[32px] border border-white/10 bg-[linear-gradient(180deg,rgba(15,23,42,0.92),rgba(2,6,23,0.98))] p-8 shadow-[0_30px_90px_rgba(2,6,23,0.34)]">
-                <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(56,189,248,0.16),transparent_30%),radial-gradient(circle_at_bottom_right,rgba(99,102,241,0.16),transparent_28%)]" />
+              <div className="relative overflow-hidden rounded-[2rem] border border-[rgba(117,132,159,0.18)] bg-[linear-gradient(180deg,rgba(255,255,255,0.92),rgba(244,248,252,0.98))] p-8 shadow-[0_24px_60px_rgba(23,38,69,0.08)]">
+                <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(24,151,214,0.14),transparent_30%),radial-gradient(circle_at_bottom_right,rgba(216,165,90,0.14),transparent_28%)]" />
                 <div className="relative space-y-6">
-                  <div className="inline-flex items-center gap-2 rounded-full border border-sky-400/25 bg-sky-500/10 px-3 py-1 text-xs font-medium text-sky-100">
+                  <div className="inline-flex items-center gap-2 rounded-full border border-sky-300/60 bg-sky-100 px-3 py-1 text-xs font-medium text-sky-900">
                     <Sparkles className="h-3.5 w-3.5" />
                     {copy.heroEyebrow}
                   </div>
 
                   <div className="max-w-3xl space-y-3">
-                    <h2 className="text-[2.35rem] font-semibold leading-[1.05] tracking-[-0.04em] text-white">
+                    <h2 className="text-[2.35rem] font-semibold leading-[1.05] tracking-[-0.04em] text-[var(--sf-text)]">
                       {copy.heroTitle}
                     </h2>
-                    <p className="max-w-2xl text-base leading-8 text-slate-300">{copy.heroBody}</p>
+                    <p className="max-w-2xl text-base leading-8 text-[var(--sf-text-muted)]">{copy.heroBody}</p>
                   </div>
 
                   <div className="grid gap-3 sm:grid-cols-3">
                     <button
                       type="button"
                       onClick={() => navigate("/app/novel-workbench")}
-                      className="inline-flex items-center justify-center gap-2 rounded-2xl bg-sky-500 px-4 py-3 text-sm font-semibold text-slate-950 transition hover:bg-sky-400"
+                      className="storyforge-primary-button inline-flex items-center justify-center gap-2 rounded-2xl px-4 py-3 text-sm font-semibold transition hover:-translate-y-0.5"
                     >
                       <BookOpen className="h-4 w-4" />
                       {copy.primaryAction}
@@ -683,7 +683,7 @@ export function ProjectsPage() {
                     <button
                       type="button"
                       onClick={() => setShowCreateModal(true)}
-                      className="inline-flex items-center justify-center gap-2 rounded-2xl border border-white/12 bg-white/[0.05] px-4 py-3 text-sm font-medium text-white transition hover:bg-white/[0.08]"
+                      className="storyforge-secondary-button inline-flex items-center justify-center gap-2 rounded-2xl px-4 py-3 text-sm font-medium transition hover:-translate-y-0.5"
                     >
                       <Plus className="h-4 w-4" />
                       {copy.secondaryAction}
@@ -692,7 +692,7 @@ export function ProjectsPage() {
                       type="button"
                       onClick={() => importInputRef.current?.click()}
                       disabled={importingProject}
-                      className="inline-flex items-center justify-center gap-2 rounded-2xl border border-white/12 bg-white/[0.03] px-4 py-3 text-sm font-medium text-slate-200 transition hover:bg-white/[0.08] disabled:cursor-not-allowed disabled:opacity-60"
+                      className="storyforge-secondary-button inline-flex items-center justify-center gap-2 rounded-2xl px-4 py-3 text-sm font-medium transition hover:-translate-y-0.5 disabled:translate-y-0 disabled:cursor-not-allowed disabled:opacity-60"
                     >
                       {importingProject ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
                       {importingProject ? t("dashboard:importing") : copy.tertiaryAction}
@@ -700,26 +700,26 @@ export function ProjectsPage() {
                   </div>
 
                   <div className="grid gap-4 md:grid-cols-[minmax(0,1fr)_280px]">
-                    <div className="rounded-[28px] border border-white/10 bg-black/20 p-5">
-                      <div className="text-[11px] uppercase tracking-[0.24em] text-slate-500">{copy.heroNoteTitle}</div>
-                      <p className="mt-3 max-w-2xl text-sm leading-7 text-slate-300">{copy.heroNoteBody}</p>
+                    <div className="rounded-[1.7rem] border border-[rgba(117,132,159,0.18)] bg-[rgba(248,250,253,0.92)] p-5">
+                      <div className="text-[11px] uppercase tracking-[0.24em] text-[var(--sf-text-soft)]">{copy.heroNoteTitle}</div>
+                      <p className="mt-3 max-w-2xl text-sm leading-7 text-[var(--sf-text-muted)]">{copy.heroNoteBody}</p>
                     </div>
 
                     <button
                       type="button"
                       onClick={() => featuredProject && navigate(`/app/projects/${featuredProject.name}`)}
                       disabled={!featuredProject}
-                      className="rounded-[28px] border border-white/10 bg-white/[0.04] p-5 text-left transition hover:border-sky-400/30 hover:bg-white/[0.06] disabled:cursor-default disabled:hover:border-white/10"
+                      className="rounded-[1.7rem] border border-[rgba(117,132,159,0.18)] bg-white/88 p-5 text-left transition hover:border-[rgba(24,151,214,0.24)] hover:bg-white disabled:cursor-default"
                     >
-                      <div className="text-[11px] uppercase tracking-[0.24em] text-slate-500">{copy.focusContinue}</div>
-                      <div className="mt-3 text-lg font-semibold tracking-[-0.02em] text-white">
+                      <div className="text-[11px] uppercase tracking-[0.24em] text-[var(--sf-text-soft)]">{copy.focusContinue}</div>
+                      <div className="mt-3 text-lg font-semibold tracking-[-0.02em] text-[var(--sf-text)]">
                         {featuredProject
                           ? locale === "zh"
                             ? `继续 ${featuredProject.title}`
                             : `Resume ${featuredProject.title}`
                           : t("dashboard:no_projects")}
                       </div>
-                      <div className="mt-2 text-sm leading-6 text-slate-400">
+                      <div className="mt-2 text-sm leading-6 text-[var(--sf-text-muted)]">
                         {featuredProject
                           ? getRecentStatusText(locale, "current_phase" in (featuredProject.status ?? {}) ? (featuredProject.status as ProjectStatus).episodes_summary : undefined)
                           : copy.focusBody}
@@ -730,10 +730,10 @@ export function ProjectsPage() {
               </div>
 
               <div className="space-y-4">
-                <section className="rounded-[32px] border border-white/10 bg-slate-950/72 p-6 shadow-[0_24px_70px_rgba(2,6,23,0.26)]">
-                  <div className="text-[11px] uppercase tracking-[0.24em] text-slate-500">{copy.statsEyebrow}</div>
+                <section className="rounded-[2rem] border border-[rgba(117,132,159,0.18)] bg-white/82 p-6 shadow-[0_18px_40px_rgba(23,38,69,0.06)]">
+                  <div className="text-[11px] uppercase tracking-[0.24em] text-[var(--sf-text-soft)]">{copy.statsEyebrow}</div>
                   <div className="mt-4 grid gap-3">
-                    <SurfaceMetric label={copy.totalProjects} value={String(totalProjects)} detail={copy.libraryTitle} toneClass="text-sky-100" />
+                    <SurfaceMetric label={copy.totalProjects} value={String(totalProjects)} detail={copy.libraryTitle} toneClass="text-[var(--sf-blue-strong)]" />
                     <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-1">
                       <SurfaceMetric label={copy.activeProjects} value={String(activeProjects)} detail={copy.readyLabel} />
                       <SurfaceMetric
@@ -746,45 +746,45 @@ export function ProjectsPage() {
                   </div>
                 </section>
 
-                <section className="rounded-[32px] border border-white/10 bg-slate-950/72 p-6 shadow-[0_24px_70px_rgba(2,6,23,0.26)]">
-                  <div className="text-[11px] uppercase tracking-[0.24em] text-slate-500">{copy.focusEyebrow}</div>
-                  <h3 className="mt-3 text-xl font-semibold tracking-[-0.02em] text-white">{copy.focusTitle}</h3>
-                  <p className="mt-2 text-sm leading-7 text-slate-400">{copy.focusBody}</p>
+                <section className="rounded-[2rem] border border-[rgba(117,132,159,0.18)] bg-white/82 p-6 shadow-[0_18px_40px_rgba(23,38,69,0.06)]">
+                  <div className="text-[11px] uppercase tracking-[0.24em] text-[var(--sf-text-soft)]">{copy.focusEyebrow}</div>
+                  <h3 className="mt-3 text-xl font-semibold tracking-[-0.02em] text-[var(--sf-text)]">{copy.focusTitle}</h3>
+                  <p className="mt-2 text-sm leading-7 text-[var(--sf-text-muted)]">{copy.focusBody}</p>
 
                   <div className="mt-5 space-y-3">
                     <button
                       type="button"
                       onClick={() => importInputRef.current?.click()}
-                      className="w-full rounded-[24px] border border-white/10 bg-white/[0.04] px-4 py-4 text-left transition hover:bg-white/[0.07]"
+                      className="w-full rounded-[1.5rem] border border-[rgba(117,132,159,0.18)] bg-[rgba(248,250,253,0.92)] px-4 py-4 text-left transition hover:bg-white"
                     >
-                      <div className="text-sm font-medium text-white">{copy.focusImport}</div>
-                      <div className="mt-1 text-sm leading-6 text-slate-400">{copy.focusImportBody}</div>
+                      <div className="text-sm font-medium text-[var(--sf-text)]">{copy.focusImport}</div>
+                      <div className="mt-1 text-sm leading-6 text-[var(--sf-text-muted)]">{copy.focusImportBody}</div>
                     </button>
 
                     <button
                       type="button"
                       onClick={() => setShowOpenClaw(true)}
-                      className="w-full rounded-[24px] border border-white/10 bg-white/[0.04] px-4 py-4 text-left transition hover:bg-white/[0.07]"
+                      className="w-full rounded-[1.5rem] border border-[rgba(117,132,159,0.18)] bg-[rgba(248,250,253,0.92)] px-4 py-4 text-left transition hover:bg-white"
                     >
-                      <div className="text-sm font-medium text-white">{copy.focusOpenClaw}</div>
-                      <div className="mt-1 text-sm leading-6 text-slate-400">{copy.focusOpenClawBody}</div>
+                      <div className="text-sm font-medium text-[var(--sf-text)]">{copy.focusOpenClaw}</div>
+                      <div className="mt-1 text-sm leading-6 text-[var(--sf-text-muted)]">{copy.focusOpenClawBody}</div>
                     </button>
                   </div>
                 </section>
               </div>
             </section>
 
-            <section className="rounded-[32px] border border-white/10 bg-slate-950/72 p-6 shadow-[0_24px_70px_rgba(2,6,23,0.26)]">
+            <section className="rounded-[2rem] border border-[rgba(117,132,159,0.18)] bg-white/82 p-6 shadow-[0_18px_40px_rgba(23,38,69,0.06)]">
               <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
                 <div>
-                  <div className="text-[11px] uppercase tracking-[0.28em] text-slate-500">{copy.libraryEyebrow}</div>
-                  <h2 className="mt-2 text-[2rem] font-semibold tracking-[-0.03em] text-white">{copy.libraryTitle}</h2>
-                  <p className="mt-2 max-w-3xl text-sm leading-7 text-slate-400">{copy.libraryBody}</p>
+                  <div className="text-[11px] uppercase tracking-[0.28em] text-[var(--sf-text-soft)]">{copy.libraryEyebrow}</div>
+                  <h2 className="mt-2 text-[2rem] font-semibold tracking-[-0.03em] text-[var(--sf-text)]">{copy.libraryTitle}</h2>
+                  <p className="mt-2 max-w-3xl text-sm leading-7 text-[var(--sf-text-muted)]">{copy.libraryBody}</p>
                 </div>
-                <div className="text-sm text-slate-400">
+                <div className="text-sm text-[var(--sf-text-muted)]">
                   {locale === "zh"
-                    ? <>当前共 <span className="font-medium text-white">{projects.length}</span> 个项目</>
-                    : <>You currently have <span className="font-medium text-white">{projects.length}</span> projects</>}
+                    ? <>当前共 <span className="font-medium text-[var(--sf-text)]">{projects.length}</span> 个项目</>
+                    : <>You currently have <span className="font-medium text-[var(--sf-text)]">{projects.length}</span> projects</>}
                 </div>
               </div>
 
@@ -843,14 +843,14 @@ export function ProjectsPage() {
 
       {deletingProject && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4 backdrop-blur-sm">
-          <div className="w-full max-w-md overflow-hidden rounded-[28px] border border-slate-800 bg-slate-950 p-6 shadow-2xl">
+          <div className="w-full max-w-md overflow-hidden rounded-[28px] border border-[rgba(117,132,159,0.18)] bg-[linear-gradient(180deg,rgba(255,255,255,0.96),rgba(245,248,252,0.98))] p-6 shadow-[0_22px_54px_rgba(23,38,69,0.12)]">
             <div className="flex items-start gap-4">
               <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-red-500/10 text-red-500">
                 <AlertTriangle className="h-6 w-6" />
               </div>
               <div className="space-y-2">
-                <h2 className="text-lg font-semibold text-slate-100">{t("dashboard:delete_project")}</h2>
-                <p className="text-sm leading-6 text-slate-400">
+                <h2 className="text-lg font-semibold text-[var(--sf-text)]">{t("dashboard:delete_project")}</h2>
+                <p className="text-sm leading-6 text-[var(--sf-text-muted)]">
                   {t("dashboard:confirm_delete_project", { title: deletingProject.title })}
                 </p>
               </div>
@@ -860,7 +860,7 @@ export function ProjectsPage() {
                 type="button"
                 onClick={() => setDeletingProject(null)}
                 disabled={deleteLoading}
-                className="rounded-xl border border-slate-700 px-4 py-2 text-sm text-slate-300 transition-colors hover:border-slate-500 hover:text-white disabled:cursor-not-allowed disabled:opacity-60"
+                className="storyforge-secondary-button rounded-xl px-4 py-2 text-sm transition hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-60"
               >
                 {t("common:cancel")}
               </button>
@@ -896,16 +896,16 @@ function ConflictDialog({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4 backdrop-blur-sm">
-      <div className="w-full max-w-lg overflow-hidden rounded-[28px] border border-slate-800 bg-slate-950 p-6 shadow-2xl">
+      <div className="w-full max-w-lg overflow-hidden rounded-[28px] border border-[rgba(117,132,159,0.18)] bg-[linear-gradient(180deg,rgba(255,255,255,0.96),rgba(245,248,252,0.98))] p-6 shadow-[0_22px_54px_rgba(23,38,69,0.12)]">
         <div className="flex items-start gap-4">
           <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-amber-500/10 text-amber-500">
             <AlertTriangle className="h-6 w-6" />
           </div>
           <div className="space-y-2">
-            <h2 className="text-lg font-semibold text-slate-100">{t("dashboard:duplicate_project_id")}</h2>
-            <p className="text-sm leading-6 text-slate-400">
+            <h2 className="text-lg font-semibold text-[var(--sf-text)]">{t("dashboard:duplicate_project_id")}</h2>
+            <p className="text-sm leading-6 text-[var(--sf-text-muted)]">
               {t("dashboard:id_intended_hint")}
-              <span className="mx-1 rounded bg-slate-800 px-1.5 py-0.5 font-mono text-slate-200">{projectName}</span>
+              <span className="mx-1 rounded bg-[rgba(24,151,214,0.08)] px-1.5 py-0.5 font-mono text-[var(--sf-text)]">{projectName}</span>
               {t("dashboard:already_exists_conflict_hint")}
             </p>
           </div>
@@ -946,7 +946,7 @@ function ConflictDialog({
             type="button"
             onClick={onCancel}
             disabled={importing}
-            className="rounded-xl border border-slate-700 px-4 py-2 text-sm text-slate-300 transition-colors hover:border-slate-500 hover:text-white disabled:cursor-not-allowed disabled:opacity-60"
+            className="storyforge-secondary-button rounded-xl px-4 py-2 text-sm transition hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-60"
           >
             {t("common:cancel")}
           </button>

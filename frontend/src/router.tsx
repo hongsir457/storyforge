@@ -1,33 +1,29 @@
-import { useEffect } from "react";
-import { Redirect, Route, Switch, useParams, useSearch } from "wouter";
-import { StudioLayout } from "@/components/layout";
-import { StudioCanvasRouter } from "@/components/canvas/StudioCanvasRouter";
-import { ProjectsPage } from "@/components/pages/ProjectsPage";
-import { NovelWorkbenchPage } from "@/components/pages/NovelWorkbenchPage";
-import { SystemConfigPage } from "@/components/pages/SystemConfigPage";
-import { ProjectSettingsPage } from "@/components/pages/ProjectSettingsPage";
+import { lazy, Suspense } from "react";
+import { Redirect, Route, Switch, useSearch } from "wouter";
 import { ToastOverlay } from "@/components/layout/ToastOverlay";
-import { API } from "@/api";
-import { useProjectsStore } from "@/stores/projects-store";
-import { useAssistantStore } from "@/stores/assistant-store";
+import { RouteLoadingState } from "@/components/shared/RouteLoadingState";
 import { useAuthStore } from "@/stores/auth-store";
-import { LoginPage } from "@/pages/LoginPage";
-import { RegisterPage } from "@/pages/RegisterPage";
-import { VerifyEmailPage } from "@/pages/VerifyEmailPage";
-import { ForgotPasswordPage } from "@/pages/ForgotPasswordPage";
-import { HomePage } from "@/pages/HomePage";
-import { AccountPage } from "@/pages/AccountPage";
-import { NotFoundPage } from "@/pages/NotFoundPage";
+
+const HomePage = lazy(() => import("@/pages/HomePage").then((module) => ({ default: module.HomePage })));
+const LoginPage = lazy(() => import("@/pages/LoginPage").then((module) => ({ default: module.LoginPage })));
+const RegisterPage = lazy(() => import("@/pages/RegisterPage").then((module) => ({ default: module.RegisterPage })));
+const VerifyEmailPage = lazy(() => import("@/pages/VerifyEmailPage").then((module) => ({ default: module.VerifyEmailPage })));
+const ForgotPasswordPage = lazy(() => import("@/pages/ForgotPasswordPage").then((module) => ({ default: module.ForgotPasswordPage })));
+const AccountPage = lazy(() => import("@/pages/AccountPage").then((module) => ({ default: module.AccountPage })));
+const NotFoundPage = lazy(() => import("@/pages/NotFoundPage").then((module) => ({ default: module.NotFoundPage })));
+const ProjectsPage = lazy(() => import("@/components/pages/ProjectsPage").then((module) => ({ default: module.ProjectsPage })));
+const NovelWorkbenchPage = lazy(() => import("@/components/pages/NovelWorkbenchPage").then((module) => ({ default: module.NovelWorkbenchPage })));
+const SystemConfigPage = lazy(() => import("@/components/pages/SystemConfigPage").then((module) => ({ default: module.SystemConfigPage })));
+const ProjectSettingsPage = lazy(() => import("@/components/pages/ProjectSettingsPage").then((module) => ({ default: module.ProjectSettingsPage })));
+const StudioWorkspaceRoute = lazy(() =>
+  import("@/routes/StudioWorkspaceRoute").then((module) => ({ default: module.StudioWorkspaceRoute })),
+);
 
 function AuthGuard({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, isLoading } = useAuthStore();
 
   if (isLoading) {
-    return (
-      <div className="flex h-screen items-center justify-center bg-gray-950 text-gray-400">
-        Loading...
-      </div>
-    );
+    return <RouteLoadingState />;
   }
 
   if (!isAuthenticated) {
@@ -41,11 +37,7 @@ function GuestGuard({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, isLoading } = useAuthStore();
 
   if (isLoading) {
-    return (
-      <div className="flex h-screen items-center justify-center bg-gray-950 text-gray-400">
-        Loading...
-      </div>
-    );
+    return <RouteLoadingState />;
   }
 
   if (isAuthenticated) {
@@ -59,11 +51,7 @@ function AdminGuard({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, isLoading, user } = useAuthStore();
 
   if (isLoading) {
-    return (
-      <div className="flex h-screen items-center justify-center bg-gray-950 text-gray-400">
-        Loading...
-      </div>
-    );
+    return <RouteLoadingState />;
   }
 
   if (!isAuthenticated) {
@@ -82,49 +70,15 @@ function LegacySettingsRedirect() {
   return <Redirect to={`/app/admin${search ? `?${search}` : ""}`} />;
 }
 
-function StudioWorkspace() {
-  const params = useParams<{ projectName: string }>();
-  const projectName = params.projectName ?? null;
-  const { setCurrentProject, setProjectDetailLoading } = useProjectsStore();
+function LazyRouteBoundary({ children }: { children: React.ReactNode }) {
+  return <Suspense fallback={<RouteLoadingState />}>{children}</Suspense>;
+}
 
-  useEffect(() => {
-    if (!projectName) return;
-    let cancelled = false;
-
-    const assistantState = useAssistantStore.getState();
-    assistantState.setSessions([]);
-    assistantState.setCurrentSessionId(null);
-    assistantState.setTurns([]);
-    assistantState.setDraftTurn(null);
-    assistantState.setSessionStatus(null);
-    assistantState.setIsDraftSession(false);
-
-    setProjectDetailLoading(true);
-    API.getProject(projectName)
-      .then((res) => {
-        if (!cancelled) {
-          setCurrentProject(projectName, res.project, res.scripts ?? {}, res.asset_fingerprints);
-        }
-      })
-      .catch(() => {
-        if (!cancelled) {
-          setCurrentProject(projectName, null);
-        }
-      })
-      .finally(() => {
-        if (!cancelled) setProjectDetailLoading(false);
-      });
-
-    return () => {
-      cancelled = true;
-      setCurrentProject(null, null);
-    };
-  }, [projectName, setCurrentProject, setProjectDetailLoading]);
-
+function WorkspaceRouteBoundary({ projectName }: { projectName: string | null }) {
   return (
-    <StudioLayout>
-      <StudioCanvasRouter />
-    </StudioLayout>
+    <Suspense fallback={<RouteLoadingState />}>
+      <StudioWorkspaceRoute projectName={projectName} />
+    </Suspense>
   );
 }
 
@@ -133,30 +87,40 @@ export function AppRoutes() {
     <>
       <Switch>
         <Route path="/">
-          <HomePage />
+          <LazyRouteBoundary>
+            <HomePage />
+          </LazyRouteBoundary>
         </Route>
 
         <Route path="/login">
           <GuestGuard>
-            <LoginPage />
+            <LazyRouteBoundary>
+              <LoginPage />
+            </LazyRouteBoundary>
           </GuestGuard>
         </Route>
 
         <Route path="/register">
           <GuestGuard>
-            <RegisterPage />
+            <LazyRouteBoundary>
+              <RegisterPage />
+            </LazyRouteBoundary>
           </GuestGuard>
         </Route>
 
         <Route path="/verify-email">
           <GuestGuard>
-            <VerifyEmailPage />
+            <LazyRouteBoundary>
+              <VerifyEmailPage />
+            </LazyRouteBoundary>
           </GuestGuard>
         </Route>
 
         <Route path="/forgot-password">
           <GuestGuard>
-            <ForgotPasswordPage />
+            <LazyRouteBoundary>
+              <ForgotPasswordPage />
+            </LazyRouteBoundary>
           </GuestGuard>
         </Route>
 
@@ -168,13 +132,17 @@ export function AppRoutes() {
 
         <Route path="/app/projects">
           <AuthGuard>
-            <ProjectsPage />
+            <LazyRouteBoundary>
+              <ProjectsPage />
+            </LazyRouteBoundary>
           </AuthGuard>
         </Route>
 
         <Route path="/app/novel-workbench">
           <AuthGuard>
-            <NovelWorkbenchPage />
+            <LazyRouteBoundary>
+              <NovelWorkbenchPage />
+            </LazyRouteBoundary>
           </AuthGuard>
         </Route>
 
@@ -186,30 +154,40 @@ export function AppRoutes() {
 
         <Route path="/app/admin">
           <AdminGuard>
-            <SystemConfigPage />
+            <LazyRouteBoundary>
+              <SystemConfigPage />
+            </LazyRouteBoundary>
           </AdminGuard>
         </Route>
 
         <Route path="/app/account">
           <AuthGuard>
-            <AccountPage />
+            <LazyRouteBoundary>
+              <AccountPage />
+            </LazyRouteBoundary>
           </AuthGuard>
         </Route>
 
         <Route path="/app/projects/:projectName/settings">
           <AuthGuard>
-            <ProjectSettingsPage />
+            <LazyRouteBoundary>
+              <ProjectSettingsPage />
+            </LazyRouteBoundary>
           </AuthGuard>
         </Route>
 
         <Route path="/app/projects/:projectName" nest>
-          <AuthGuard>
-            <StudioWorkspace />
-          </AuthGuard>
+          {(params) => (
+            <AuthGuard>
+              <WorkspaceRouteBoundary projectName={params.projectName ?? null} />
+            </AuthGuard>
+          )}
         </Route>
 
         <Route>
-          <NotFoundPage />
+          <LazyRouteBoundary>
+            <NotFoundPage />
+          </LazyRouteBoundary>
         </Route>
       </Switch>
       <ToastOverlay />

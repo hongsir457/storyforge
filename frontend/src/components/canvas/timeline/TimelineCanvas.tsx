@@ -290,7 +290,7 @@ export function TimelineCanvas({
   // Empty state — no episode selected or no content at all
   if (!projectData || (!episodeScript && !hasDraft)) {
     return (
-      <div className="flex h-full items-center justify-center text-gray-500">
+      <div className="flex h-full items-center justify-center text-[var(--sf-text-muted)]">
         {t("select_episode_hint")}
       </div>
     );
@@ -308,43 +308,43 @@ export function TimelineCanvas({
       <div className="p-4">
         {/* ---- Episode header ---- */}
         <div className="mb-4">
-          <h2 className="text-lg font-semibold text-gray-100">
+          <h2 className="text-lg font-semibold text-[var(--sf-text)]">
             {episodeScript
               ? `E${episodeScript.episode}: ${episodeScript.title}`
               : `E${episode}${episodeTitle ? `: ${episodeTitle}` : ""}`}
           </h2>
           {episodeScript && (
-            <p className="text-xs text-gray-500">
+            <p className="text-xs text-[var(--sf-text-soft)]">
               {contentMode === "narration"
                 ? t("segment_count", { count: segments.length })
                 : t("scene_count_label", { count: segments.length })} · ~{totalDuration}s
             </p>
           )}
           {episodeCost && (
-            <div className="mt-2 flex items-center gap-4 rounded-lg bg-gray-900 border border-gray-800 px-3 py-2 text-xs tabular-nums">
-              <span className="text-gray-600">{t("cost_estimate_short")}</span>
-              <span className="text-gray-500">{t("cost_storyboard_short")} <span className="text-gray-300">{formatCost(episodeCost.totals.estimate.image)}</span></span>
-              <span className="text-gray-500">{t("cost_video_short")} <span className="text-gray-300">{formatCost(episodeCost.totals.estimate.video)}</span></span>
-              <span className="text-gray-500">{t("cost_total_short")} <span className="font-medium text-amber-400">{formatCost(totalBreakdown(episodeCost.totals.estimate))}</span></span>
-              <span className="text-gray-700">|</span>
-              <span className="text-gray-600">{t("cost_actual_short")}</span>
-              <span className="text-gray-500">{t("cost_storyboard_short")} <span className="text-gray-300">{formatCost(episodeCost.totals.actual.image)}</span></span>
-              <span className="text-gray-500">{t("cost_video_short")} <span className="text-gray-300">{formatCost(episodeCost.totals.actual.video)}</span></span>
-              <span className="text-gray-500">{t("cost_total_short")} <span className="font-medium text-emerald-400">{formatCost(totalBreakdown(episodeCost.totals.actual))}</span></span>
+            <div className="mt-2 flex items-center gap-4 rounded-[1rem] border border-[rgba(117,132,159,0.18)] bg-[rgba(248,250,253,0.92)] px-3 py-2 text-xs tabular-nums text-[var(--sf-text-muted)]">
+              <span className="text-[var(--sf-text-soft)]">{t("cost_estimate_short")}</span>
+              <span>{t("cost_storyboard_short")} <span className="text-[var(--sf-text)]">{formatCost(episodeCost.totals.estimate.image)}</span></span>
+              <span>{t("cost_video_short")} <span className="text-[var(--sf-text)]">{formatCost(episodeCost.totals.estimate.video)}</span></span>
+              <span>{t("cost_total_short")} <span className="font-medium text-amber-700">{formatCost(totalBreakdown(episodeCost.totals.estimate))}</span></span>
+              <span className="text-[var(--sf-text-soft)]">|</span>
+              <span className="text-[var(--sf-text-soft)]">{t("cost_actual_short")}</span>
+              <span>{t("cost_storyboard_short")} <span className="text-[var(--sf-text)]">{formatCost(episodeCost.totals.actual.image)}</span></span>
+              <span>{t("cost_video_short")} <span className="text-[var(--sf-text)]">{formatCost(episodeCost.totals.actual.video)}</span></span>
+              <span>{t("cost_total_short")} <span className="font-medium text-emerald-700">{formatCost(totalBreakdown(episodeCost.totals.actual))}</span></span>
             </div>
           )}
         </div>
 
         {/* ---- Tab bar (only when draft exists) ---- */}
         {showTabs && (
-          <div className="mb-4 flex gap-0 border-b border-gray-800">
+          <div className="mb-4 flex gap-0 border-b border-[rgba(117,132,159,0.18)]">
             <button
               type="button"
               onClick={() => setActiveTab("preprocessing")}
               className={`border-b-2 px-4 py-2 text-sm transition-colors focus-ring rounded-t ${
                 activeTab === "preprocessing"
-                  ? "border-indigo-500 text-indigo-400 font-medium"
-                  : "border-transparent text-gray-500 hover:text-gray-300"
+                  ? "border-[var(--sf-blue)] text-[var(--sf-blue-strong)] font-medium"
+                  : "border-transparent text-[var(--sf-text-muted)] hover:text-[var(--sf-text)]"
               }`}
             >
               {t("preprocessing_tab")}
@@ -355,10 +355,10 @@ export function TimelineCanvas({
               disabled={!hasScript}
               className={`border-b-2 px-4 py-2 text-sm transition-colors focus-ring rounded-t ${
                 activeTab === "timeline"
-                  ? "border-indigo-500 text-indigo-400 font-medium"
+                  ? "border-[var(--sf-blue)] text-[var(--sf-blue-strong)] font-medium"
                   : !hasScript
-                    ? "border-transparent text-gray-700 cursor-not-allowed"
-                    : "border-transparent text-gray-500 hover:text-gray-300"
+                    ? "border-transparent text-[var(--sf-text-soft)] cursor-not-allowed"
+                    : "border-transparent text-[var(--sf-text-muted)] hover:text-[var(--sf-text)]"
               }`}
             >
               {t("timeline_tab")}

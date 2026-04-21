@@ -78,6 +78,7 @@ def _release_project_file_lock(lock_file: Any) -> None:
     lock_file.seek(0)
     msvcrt.locking(lock_file.fileno(), msvcrt.LK_UNLCK, 1)
 
+
 # ==================== 数据模型 ====================
 
 

@@ -1,401 +1,226 @@
-# DESIGN.md
+# Design System - Storyforge
 
-## Product Frame
-
-- External brand: `Storyforge / 叙影工场`
-- External subtitle: `AI novel&video studio / 小说与视频自动生成工作台`
-- Internal compatibility name: `autovideo`
-- Product wedge: `小说 -> 分镜 -> 视频`
-
-Storyforge is not a generic AI playground and not a generic video editor. It is a narrative production studio that turns a seed idea into a reusable story world, then into scenes, assets, and short-form video output.
-
-The design must make that production line obvious on every major surface.
+## Product Context
+- **What this is:** Storyforge is a story-to-visual-IP production studio. It turns a novel seed into a reusable world, then into characters, clues, storyboards, assets, and short-form video output.
+- **Who it is for:** There are two primary users. Creators move a story from idea to production. Operators manage providers, models, accounts, costs, and system health.
+- **Space / industry:** AI-assisted narrative production, novel-to-video tooling, creator workflow software.
+- **Project type:** Dark-first web app with public landing/auth surfaces, creator workspaces, and an admin console.
 
 ## Design Thesis
+- **Core thesis:** This product should feel like a narrative studio, not a cloud dashboard.
+- **Primary promise:** The first thing users understand is the production pipeline, not model plumbing.
+- **Mental-model split:** Creator surfaces should feel guided and confident. Admin surfaces should feel precise, denser, and more operational, while still belonging to the same brand world.
 
-The product should feel like a narrative atelier, not a cloud dashboard.
+## Aesthetic Direction
+- **Direction:** Narrative Studio / Cinematic Editorial Utility
+- **Decoration level:** intentional
+- **Mood:** calm, credible, dark, and slightly editorial. Public pages should feel like a title sequence or brand booklet. Creator pages should feel like a studio desk. Admin pages should feel like a control rack, not a marketing site.
+- **Reference basis:** This pass is based on the current codebase, existing Storyforge product framing, and current screenshots. No external competitive research was used in this iteration.
 
-Three rules:
+### Safe Choices
+- **Dark-first studio shell:** The product has to hold images, video, timelines, logs, and long text. A dark shell gives media and state colors room to breathe.
+- **Creator / admin split:** These users have different goals. Separate mental models are not a polish pass; they are core product structure.
+- **Restrained accent strategy:** Accent color should signal progress and focus. Success, warning, and error states should stay strictly semantic.
 
-1. The first thing users understand is the story pipeline, not the model plumbing.
-2. Creator surfaces should feel guided and confident; operational surfaces should feel precise and contained.
-3. Trust must be visible at the pixel level, especially in auth, settings, and job status flows.
-
-## North Star Experience
-
-Within 10 seconds, a new user should understand:
-
-- this is for turning stories into visual IP
-- there is a clear first step
-- the product already knows what comes next after that first step
-
-Within 5 minutes, an authenticated user should feel:
-
-- I know where to start
-- I can see the state of my story assets
-- I am not managing infrastructure by accident
-
-## Audience Split
-
-There are two distinct users. The UI must stop mixing them.
-
-### 1. Creator
-
-Primary goals:
-
-- create a project
-- start from a seed or manuscript
-- inspect assets, story state, and progress
-- continue into storyboard and video production
-
-### 2. Operator / Admin
-
-Primary goals:
-
-- configure providers
-- manage agent settings
-- inspect usage and cost
-- debug delivery or model issues
-
-Rule: creator navigation and admin navigation must not share the same top-level mental model.
+### Deliberate Risks
+- **Editorial display typography:** Public and key creator moments should feel more like a real narrative brand and less like a generic SaaS starter.
+- **Warm metal accent inside a cool system:** A small amount of amber-gold warmth helps shift the product from "tooling" toward "studio."
+- **Asymmetric public composition:** Public pages should avoid symmetrical SaaS-template hero layouts. Story on the left and action on the right is more memorable and more brand-specific.
 
 ## Information Architecture
-
-### Public
-
-```text
-/                      Brand promise + entry
-/login                 Sign in
-/register              Create account
-/verify-email          Verify account
-/forgot-password       Reset password
-```
-
-### Creator App
-
-```text
-/app/projects                   Home for signed-in creators
-/app/novel-workbench            Start from seed and generate novel
-/app/projects/:projectName      Single project workspace
-/app/projects/:projectName/settings
-/app/account                    Personal profile and security
-```
-
-### Admin
-
-```text
-/app/admin?section=agent
-/app/admin?section=providers
-/app/admin?section=media
-/app/admin?section=usage
-/app/admin?section=api-keys
-```
+- **Public:** `/`, `/login`, `/register`, `/verify-email`, `/forgot-password`
+- **Creator app:** `/app/projects`, `/app/novel-workbench`, `/app/projects/:projectName`, `/app/projects/:projectName/settings`, `/app/account`
+- **Admin console:** `/app/admin?section=agent|providers|media|usage|api-keys`
 
 ### IA Rules
+- **Post-login home:** `/app/projects` is the default creator landing page.
+- **Novel Workbench:** This is a creator entry flow, not an advanced settings page.
+- **Admin console:** Keep it denser, more structured, and less cinematic than creator surfaces.
+- **Trust-critical surfaces:** Home, auth, email verification, long-running jobs, and destructive actions must feel calm, explicit, and legitimate.
 
-- `/app/projects` is the primary post-login landing page.
-- `Novel Workbench` is a creator flow, not an admin tool.
-- `SystemConfigPage` should conceptually become `Admin Console`.
-- Project-level media settings belong inside a project, never in the novel creation entry.
-- Global provider and model configuration must be admin-only.
+## Typography
+- **Display / hero:** `Space Grotesk`
+  Why: strong structure, modern but not generic, better brand character than `Inter`.
+- **Body / UI:** `Manrope`
+  Why: good small-size readability on dark surfaces and less template-feeling than the default SaaS stack.
+- **CJK companion:** `Noto Sans SC`
+  Why: stable coverage for Chinese UI text without changing the overall tone.
+- **Data / tables:** `Manrope` with `font-variant-numeric: tabular-nums`
+- **Code / logs / IDs:** `IBM Plex Mono`
+- **Loading strategy:** Self-host when possible. Otherwise use preconnect plus `font-display: swap`.
+- **Do not use as primary UI fonts:** `Inter`, `Avenir Next`, `Trebuchet MS`, `Roboto`, `Arial`
 
-## Page Intent
+### Type Scale
+- `display-2xl`: 72 / 80 / 700
+- `display-xl`: 60 / 68 / 700
+- `h1`: 44 / 52 / 700
+- `h2`: 32 / 40 / 700
+- `h3`: 24 / 32 / 600
+- `title`: 20 / 28 / 600
+- `body-lg`: 18 / 30 / 500
+- `body`: 16 / 26 / 500
+- `body-sm`: 14 / 22 / 500
+- `caption`: 12 / 18 / 500
+- `micro`: 11 / 16 / 600
 
-### Home
+### Type Rules
+- Do not mix legacy font stacks across the app.
+- Use letterspacing only for uppercase micro-labels.
+- Enable tabular numerals on cost, stats, phase counts, and any columnar numbers.
+- Keep long-form text around `66ch` when possible.
 
-Purpose:
+## Color
+- **Approach:** balanced, dark-first, restrained public glow plus denser studio surfaces
+- **Primary:** `#38A8F5` - trust, forward motion, public CTA, creator entry actions
+- **Secondary:** `#5B5CE6` - active selection, in-studio actions, focused workflow state
+- **Accent metal:** `#D8A55A` - editorial warmth, trust callouts, empty-state warmth, diagnostics framing
+- **Semantic success:** `#2BCB90`
+- **Semantic warning:** `#E2A446`
+- **Semantic error:** `#F06C82`
+- **Semantic info:** `#62B6FF`
 
-- explain the product in one sentence
-- establish brand tone
-- route the user to sign in or create an account
+### Neutrals
+- `#F7F8FB` text-high
+- `#D9DFE8` text
+- `#9AA5B5` text-muted
+- `#657184` text-faint
+- `#273247` line-strong
+- `#1A2334` surface-raised
+- `#101826` surface
+- `#060B14` canvas
 
-Hierarchy:
+### Color Rules
+- Public CTA defaults to sky. In-studio active and generate actions default to indigo. Do not use both as equal co-primary colors inside the same region.
+- Amber is for diagnostics, guided warnings, and warmth. It is not the default main button color.
+- Rose is only for blocked or destructive states.
+- Large backgrounds should be deep ink and subtle atmospheric light, not blue-purple AI gradients.
 
-1. brand promise
-2. story pipeline
-3. primary CTA
-4. supporting trust signals
+### Suggested Tokens
+- `--sf-canvas: #060B14`
+- `--sf-surface: #101826`
+- `--sf-surface-raised: #1A2334`
+- `--sf-surface-glass: rgba(18, 25, 38, 0.76)`
+- `--sf-line-subtle: rgba(154, 165, 181, 0.12)`
+- `--sf-line-strong: rgba(154, 165, 181, 0.24)`
+- `--sf-text: #D9DFE8`
+- `--sf-text-muted: #9AA5B5`
+- `--sf-text-faint: #657184`
+- `--sf-primary: #38A8F5`
+- `--sf-secondary: #5B5CE6`
+- `--sf-accent-metal: #D8A55A`
+- `--sf-success: #2BCB90`
+- `--sf-warning: #E2A446`
+- `--sf-error: #F06C82`
 
-The home page should sell the transformation, not the list of AI capabilities.
+## Spacing
+- **Base unit:** 4px
+- **Density:** comfortable-compact
+- **Scale:** `2, 4, 8, 12, 16, 24, 32, 48, 64, 96`
 
-Preferred framing:
+### Spacing Rules
+- Use `24` and `32` as the default panel padding sizes.
+- Keep horizontal action groups on `8` or `12` spacing only.
+- Separate label, title, description, and action layers with clear rhythm instead of making every section feel equally weighted.
 
-- headline: story-to-visual-IP transformation
-- body: world, character, chapter, storyboard, asset continuity
-- support cards: three concrete production promises, not generic feature marketing
+## Layout
+- **Approach:** hybrid
+- **Grid:** public `12 / 6 / 4`, creator app `12`, admin `12`
+- **Max widths:** public `1280px`, creator hub `1360px`, workspace shell can stretch to `1440px`
+- **Radius scale:** `10px`, `14px`, `20px`, `28px`, `999px`
 
-### Auth Pages
+### Layout Rules
+- Public shell uses a story stage plus action card composition, not a centered generic SaaS block.
+- Projects hub leads with "what to do next" and only then shows tools and project inventory.
+- Novel Workbench keeps new-job creation as the first visual layer. Runtime history and diagnostics are second-layer information.
+- Workspace keeps a stable three-track model: navigation rail, main canvas, assistant rail. None of them should collapse into decorative width.
+- Admin pages should not use cinematic oversized hero treatments.
 
-Purpose:
+## Motion
+- **Approach:** intentional
+- **Enter easing:** `cubic-bezier(0.22, 1, 0.36, 1)`
+- **Exit easing:** `cubic-bezier(0.4, 0, 1, 1)`
+- **Move easing:** `cubic-bezier(0.2, 0.8, 0.2, 1)`
+- **Duration:** micro `90ms`, short `160-200ms`, medium `240-320ms`, long `420-560ms`
 
-- reduce anxiety
-- explain exactly what happens next
-- preserve brand trust
+### Motion Rules
+- Motion exists to clarify state: drawer open/close, hover lift, toast entry, progress movement, panel swaps.
+- Animate `opacity`, `transform`, and sometimes `filter`. Avoid `transition: all`.
+- Atmospheric motion is allowed only on public backgrounds and must stay subtle.
+- Hover lift stays within `-2px`. Scale stays within `1.015`.
+- Respect `prefers-reduced-motion` globally.
 
-Rules:
+## Surface Patterns
 
-- every auth page uses the same shell and same tonal center
-- error messages must be plain, direct, and non-technical
-- email verification and password reset must feel like account safety, not system plumbing
+### Public / Auth
+- Public pages should feel like a brand cover, with fewer buttons and a stronger headline.
+- Login, register, forgot-password, and verification share one shell.
+- Public cards may use larger radius and glassier surfaces than admin pages, but keep depth to two layers.
 
-### Projects Page
-
-Purpose:
-
-- act as the creator home
-- show owned work only
-- make the next action obvious
-
-Hierarchy:
-
-1. page identity
-2. create / import / enter novel workbench
-3. project cards
-4. secondary account and settings actions
-
-Rules:
-
-- project cards should foreground story progress, not only thumbnail aesthetics
-- the empty state is a product feature and must offer a warm start
-- account name and logout are utilities, not primary navigation
+### Creator Hub
+- `/app/projects` is the creator home, not a system control board.
+- The top section explains the next meaningful action.
+- Project cards foreground stage, asset coverage, and next step rather than acting as generic thumbnail tiles.
 
 ### Novel Workbench
+- The first screen must answer what this page does, what the user needs to fill in, and where they go after success.
+- Diagnostics belong in a lower-priority disclosure area.
+- Job history should read like a production record, not a backend dump.
 
-Purpose:
-
-- start the novel-generation pipeline from a seed
-- help the user understand progress and outcomes
-
-Hierarchy:
-
-1. what this page does
-2. create-new-job form
-3. current / recent jobs
-4. diagnostics, only when needed
-
-Rules:
-
-- default view must prioritize creation, not environment inspection
-- operational details such as workspace, git, uv, and env source belong in a collapsible diagnostics area
-- job records must read like a guided production log, not raw backend output
-- when a job is running, show current phase, recent meaningful events, and expected next milestone
-
-### Project Workspace
-
-Purpose:
-
-- make a single project feel like a living story system
-
-Hierarchy should be story-first:
-
-1. current production phase
-2. characters / clues / scripts / shots
-3. asset actions
-4. deep utilities
-
-### Project Settings
-
-Purpose:
-
-- hold project-specific media defaults
-
-Rules:
-
-- this is where aspect ratio, generation mode, and default clip duration belong
-- settings copy should explain why a creator would change something, not just what the field is called
+### Workspace
+- The header must clearly hold brand, project, phase, and high-value actions.
+- When the assistant rail opens, the main canvas must remain comfortably usable.
+- Sidebar grouping stays stable and functional. Decorative icon noise is not allowed.
 
 ### Admin Console
-
-Purpose:
-
-- hold global operational configuration
-
-Rules:
-
-- visually distinct from creator surfaces
-- more compact, more utility-focused, less cinematic
-- only accessible to admins
-
-## Visual System
-
-### Tone
-
-- dark studio environment
-- high-contrast, restrained color accents
-- strong surfaces with soft glow, not neon overload
-
-### Color Roles
-
-- `sky`: primary trust and forward motion
-- `indigo`: studio actions and active selection
-- `emerald`: success and healthy completion
-- `amber`: caution, pending work, diagnostics
-- `rose`: destructive or blocked states
-- `gray/slate`: utility surfaces and quiet scaffolding
-
-Rule: one surface should not mix `sky` and `indigo` as equal competing primaries.
-
-### Typography
-
-Recommended pairing:
-
-- display Latin: `Space Grotesk`
-- body Latin: `Manrope`
-- CJK UI/body: `Noto Sans SC`
-
-If implementation complexity is a concern, unify on `Noto Sans SC` for CJK and `Manrope` for Latin body, while preserving a stronger display face for hero headlines.
-
-### Radius
-
-- input/button small: `12px`
-- card/dialog: `16px`
-- hero/public shell: `32px`
-
-### Shadow
-
-- public pages: deeper atmospheric shadows
-- app surfaces: tighter, more structural shadows
-- modals: strongest elevation in the system
-
-### Iconography
-
-- use line icons for system actions
-- avoid mixing cute emoji, dense icons, and brand marks in the same header cluster
+- Higher density, stronger grouping, fewer brand theatrics.
+- Headings, helper text, and errors should be more systematic than expressive.
 
 ## Component Rules
 
 ### Buttons
-
-- primary: filled, decisive, one per area
-- secondary: outlined or tinted
-- destructive: always rose, never primary position by default
-
-Each region gets one obvious primary button. If two buttons look primary, hierarchy is broken.
+- Each region gets one obvious primary action.
+- Primary: filled. Secondary: tinted or outlined. Danger: rose only.
+- Public pages may use sky for primary. Studio actions prefer indigo.
 
 ### Cards
-
-- cards must have a dominant data point
-- avoid generic equal-weight metadata stacks
-- card footer actions are secondary utilities, not the headline
+- Every card needs one dominant signal: phase, asset coverage, next step, status, or hero media.
+- Avoid stacking multiple equal-weight stat boxes unless one layer is clearly subordinate.
 
 ### Forms
-
-- labels always visible
-- helper text explains consequence, not implementation detail
-- inline errors appear near the field or submit action, never hidden elsewhere
+- Labels stay visible.
+- Helper text explains consequence, not implementation detail.
+- Inputs target `44-48px` height and `44x44` minimum touch area.
 
 ### Empty States
-
-Every empty state must include:
-
-1. what this area is for
-2. what to do next
-3. one primary action
-
-Optional:
-
-- one secondary path for experienced users
-
-Never ship `No items found.` as the entire state.
-
-## Interaction State Matrix
-
-```text
-Feature            | Loading                     | Empty                                       | Error                                           | Success                                 | Partial
------------------- | --------------------------- | ------------------------------------------- | ----------------------------------------------- | --------------------------------------- | ---------------------------------------
-Home               | n/a                         | n/a                                         | graceful fallback copy                          | CTA available                           | n/a
-Login              | button spinner              | n/a                                         | plain-language auth error                       | redirect to /app/projects               | unverified email prompt
-Register           | button spinner              | n/a                                         | delivery/auth validation message                | verification sent / pending             | verification created but delivery failed
-Projects           | skeleton or centered loader | warm starter state with create + workbench  | import/delete failure toast + recover path      | project list visible                    | partial asset/progress summaries
-Novel Workbench    | page loader / polling state | explain pipeline + start form               | job failure with stage and next action          | import completed and open-project CTA   | running with phase + live milestone
-Project Workspace  | project detail loader       | no assets yet with next recommended action  | asset-level failure with retry affordance       | new asset/script/video available        | some assets generated, some pending
-Project Settings   | form skeleton               | n/a                                         | save error inline + toast                       | saved confirmation                      | unsupported inherited defaults
-Admin Console      | section skeleton            | explain missing providers/config            | provider validation error with exact section    | saved status + config health recovered  | some providers healthy, some missing
-```
-
-## Responsive Rules
-
-### Mobile
-
-- public shell collapses to a strong single-column narrative
-- project header actions wrap into a second row
-- novel workbench becomes stacked sections: create, jobs, details
-- avoid side-by-side diagnostics and logs on phones
-
-### Tablet
-
-- maintain two-column composition only if each column can preserve hierarchy
-- prefer stacked logs/detail panels over cramped split panes
-
-### Desktop
-
-- preserve cinematic breathing room
-- use wide layouts to separate creation from inspection
-
-Responsive is not "stack everything." Each breakpoint must preserve hierarchy.
+- Every empty state includes what the area is for, what to do next, and one primary action.
+- A secondary expert path is allowed, but only after the main path.
+- Never ship `No items found.` as a complete empty state.
 
 ## Accessibility Rules
+- Minimum interactive target: `44x44`
+- All buttons, cards, tabs, menus, and dismiss controls need visible `focus-visible`
+- Color is never the only status signal
+- Body contrast must meet AA on dark surfaces
+- Long-running status and toasts should use `aria-live`
 
-- minimum interactive touch target: `44x44`
-- visible focus state on all buttons, cards, menus, tabs, and nav
-- color is never the only status signal
-- use `aria-live` for long-running job status changes
-- destructive dialogs must have explicit labels and clear escape path
-- maintain readable contrast on all tinted surfaces
-
-## Trust Surfaces
-
-Trust-critical surfaces:
-
-- home hero
-- login/register/verify/reset
-- email templates
-- long-running generation jobs
-- deletion / cancellation flows
-
-Rules:
-
-- brand identity must be consistent between email and UI
-- system messages must explain what happened, what it means, and what to do next
-- do not expose infrastructure details unless the user is in an advanced or admin context
-
-## Email Design
-
-Email templates should feel transactional, calm, and obviously legitimate.
-
-Required elements:
-
-- brand mark / logo
-- clear headline
-- short explanation
-- large verification code or clear action
-- expiry note
-- support guidance
-
-Avoid:
-
-- plain unstyled text only
-- overly promotional copy
-- inconsistent sender name and brand name
-
-## Copy Rules
-
-- creator-facing copy should use narrative language
-- admin-facing copy should use operational language
-- do not mix "provider setup" language into creator-first screens unless setup is blocking the action
-- job stages should describe outcomes, not only internal process names
-
-## What Not To Build
-
-- a generic analytics dashboard as the creator home
-- a settings-first product shell
-- a cluttered multi-primary header
-- a generic SaaS hero with vague "AI-powered" copy
+## Anti-Slop Rules
+- No blue-purple default brand gradients
+- No generic 3-card feature grid with icon circles
+- No centering everything by default
+- No uniform bubbly radius on every element
+- No emoji as a primary navigation or product action icon
+- No vague `AI-powered` or `all-in-one solution` marketing copy
 
 ## Immediate Design Priorities
+1. Unify the font stack and remove `Inter`, `Avenir Next`, and `Trebuchet MS` drift.
+2. Make public pages feel more story-led and less template-led.
+3. Turn `/app/projects` into a true creator home instead of a tool cluster.
+4. Tighten the workspace header and rail hierarchy so phase, project, and actions read clearly.
+5. Land design tokens into CSS variables and utility patterns.
 
-1. Split creator IA from admin IA.
-2. Turn `Novel Workbench` into a creator-first guided flow.
-3. Upgrade project empty state into a warm start surface.
-4. Formalize tokens and typography into implementation-ready frontend conventions.
-5. Keep email/auth trust surfaces visually synchronized with the app.
+## Decisions Log
+| Date | Decision | Rationale |
+|------|----------|-----------|
+| 2026-04-21 | Rebuilt Storyforge design-system baseline | Replaced the older concept-only document with implementation-ready typography, color, layout, and motion guidance |
+| 2026-04-21 | Kept the dark-first studio direction | The product has to hold media, long text, logs, timelines, and creator state at the same time |
+| 2026-04-21 | Strengthened the creator/admin split | Creation and system configuration are different mental models and should diverge in IA and visual density |

@@ -7,27 +7,31 @@
     --color-ink-900: #0b1320;
     --color-ink-800: #132034;
     --color-ink-700: #22344f;
-    --color-neon-500: #11d3ac;
-    --color-neon-400: #34e7c5;
-    --color-neon-300: #6af2d8;
-    --color-amberx-500: #f0a93e;
-    --color-amberx-400: #f6be67;
-    --color-amberx-300: #ffd892;
-    --shadow-glow: 0 0 0 1px rgba(17, 211, 172, 0.28), 0 18px 40px rgba(8, 15, 25, 0.45);
+    --color-neon-500: #38a8f5;
+    --color-neon-400: #62b6ff;
+    --color-neon-300: #9fd6ff;
+    --color-amberx-500: #d8a55a;
+    --color-amberx-400: #e6bc79;
+    --color-amberx-300: #f3d9ab;
+    --shadow-glow: 0 0 0 1px rgba(56, 168, 245, 0.22), 0 18px 40px rgba(8, 15, 25, 0.45);
+    --color-brand-sky-500: #38a8f5;
+    --color-brand-indigo-500: #5b5ce6;
+    --color-brand-metal-500: #d8a55a;
 
     /* Studio theme colors — 工作台主题色 */
     --color-studio-bg: #030712;
     --color-studio-panel: #111827;
     --color-studio-border: #1f2937;
-    --color-accent-start: #4f46e5;
-    --color-accent-end: #4f46e5;
+    --color-accent-start: #38a8f5;
+    --color-accent-end: #5b5ce6;
 
     /* Font families — 字体定义 */
-    --font-sans: "Inter", "Noto Sans SC", system-ui, sans-serif;
-    --font-mono: "Fira Code", "Noto Sans Mono", monospace;
+    --font-sans: "Manrope", "Noto Sans SC", system-ui, sans-serif;
+    --font-display: "Space Grotesk", "Noto Sans SC", system-ui, sans-serif;
+    --font-mono: "IBM Plex Mono", "Fira Code", "Noto Sans Mono", monospace;
 }
 
 /* 统一焦点指示（a11y）—— 所有可聚焦元素共用；比旧 .focus-ring（studio.css）的 ring-indigo-500/40 更明显 */
 @utility focus-ring {
-  @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500;
+  @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-400;
 }

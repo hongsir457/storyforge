@@ -145,3 +145,9 @@ ORM 和仓储位于：
 - Python 代码改动前后优先跑 `ruff`
 - 前端改动优先跑 `pnpm check`
 - 新增用户可见文本时，同时补齐中英文 i18n key
+## Design System
+
+Always read `DESIGN.md` before making any visual or UI decisions.
+All font choices, colors, spacing, layout, and motion direction are defined there.
+Do not deviate without explicit user approval.
+In QA or design-review work, flag any implementation that does not match `DESIGN.md`.

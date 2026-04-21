@@ -44,8 +44,13 @@ export function LoginPage() {
       description={t("auth:home_hero_body")}
     >
       <div className="mb-6">
-        <h2 className="text-2xl font-semibold text-white">{t("auth:login")}</h2>
-        <p className="mt-2 text-sm text-slate-400">{t("dashboard:app_subtitle")}</p>
+        <h2
+          className="text-[2rem] font-semibold tracking-[-0.02em] text-white"
+          style={{ fontFamily: "var(--font-display)" }}
+        >
+          {t("auth:login")}
+        </h2>
+        <p className="mt-2 text-sm leading-7 text-slate-300">{t("dashboard:app_subtitle")}</p>
       </div>
 
       <form onSubmit={(e) => void handleSubmit(e)} className="space-y-4">
@@ -70,7 +75,7 @@ export function LoginPage() {
         <button
           type="submit"
           disabled={loading}
-          className="w-full rounded-xl bg-sky-500 px-4 py-3 text-sm font-semibold text-slate-950 transition hover:bg-sky-400 disabled:opacity-60"
+          className="w-full rounded-2xl bg-sky-500 px-4 py-3 text-sm font-semibold text-slate-950 transition hover:bg-sky-400 disabled:opacity-60"
         >
           {loading ? t("auth:logging_in") : t("auth:login")}
         </button>
@@ -104,12 +109,12 @@ function Field({
 }) {
   return (
     <label className="block">
-      <span className="mb-2 block text-sm text-slate-300">{label}</span>
+      <span className="mb-2 block text-[11px] font-medium uppercase tracking-[0.18em] text-slate-400">{label}</span>
       <input
         type={type}
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white outline-none transition focus:border-sky-400/60 focus:bg-white/8"
+        className="w-full rounded-2xl border border-white/10 bg-slate-950/65 px-4 py-3.5 text-[15px] text-white outline-none transition focus:border-sky-400/70 focus:bg-slate-950/80"
         required
       />
     </label>

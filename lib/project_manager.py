@@ -4,19 +4,29 @@
 管理视频项目的目录结构、分镜剧本读写、状态追踪。
 """
 
-import fcntl
 import json
 import logging
 import os
 import re
 import secrets
 import tempfile
+import time
 import unicodedata
 from collections.abc import Callable
 from contextlib import contextmanager
 from datetime import datetime
 from pathlib import Path
 from typing import Any
+
+try:
+    import fcntl
+except ImportError:  # pragma: no cover - Windows
+    fcntl = None
+
+if os.name == "nt":  # pragma: no cover - exercised on Windows only
+    import msvcrt
+else:  # pragma: no cover - non-Windows
+    msvcrt = None
 
 from pydantic import BaseModel, Field
 
@@ -25,10 +35,48 @@ from lib.request_user_context import get_current_request_user
 
 logger = logging.getLogger(__name__)
 
+WINDOWS_LOCK_RETRY_DELAY_SECONDS = 0.05
+
 PROJECT_NAME_PATTERN = re.compile(r"^[A-Za-z0-9-]+$")
 PROJECT_SLUG_SANITIZER = re.compile(r"[^a-zA-Z0-9]+")
 PROJECT_OWNER_USER_ID_KEY = "owner_user_id"
 PROJECT_OWNER_USERNAME_KEY = "owner_username"
+
+
+def _acquire_project_file_lock(lock_file: Any) -> None:
+    if fcntl is not None:
+        fcntl.flock(lock_file.fileno(), fcntl.LOCK_EX)
+        return
+
+    if msvcrt is None:
+        raise RuntimeError("No supported file locking primitive is available on this platform")
+
+    lock_file.seek(0, os.SEEK_END)
+    if lock_file.tell() == 0:
+        lock_file.write(b"\0")
+        lock_file.flush()
+
+    while True:
+        try:
+            lock_file.seek(0)
+            msvcrt.locking(lock_file.fileno(), msvcrt.LK_NBLCK, 1)
+            return
+        except OSError as exc:
+            if getattr(exc, "winerror", None) != 33 and exc.errno != 13:
+                raise
+            time.sleep(WINDOWS_LOCK_RETRY_DELAY_SECONDS)
+
+
+def _release_project_file_lock(lock_file: Any) -> None:
+    if fcntl is not None:
+        fcntl.flock(lock_file.fileno(), fcntl.LOCK_UN)
+        return
+
+    if msvcrt is None:
+        raise RuntimeError("No supported file locking primitive is available on this platform")
+
+    lock_file.seek(0)
+    msvcrt.locking(lock_file.fileno(), msvcrt.LK_UNLCK, 1)
 
 # ==================== 数据模型 ====================
 
@@ -1090,12 +1138,12 @@ class ProjectManager:
         """
         lock_path = self._get_project_file_path(project_name).with_suffix(".lock")
         lock_path.touch(exist_ok=True)
-        fd = open(lock_path)
+        fd = open(lock_path, "a+b")
         try:
-            fcntl.flock(fd, fcntl.LOCK_EX)
+            _acquire_project_file_lock(fd)
             yield
         finally:
-            fcntl.flock(fd, fcntl.LOCK_UN)
+            _release_project_file_lock(fd)
             fd.close()
 
     @staticmethod

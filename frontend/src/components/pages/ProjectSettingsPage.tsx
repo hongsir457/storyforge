@@ -3,6 +3,7 @@ import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { ArrowLeft } from "lucide-react";
 import { API } from "@/api";
+import { SiteLegalFooter } from "@/components/legal/SiteLegalFooter";
 import { useAppStore } from "@/stores/app-store";
 import { ProviderModelSelect } from "@/components/ui/ProviderModelSelect";
 import { PROVIDER_NAMES } from "@/components/ui/ProviderIcon";
@@ -423,6 +424,8 @@ export function ProjectSettingsPage() {
             {t("common:cancel")}
           </button>
         </div>
+
+        <SiteLegalFooter className="mt-8 rounded-[1.5rem] border bg-white/72" contentClassName="max-w-none px-5 py-4" />
       </div>
     </div>
   );

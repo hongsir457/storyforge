@@ -3,6 +3,7 @@ import { Link } from "wouter";
 import { ArrowUpRight, Sparkles } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { BrandLogo } from "@/components/brand/BrandLogo";
+import { SiteLegalFooter } from "@/components/legal/SiteLegalFooter";
 
 interface PublicShellProps {
   eyebrow?: string;
@@ -16,7 +17,7 @@ export function PublicShell({ eyebrow, title, description, children, aside }: Pu
   const { t } = useTranslation(["auth", "dashboard"]);
 
   return (
-    <div className="storyforge-public-shell min-h-screen">
+    <div className="storyforge-public-shell flex min-h-screen flex-col">
       <div className="landing-grid pointer-events-none" />
       <div className="landing-orb landing-orb-a" />
       <div className="landing-orb landing-orb-b" />
@@ -39,7 +40,7 @@ export function PublicShell({ eyebrow, title, description, children, aside }: Pu
         </div>
       </header>
 
-      <main className="mx-auto grid max-w-7xl gap-8 px-6 pb-16 pt-2 xl:grid-cols-[minmax(0,1.18fr)_28rem] xl:items-start">
+      <main className="mx-auto grid max-w-7xl flex-1 gap-8 px-6 pb-16 pt-2 xl:grid-cols-[minmax(0,1.18fr)_28rem] xl:items-start">
         <section className="storyforge-stage-card relative overflow-hidden rounded-[2.4rem] p-8 sm:p-10 lg:p-12">
           <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(24,151,214,0.12),transparent_26%),radial-gradient(circle_at_bottom_left,rgba(216,165,90,0.12),transparent_24%)]" />
           <div className="relative space-y-8">
@@ -68,6 +69,8 @@ export function PublicShell({ eyebrow, title, description, children, aside }: Pu
           {children}
         </section>
       </main>
+
+      <SiteLegalFooter className="mt-auto bg-transparent" contentClassName="max-w-7xl px-6 py-5" />
     </div>
   );
 }

@@ -3,6 +3,7 @@ import { Bot } from "lucide-react";
 import { GlobalHeader } from "./GlobalHeader";
 import { AssetSidebar } from "./AssetSidebar";
 import { AgentCopilot } from "@/components/copilot/AgentCopilot";
+import { SiteLegalFooter } from "@/components/legal/SiteLegalFooter";
 import { useTasksSSE } from "@/hooks/useTasksSSE";
 import { useProjectEventsSSE } from "@/hooks/useProjectEventsSSE";
 import { useProjectsStore } from "@/stores/projects-store";
@@ -50,6 +51,11 @@ export function StudioLayout({ children }: StudioLayoutProps) {
           </div>
         </div>
       </div>
+
+      <SiteLegalFooter
+        className="mx-4 mb-4 rounded-[1.4rem] border border-[rgba(117,132,159,0.16)] bg-white/72"
+        contentClassName="max-w-none px-5 py-4"
+      />
 
       <button
         type="button"

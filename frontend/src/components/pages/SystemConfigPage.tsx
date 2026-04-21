@@ -3,6 +3,7 @@ import { Link, useLocation, useSearch } from "wouter";
 import { AlertTriangle, BarChart3, Bot, ChevronLeft, Film, KeyRound, Languages, Plug } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { BrandLogo } from "@/components/brand/BrandLogo";
+import { SiteLegalFooter } from "@/components/legal/SiteLegalFooter";
 import { RouteLoadingState } from "@/components/shared/RouteLoadingState";
 import { useConfigStatusStore } from "@/stores/config-status-store";
 
@@ -56,8 +57,8 @@ export function SystemConfigPage() {
   const sectionFallback = <RouteLoadingState embedded message="Loading admin section" />;
 
   return (
-    <div className="storyforge-admin-shell min-h-screen px-6 py-6 text-[var(--sf-text)]">
-      <div className="mx-auto max-w-7xl space-y-6">
+    <div className="storyforge-admin-shell flex min-h-screen flex-col px-6 py-6 text-[var(--sf-text)]">
+      <div className="mx-auto flex w-full max-w-7xl flex-1 flex-col space-y-6">
         <header className="storyforge-page-header flex flex-col gap-5 rounded-[2rem] px-6 py-5 lg:flex-row lg:items-center lg:justify-between">
           <div className="flex items-start gap-4">
             <Link
@@ -157,6 +158,8 @@ export function SystemConfigPage() {
           </main>
         </div>
       </div>
+
+      <SiteLegalFooter className="mt-8 bg-transparent" contentClassName="max-w-7xl px-0 py-5" />
     </div>
   );
 }

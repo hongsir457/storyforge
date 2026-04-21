@@ -19,6 +19,7 @@ import {
 import { useTranslation } from "react-i18next";
 
 import { API } from "@/api";
+import { SiteLegalFooter } from "@/components/legal/SiteLegalFooter";
 import { useAppStore } from "@/stores/app-store";
 import type {
   NovelWorkbenchArtifact,
@@ -657,7 +658,7 @@ export function NovelWorkbenchPage() {
   };
 
   return (
-    <div className="sf-editorial-page min-h-screen text-[var(--sf-text)]">
+    <div className="sf-editorial-page flex min-h-screen flex-col text-[var(--sf-text)]">
       <header className="px-6 pt-6">
         <div className="storyforge-page-header mx-auto flex max-w-7xl flex-col gap-4 rounded-[2rem] px-5 py-4 lg:flex-row lg:items-center lg:justify-between">
           <div className="flex min-w-0 items-center gap-3">
@@ -1294,6 +1295,8 @@ export function NovelWorkbenchPage() {
           </div>
         )}
       </main>
+
+      <SiteLegalFooter className="bg-transparent" contentClassName="max-w-7xl px-6 py-5" />
     </div>
   );
 }

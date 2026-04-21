@@ -11,6 +11,9 @@ const VerifyEmailPage = lazy(() => import("@/pages/VerifyEmailPage").then((modul
 const ForgotPasswordPage = lazy(() => import("@/pages/ForgotPasswordPage").then((module) => ({ default: module.ForgotPasswordPage })));
 const AccountPage = lazy(() => import("@/pages/AccountPage").then((module) => ({ default: module.AccountPage })));
 const NotFoundPage = lazy(() => import("@/pages/NotFoundPage").then((module) => ({ default: module.NotFoundPage })));
+const PrivacyPage = lazy(() => import("@/pages/LegalPages").then((module) => ({ default: module.PrivacyPage })));
+const TermsPage = lazy(() => import("@/pages/LegalPages").then((module) => ({ default: module.TermsPage })));
+const ContactPage = lazy(() => import("@/pages/LegalPages").then((module) => ({ default: module.ContactPage })));
 const ProjectsPage = lazy(() => import("@/components/pages/ProjectsPage").then((module) => ({ default: module.ProjectsPage })));
 const NovelWorkbenchPage = lazy(() => import("@/components/pages/NovelWorkbenchPage").then((module) => ({ default: module.NovelWorkbenchPage })));
 const SystemConfigPage = lazy(() => import("@/components/pages/SystemConfigPage").then((module) => ({ default: module.SystemConfigPage })));
@@ -122,6 +125,24 @@ export function AppRoutes() {
               <ForgotPasswordPage />
             </LazyRouteBoundary>
           </GuestGuard>
+        </Route>
+
+        <Route path="/privacy">
+          <LazyRouteBoundary>
+            <PrivacyPage />
+          </LazyRouteBoundary>
+        </Route>
+
+        <Route path="/terms">
+          <LazyRouteBoundary>
+            <TermsPage />
+          </LazyRouteBoundary>
+        </Route>
+
+        <Route path="/contact">
+          <LazyRouteBoundary>
+            <ContactPage />
+          </LazyRouteBoundary>
         </Route>
 
         <Route path="/app">

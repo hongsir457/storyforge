@@ -15,6 +15,7 @@ import {
 import { useTranslation } from "react-i18next";
 import { Link } from "wouter";
 import { BrandLogo } from "@/components/brand/BrandLogo";
+import { SiteLegalFooter } from "@/components/legal/SiteLegalFooter";
 import { useAuthStore } from "@/stores/auth-store";
 
 const HOME_COPY = {
@@ -433,16 +434,13 @@ export function HomePage() {
               </div>
             </div>
 
-            <div className="flex flex-col gap-4 border-t border-[rgba(117,132,159,0.12)] pt-8 text-xs uppercase tracking-[0.24em] text-slate-400 md:flex-row md:items-center md:justify-between">
-              <span>{copy.footer.copyright}</span>
-              <div className="flex gap-8">
-                {copy.footer.legal.map((item) => (
-                  <span key={item} className="transition-colors hover:text-[var(--sf-blue-strong)]">
-                    {item}
-                  </span>
-                ))}
-              </div>
-            </div>
+            <SiteLegalFooter
+              className="bg-transparent"
+              contentClassName="max-w-none px-0 py-8"
+              textClassName="text-slate-400"
+              brandClassName="text-slate-900"
+              navClassName="text-slate-400"
+            />
           </div>
         </footer>
       </main>

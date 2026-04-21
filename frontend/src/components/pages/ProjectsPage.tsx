@@ -16,6 +16,7 @@ import { useTranslation } from "react-i18next";
 
 import { API } from "@/api";
 import { BrandLogo } from "@/components/brand/BrandLogo";
+import { SiteLegalFooter } from "@/components/legal/SiteLegalFooter";
 import { ArchiveDiagnosticsDialog } from "@/components/shared/ArchiveDiagnosticsDialog";
 import { Popover } from "@/components/ui/Popover";
 import { ProgressBar } from "@/components/ui/ProgressBar";
@@ -561,7 +562,7 @@ export function ProjectsPage() {
   const featuredProject = projects[0] ?? null;
 
   return (
-    <div className="sf-editorial-page min-h-screen text-[var(--sf-text)]">
+    <div className="sf-editorial-page flex min-h-screen flex-col text-[var(--sf-text)]">
       <header className="px-6 pt-6">
         <div className="storyforge-page-header mx-auto flex max-w-7xl flex-col gap-4 rounded-[2rem] px-5 py-4 xl:flex-row xl:items-center xl:justify-between">
           <div className="flex items-center gap-4">
@@ -797,6 +798,8 @@ export function ProjectsPage() {
           </div>
         )}
       </main>
+
+      <SiteLegalFooter className="bg-transparent" contentClassName="max-w-7xl px-6 py-5" />
 
       {conflictProject && conflictFile && (
         <ConflictDialog

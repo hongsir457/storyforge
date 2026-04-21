@@ -4,6 +4,7 @@ import { ArrowLeft, ShieldCheck } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { API } from "@/api";
 import { BrandLogo } from "@/components/brand/BrandLogo";
+import { SiteLegalFooter } from "@/components/legal/SiteLegalFooter";
 import { useAuthStore } from "@/stores/auth-store";
 
 export function AccountPage() {
@@ -82,8 +83,8 @@ export function AccountPage() {
   };
 
   return (
-    <div className="sf-editorial-page min-h-screen px-6 py-8 text-[var(--sf-text)]">
-      <div className="mx-auto max-w-6xl space-y-6">
+    <div className="sf-editorial-page flex min-h-screen flex-col px-6 py-8 text-[var(--sf-text)]">
+      <div className="mx-auto flex w-full max-w-6xl flex-1 flex-col space-y-6">
         <header className="storyforge-page-header flex flex-col gap-5 rounded-[2rem] px-6 py-5 lg:flex-row lg:items-center lg:justify-between">
           <div className="flex items-start gap-4">
             <button
@@ -221,6 +222,8 @@ export function AccountPage() {
           </section>
         </div>
       </div>
+
+      <SiteLegalFooter className="mt-8 bg-transparent" contentClassName="max-w-6xl px-0 py-5" />
     </div>
   );
 }

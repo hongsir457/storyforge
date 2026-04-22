@@ -24,6 +24,15 @@ import type {
   GetSystemConfigResponse,
   ProjectSettingsConfigResponse,
   SystemConfigPatch,
+  BillingSummary,
+  BillingTransaction,
+  BillingAdminOverview,
+  BillingAdminTopupPayload,
+  BillingAdminTopupResponse,
+  BillingCheckoutConfig,
+  BillingCheckoutSessionPayload,
+  BillingCheckoutSessionResponse,
+  BillingCheckoutStatusResponse,
   ApiKeyInfo,
   CreateApiKeyResponse,
   ProviderInfo,
@@ -390,6 +399,42 @@ class API {
         new_password: newPassword,
       }),
     });
+  }
+
+  static async getBillingSummary(limit = 50): Promise<BillingSummary> {
+    return this.request(`/billing/me?limit=${encodeURIComponent(String(limit))}`);
+  }
+
+  static async getBillingTransactions(limit = 50): Promise<BillingTransaction[]> {
+    return this.request(`/billing/transactions?limit=${encodeURIComponent(String(limit))}`);
+  }
+
+  static async getBillingAdminOverview(limit = 100): Promise<BillingAdminOverview> {
+    return this.request(`/billing/admin/overview?limit=${encodeURIComponent(String(limit))}`);
+  }
+
+  static async createBillingTopup(payload: BillingAdminTopupPayload): Promise<BillingAdminTopupResponse> {
+    return this.request("/billing/admin/topups", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    });
+  }
+
+  static async getBillingCheckoutConfig(): Promise<BillingCheckoutConfig> {
+    return this.request("/billing/checkout/config");
+  }
+
+  static async createBillingCheckoutSession(
+    payload: BillingCheckoutSessionPayload,
+  ): Promise<BillingCheckoutSessionResponse> {
+    return this.request("/billing/checkout/session", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    });
+  }
+
+  static async getBillingCheckoutSessionStatus(sessionId: string): Promise<BillingCheckoutStatusResponse> {
+    return this.request(`/billing/checkout/session-status?session_id=${encodeURIComponent(sessionId)}`);
   }
 
   static async getSystemConfig(): Promise<GetSystemConfigResponse> {

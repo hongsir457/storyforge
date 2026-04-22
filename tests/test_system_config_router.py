@@ -142,8 +142,11 @@ class TestGetSystemConfig:
             "default_image_backend",
             "default_text_backend",
             "video_generate_audio",
+            "public_app_url",
             "anthropic_api_key",
             "anthropic_auth_token",
+            "stripe_secret_key",
+            "stripe_webhook_secret",
             "anthropic_base_url",
             "anthropic_model",
             "anthropic_default_haiku_model",
@@ -339,6 +342,23 @@ class TestPatchSystemConfig:
         assert res.status_code == 200
         token = res.json()["settings"]["anthropic_auth_token"]
         assert token["is_set"] is True
+
+    def test_patch_sets_stripe_secrets_and_public_url(self):
+        mock_svc = _make_mock_svc()
+        with TestClient(self._make_patch_app(mock_svc)) as client:
+            res = client.patch(
+                "/api/v1/system/config",
+                json={
+                    "stripe_secret_key": "sk_test_123",
+                    "stripe_webhook_secret": "whsec_123",
+                    "public_app_url": "https://storyforge.example.com",
+                },
+            )
+        assert res.status_code == 200
+        settings = res.json()["settings"]
+        assert settings["stripe_secret_key"]["is_set"] is True
+        assert settings["stripe_webhook_secret"]["is_set"] is True
+        assert settings["public_app_url"] == "https://storyforge.example.com"
 
     def test_patch_sets_anthropic_base_url(self):
         mock_svc = _make_mock_svc()

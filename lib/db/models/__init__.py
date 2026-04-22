@@ -2,6 +2,7 @@
 
 from lib.db.models.api_call import ApiCall
 from lib.db.models.api_key import ApiKey
+from lib.db.models.billing import BillingAccount, BillingPaymentOrder, BillingTransaction
 from lib.db.models.config import ProviderConfig, SystemSetting
 from lib.db.models.credential import ProviderCredential
 from lib.db.models.custom_provider import CustomProvider, CustomProviderModel
@@ -16,6 +17,9 @@ __all__ = [
     "ApiCall",
     "AgentSession",
     "ApiKey",
+    "BillingAccount",
+    "BillingPaymentOrder",
+    "BillingTransaction",
     "ProviderConfig",
     "SystemSetting",
     "User",

@@ -73,6 +73,7 @@ export default {
   'providers': '供应商',
   'models': '模型选择',
   'usage': '用量统计',
+  'billing': '充值计费',
   'api_keys': 'API 管理',
   'system_config_title': '系统配置与 API 访问管理',
   'config_issues': '配置问题',

@@ -27,6 +27,7 @@ from server.routers import (
     agent_chat,
     api_keys,
     assistant,
+    billing,
     autonovel_workbench,
     characters,
     clues,
@@ -192,6 +193,7 @@ app.include_router(files.router, prefix="/api/v1", tags=["文件管理"])
 app.include_router(generate.router, prefix="/api/v1", tags=["生成"])
 app.include_router(versions.router, prefix="/api/v1", tags=["版本管理"])
 app.include_router(usage.router, prefix="/api/v1", tags=["费用统计"])
+app.include_router(billing.router, prefix="/api/v1", tags=["充值计费"])
 app.include_router(assistant.router, prefix="/api/v1/projects/{project_name}/assistant", tags=["助手会话"])
 app.include_router(tasks.router, prefix="/api/v1", tags=["任务队列"])
 app.include_router(project_events.router, prefix="/api/v1", tags=["项目变更流"])

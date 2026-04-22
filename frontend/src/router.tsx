@@ -11,6 +11,7 @@ const RegisterPage = lazy(() => import("@/pages/RegisterPage").then((module) => 
 const VerifyEmailPage = lazy(() => import("@/pages/VerifyEmailPage").then((module) => ({ default: module.VerifyEmailPage })));
 const ForgotPasswordPage = lazy(() => import("@/pages/ForgotPasswordPage").then((module) => ({ default: module.ForgotPasswordPage })));
 const AccountPage = lazy(() => import("@/pages/AccountPage").then((module) => ({ default: module.AccountPage })));
+const BillingReturnPage = lazy(() => import("@/pages/BillingReturnPage").then((module) => ({ default: module.BillingReturnPage })));
 const NotFoundPage = lazy(() => import("@/pages/NotFoundPage").then((module) => ({ default: module.NotFoundPage })));
 const PrivacyPage = lazy(() => import("@/pages/LegalPages").then((module) => ({ default: module.PrivacyPage })));
 const TermsPage = lazy(() => import("@/pages/LegalPages").then((module) => ({ default: module.TermsPage })));
@@ -193,6 +194,14 @@ export function AppRoutes() {
           <AuthGuard>
             <LazyRouteBoundary>
               <AccountPage />
+            </LazyRouteBoundary>
+          </AuthGuard>
+        </Route>
+
+        <Route path="/app/billing/return">
+          <AuthGuard>
+            <LazyRouteBoundary>
+              <BillingReturnPage />
             </LazyRouteBoundary>
           </AuthGuard>
         </Route>

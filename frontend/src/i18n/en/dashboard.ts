@@ -72,6 +72,7 @@ export default {
   'providers': 'Providers',
   'models': 'Models',
   'usage': 'Usage',
+  'billing': 'Billing',
   'api_keys': 'API Keys',
   'system_config_title': 'System configuration and API access management',
   'config_issues': 'Configuration Issues',

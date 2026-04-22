@@ -95,6 +95,7 @@ class SystemConfigPatchRequest(BaseModel):
     default_image_backend: str | None = None
     default_text_backend: str | None = None
     video_generate_audio: bool | None = None
+    public_app_url: str | None = None
     anthropic_api_key: str | None = None
     anthropic_auth_token: str | None = None
     anthropic_base_url: str | None = None
@@ -105,6 +106,8 @@ class SystemConfigPatchRequest(BaseModel):
     claude_code_subagent_model: str | None = None
     agent_session_cleanup_delay_seconds: int | None = None
     agent_max_concurrent_sessions: int | None = None
+    stripe_secret_key: str | None = None
+    stripe_webhook_secret: str | None = None
     text_backend_script: str | None = None
     text_backend_overview: str | None = None
     text_backend_style: str | None = None
@@ -112,6 +115,7 @@ class SystemConfigPatchRequest(BaseModel):
 
 # Setting keys that map directly to string DB settings
 _STRING_SETTINGS = (
+    "public_app_url",
     "anthropic_base_url",
     "anthropic_model",
     "anthropic_default_haiku_model",
@@ -141,6 +145,8 @@ def _build_private_settings(all_s: dict[str, str]) -> dict[str, Any]:
     settings = _build_public_settings(all_s)
     anthropic_key = all_s.get("anthropic_api_key", "")
     anthropic_auth_token = all_s.get("anthropic_auth_token", "")
+    stripe_secret_key = all_s.get("stripe_secret_key", "")
+    stripe_webhook_secret = all_s.get("stripe_webhook_secret", "")
     settings.update(
         {
             "anthropic_api_key": {
@@ -150,6 +156,15 @@ def _build_private_settings(all_s: dict[str, str]) -> dict[str, Any]:
             "anthropic_auth_token": {
                 "is_set": bool(anthropic_auth_token),
                 "masked": mask_secret(anthropic_auth_token) if anthropic_auth_token else None,
+            },
+            "public_app_url": all_s.get("public_app_url") or "",
+            "stripe_secret_key": {
+                "is_set": bool(stripe_secret_key),
+                "masked": mask_secret(stripe_secret_key) if stripe_secret_key else None,
+            },
+            "stripe_webhook_secret": {
+                "is_set": bool(stripe_webhook_secret),
+                "masked": mask_secret(stripe_webhook_secret) if stripe_webhook_secret else None,
             },
             "anthropic_base_url": all_s.get("anthropic_base_url") or None,
             "anthropic_model": all_s.get("anthropic_model") or None,
@@ -234,6 +249,20 @@ async def patch_system_config(
             await svc.set_setting("anthropic_auth_token", str(value).strip())
         else:
             await svc.set_setting("anthropic_auth_token", "")
+
+    if "stripe_secret_key" in patch:
+        value = patch["stripe_secret_key"]
+        if value:
+            await svc.set_setting("stripe_secret_key", str(value).strip())
+        else:
+            await svc.set_setting("stripe_secret_key", "")
+
+    if "stripe_webhook_secret" in patch:
+        value = patch["stripe_webhook_secret"]
+        if value:
+            await svc.set_setting("stripe_webhook_secret", str(value).strip())
+        else:
+            await svc.set_setting("stripe_webhook_secret", "")
 
     # Integer settings with range validation
     _INT_SETTINGS_RANGES = {

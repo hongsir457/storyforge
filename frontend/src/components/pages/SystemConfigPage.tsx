@@ -1,6 +1,6 @@
 import { lazy, Suspense, useEffect, useMemo } from "react";
 import { Link, useLocation, useSearch } from "wouter";
-import { AlertTriangle, BarChart3, Bot, ChevronLeft, Film, KeyRound, Languages, Plug } from "lucide-react";
+import { AlertTriangle, BarChart3, Bot, ChevronLeft, Film, KeyRound, Languages, Plug, Wallet } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { BrandLogo } from "@/components/brand/BrandLogo";
 import { SiteLegalFooter } from "@/components/legal/SiteLegalFooter";
@@ -16,14 +16,18 @@ const ProviderSection = lazy(() => import("./ProviderSection").then((module) => 
 const UsageStatsSection = lazy(() =>
   import("./settings/UsageStatsSection").then((module) => ({ default: module.UsageStatsSection })),
 );
+const BillingSection = lazy(() =>
+  import("./settings/BillingSection").then((module) => ({ default: module.BillingSection })),
+);
 
-type SettingsSection = "agent" | "providers" | "media" | "usage" | "api-keys";
+type SettingsSection = "agent" | "providers" | "media" | "usage" | "billing" | "api-keys";
 
 const SECTION_LIST: { id: SettingsSection; labelKey: string; Icon: React.ComponentType<{ className?: string }> }[] = [
   { id: "agent", labelKey: "dashboard:agents", Icon: Bot },
   { id: "providers", labelKey: "dashboard:providers", Icon: Plug },
   { id: "media", labelKey: "dashboard:models", Icon: Film },
   { id: "usage", labelKey: "dashboard:usage", Icon: BarChart3 },
+  { id: "billing", labelKey: "dashboard:billing", Icon: Wallet },
   { id: "api-keys", labelKey: "dashboard:api_keys", Icon: KeyRound },
 ];
 
@@ -37,6 +41,7 @@ export function SystemConfigPage() {
     if (section === "providers") return "providers";
     if (section === "media") return "media";
     if (section === "usage") return "usage";
+    if (section === "billing") return "billing";
     if (section === "api-keys") return "api-keys";
     return "agent";
   }, [search]);
@@ -149,6 +154,7 @@ export function SystemConfigPage() {
               {activeSection === "providers" && <ProviderSection />}
               {activeSection === "media" && <MediaModelSection />}
               {activeSection === "usage" && <UsageStatsSection />}
+              {activeSection === "billing" && <BillingSection />}
               {activeSection === "api-keys" && (
                 <div className="p-2">
                   <ApiKeysTab />

@@ -6,8 +6,11 @@ export interface SystemConfigSettings {
   text_backend_overview: string;
   text_backend_style: string;
   video_generate_audio: boolean;
+  public_app_url: string;
   anthropic_api_key: { is_set: boolean; masked: string | null };
   anthropic_auth_token: { is_set: boolean; masked: string | null };
+  stripe_secret_key: { is_set: boolean; masked: string | null };
+  stripe_webhook_secret: { is_set: boolean; masked: string | null };
   anthropic_base_url: string;
   anthropic_model: string;
   anthropic_default_haiku_model: string;
@@ -53,8 +56,11 @@ export interface SystemConfigPatch {
   text_backend_overview?: string;
   text_backend_style?: string;
   video_generate_audio?: boolean;
+  public_app_url?: string;
   anthropic_api_key?: string;
   anthropic_auth_token?: string;
+  stripe_secret_key?: string;
+  stripe_webhook_secret?: string;
   anthropic_base_url?: string;
   anthropic_model?: string;
   anthropic_default_haiku_model?: string;

@@ -4,6 +4,7 @@ import pytest
 from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 
 from lib.db.base import Base
+from lib.db.models import BillingTransaction
 from lib.db.repositories.usage_repo import UsageRepository
 
 
@@ -88,6 +89,26 @@ class TestUsageRepository:
 
         page2 = await repo.get_calls(page=2, page_size=2)
         assert len(page2["items"]) == 2
+
+    async def test_finish_call_records_billing_charge(self, db_session):
+        repo = UsageRepository(db_session)
+        call_id = await repo.start_call(
+            project_name="demo",
+            call_type="video",
+            model="veo-3.1-generate-001",
+            resolution="1080p",
+            duration_seconds=8,
+        )
+
+        await repo.finish_call(call_id, status="success")
+
+        result = await db_session.execute(
+            BillingTransaction.__table__.select().where(BillingTransaction.source_id == str(call_id))
+        )
+        rows = result.all()
+        assert len(rows) == 1
+        assert rows[0].entry_type == "charge"
+        assert rows[0].amount == pytest.approx(-3.2)
 
 
 class TestMultiProviderUsage:

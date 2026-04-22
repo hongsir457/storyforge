@@ -21,8 +21,11 @@ function makeConfigResponse(
       text_backend_overview: "",
       text_backend_style: "",
       video_generate_audio: true,
+      public_app_url: "",
       anthropic_api_key: { is_set: true, masked: "sk-ant-***" },
       anthropic_auth_token: { is_set: false, masked: null },
+      stripe_secret_key: { is_set: false, masked: null },
+      stripe_webhook_secret: { is_set: false, masked: null },
       anthropic_base_url: "",
       anthropic_model: "",
       anthropic_default_haiku_model: "",
@@ -101,27 +104,29 @@ describe("SystemConfigPage", () => {
     } as never);
     vi.spyOn(API, "listCredentials").mockResolvedValue({ credentials: [] });
     vi.spyOn(API, "getUsageStatsGrouped").mockResolvedValue({ stats: [], period: { start: "", end: "" } });
+    vi.spyOn(API, "getBillingAdminOverview").mockResolvedValue({ users: [], recent_transactions: [] });
   });
 
   it("renders the admin console header", () => {
     renderPage();
-    expect(screen.getByText("管理控制台")).toBeInTheDocument();
-    expect(screen.getByText("仅管理员可见：供应商、模型、用量和 API Key 管理")).toBeInTheDocument();
+    expect(screen.getByText("Admin Console")).toBeInTheDocument();
+    expect(screen.getByText("系统配置与运营面板")).toBeInTheDocument();
   });
 
-  it("renders all 5 sidebar sections", () => {
+  it("renders all 6 sidebar sections", () => {
     renderPage();
     expect(screen.getByRole("button", { name: /Agents|智能体/ })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /Providers|供应商/ })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /Models|模型选择/ })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /Usage|用量统计/ })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Billing|充值计费/ })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /API Keys|API 管理/ })).toBeInTheDocument();
   });
 
   it("defaults to the agent section", () => {
     renderPage();
     const agentButton = screen.getByRole("button", { name: /Agents|智能体/ });
-    expect(agentButton.className).toContain("border-indigo-500");
+    expect(agentButton.className).toContain("bg-[rgba(24,151,214,0.1)]");
   });
 
   it("switches sections from the sidebar", async () => {
@@ -129,7 +134,7 @@ describe("SystemConfigPage", () => {
     const providersButton = screen.getByRole("button", { name: /Providers|供应商/ });
     fireEvent.click(providersButton);
     await waitFor(() => {
-      expect(providersButton.className).toContain("border-indigo-500");
+      expect(providersButton.className).toContain("bg-[rgba(24,151,214,0.1)]");
     });
   });
 

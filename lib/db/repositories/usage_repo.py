@@ -5,7 +5,7 @@ from __future__ import annotations
 from datetime import UTC, datetime, timedelta
 from typing import Any
 
-from sqlalchemy import case, func, select, update
+from sqlalchemy import case, func, select
 
 from lib.cost_calculator import cost_calculator
 from lib.custom_provider import is_custom_provider, parse_provider_id
@@ -154,23 +154,29 @@ class UsageRepository(BaseRepository):
 
         error_truncated = error_message[:500] if error_message else None
 
-        await self.session.execute(
-            update(ApiCall)
-            .where(ApiCall.id == call_id)
-            .values(
-                status=status,
-                finished_at=finished_at,
-                duration_ms=duration_ms,
-                retry_count=retry_count,
-                cost_amount=cost_amount,
+        row.status = status
+        row.finished_at = finished_at
+        row.duration_ms = duration_ms
+        row.retry_count = retry_count
+        row.cost_amount = cost_amount
+        row.currency = currency
+        row.usage_tokens = usage_tokens
+        row.input_tokens = input_tokens
+        row.output_tokens = output_tokens
+        row.output_path = output_path
+        row.error_message = error_truncated
+        await self.session.flush()
+
+        if status == "success" and cost_amount > 0:
+            from lib.db.repositories.billing_repo import BillingRepository
+
+            await BillingRepository(self.session).charge_api_call(
+                user_id=row.user_id,
+                api_call_id=row.id,
+                amount=cost_amount,
                 currency=currency,
-                usage_tokens=usage_tokens,
-                input_tokens=input_tokens,
-                output_tokens=output_tokens,
-                output_path=output_path,
-                error_message=error_truncated,
+                description=f"{row.call_type} generation via {row.provider or effective_provider}",
             )
-        )
         await self.session.commit()
 
     @staticmethod

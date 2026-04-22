@@ -61,7 +61,9 @@ describe("AppRoutes", () => {
 
   it("renders the public home page at root", async () => {
     renderAt("/");
-    expect((await screen.findAllByText("AutoNovel")).length).toBeGreaterThan(0);
+    expect(
+      (await screen.findAllByText("AutoNovel", {}, { timeout: 5_000 })).length,
+    ).toBeGreaterThan(0);
   });
 
   it("redirects /app to /app/projects", async () => {

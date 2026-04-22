@@ -214,19 +214,19 @@ describe("StudioCanvasRouter", () => {
     });
 
     const viewCharacters = renderAt("/characters");
-    expect(screen.getByTestId("lorebook-gallery")).toHaveAttribute("data-mode", "characters");
+    expect(await screen.findByTestId("lorebook-gallery")).toHaveAttribute("data-mode", "characters");
     viewCharacters.unmount();
 
     const viewClues = renderAt("/clues");
-    expect(screen.getByTestId("lorebook-gallery")).toHaveAttribute("data-mode", "clues");
+    expect(await screen.findByTestId("lorebook-gallery")).toHaveAttribute("data-mode", "clues");
     viewClues.unmount();
 
     const viewSource = renderAt("/source/source%20file.txt");
-    expect(screen.getByTestId("source-file-viewer")).toHaveTextContent("source file.txt");
+    expect(await screen.findByTestId("source-file-viewer")).toHaveTextContent("source file.txt");
     viewSource.unmount();
 
     const viewEpisodes = renderAt("/episodes/1");
-    expect(screen.getByTestId("timeline-canvas")).toBeInTheDocument();
+    expect(await screen.findByTestId("timeline-canvas")).toBeInTheDocument();
     expect(screen.getByTestId("timeline-has-script")).toHaveTextContent("yes");
     viewEpisodes.unmount();
 
@@ -353,7 +353,7 @@ describe("StudioCanvasRouter", () => {
 
     renderAt("/episodes/1");
 
-    fireEvent.click(screen.getByText("update-prompt"));
+    fireEvent.click(await screen.findByText("update-prompt"));
     await waitFor(() => {
       expect(API.updateSegment).toHaveBeenCalledWith("demo", "SEG-1", {
         image_prompt: "new prompt",

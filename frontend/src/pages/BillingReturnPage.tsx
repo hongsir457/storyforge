@@ -34,13 +34,10 @@ export function BillingReturnPage() {
 
   useEffect(() => {
     if (!sessionId) {
-      setLoading(false);
       return;
     }
 
     let cancelled = false;
-    setLoading(true);
-    setError("");
 
     void API.getBillingCheckoutSessionStatus(sessionId)
       .then((res) => {

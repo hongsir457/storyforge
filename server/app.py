@@ -1,4 +1,4 @@
-﻿"""
+"""
 Frametale FastAPI application.
 
 Run locally:
@@ -27,7 +27,6 @@ from server.routers import (
     agent_chat,
     api_keys,
     assistant,
-    auth as auth_router,
     autonovel_workbench,
     billing,
     characters,
@@ -44,6 +43,9 @@ from server.routers import (
     tasks,
     usage,
     versions,
+)
+from server.routers import (
+    auth as auth_router,
 )
 from server.services.autonovel_workbench import get_novel_workbench_service
 from server.services.project_events import ProjectEventService

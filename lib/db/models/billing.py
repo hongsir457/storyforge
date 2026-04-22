@@ -24,9 +24,7 @@ class BillingAccount(TimestampMixin, Base):
     currency: Mapped[str] = mapped_column(String(8), nullable=False, server_default="USD")
     balance: Mapped[float] = mapped_column(Float, nullable=False, server_default="0.0")
 
-    __table_args__ = (
-        UniqueConstraint("user_id", "currency", name="uq_billing_accounts_user_currency"),
-    )
+    __table_args__ = (UniqueConstraint("user_id", "currency", name="uq_billing_accounts_user_currency"),)
 
 
 class BillingTransaction(TimestampMixin, Base):

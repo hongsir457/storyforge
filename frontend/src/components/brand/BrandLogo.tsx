@@ -76,7 +76,7 @@ export function BrandLogo({ alt, className, variant = "full" }: BrandLogoProps) 
         fontWeight="700"
         letterSpacing="-0.05em"
       >
-        Storyforge
+        Frametale
       </text>
       <text
         x="166"

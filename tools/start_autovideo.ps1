@@ -12,7 +12,7 @@ $deployDir = if ($Production) {
 }
 
 if (-not (Test-Path $deployDir)) {
-    throw "Storyforge deploy directory not found: $deployDir"
+    throw "Frametale deploy directory not found: $deployDir"
 }
 
 $envFile = Join-Path $deployDir ".env"
@@ -20,10 +20,10 @@ $envExample = Join-Path $deployDir ".env.example"
 
 if (-not (Test-Path $envFile)) {
     if (-not (Test-Path $envExample)) {
-        throw "Missing Storyforge env example: $envExample"
+        throw "Missing Frametale env example: $envExample"
     }
     Copy-Item $envExample $envFile
-    Write-Host "Created Storyforge env file:" $envFile
+    Write-Host "Created Frametale env file:" $envFile
     Write-Host "Edit it before first real run if you need custom settings."
 }
 
@@ -35,4 +35,4 @@ finally {
     Pop-Location
 }
 
-Write-Host "Storyforge should be starting at http://localhost:1241"
+Write-Host "Frametale should be starting at http://localhost:1241"

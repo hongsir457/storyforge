@@ -1,11 +1,11 @@
 # Sealos Deploy
 
-Storyforge currently runs on Sealos as a split stack:
+Frametale currently runs on Sealos as a split stack:
 
-- `storyforge-frontend`
-- `storyforge-backend`
-- `storyforge-postgres`
-- `storyforge-redis`
+- `frametale-frontend`
+- `frametale-backend`
+- `frametale-postgres`
+- `frametale-redis`
 
 Public URL:
 
@@ -13,7 +13,7 @@ Public URL:
 
 ## 1. Target namespace
 
-The checked-in manifest targets the isolated Storyforge workspace namespace:
+The checked-in manifest targets the isolated Frametale workspace namespace:
 
 - `ns-qkcc8vj1`
 
@@ -22,26 +22,26 @@ The checked-in manifest targets the isolated Storyforge workspace namespace:
 Create the secret used by the frontend, backend, and database workloads:
 
 ```bash
-kubectl create secret generic storyforge-env \
+kubectl create secret generic frametale-env \
   --namespace ns-qkcc8vj1 \
   --from-literal=POSTGRES_PASSWORD='<postgres-password>' \
   --from-literal=AUTH_USERNAME='admin' \
   --from-literal=AUTH_PASSWORD='<bootstrap-admin-password>' \
-  --from-literal=AUTH_EMAIL='admin@storyforge.local' \
+  --from-literal=AUTH_EMAIL='admin@frametale.local' \
   --from-literal=AUTH_TOKEN_SECRET='<long-random-secret>' \
   --from-literal=SMTP_HOST='' \
   --from-literal=SMTP_PORT='587' \
   --from-literal=SMTP_USERNAME='' \
   --from-literal=SMTP_PASSWORD='' \
   --from-literal=SMTP_FROM_EMAIL='' \
-  --from-literal=SMTP_FROM_NAME='Storyforge' \
+  --from-literal=SMTP_FROM_NAME='Frametale' \
   --dry-run=client -o yaml | kubectl apply -f -
 ```
 
 If SMTP is not ready yet and you still want registration, verification, and password reset flows to be testable:
 
 ```bash
-kubectl create secret generic storyforge-env \
+kubectl create secret generic frametale-env \
   --namespace ns-qkcc8vj1 \
   --from-literal=AUTH_EMAIL_DEBUG='true' \
   --dry-run=client -o yaml | kubectl apply -f -
@@ -55,16 +55,16 @@ If you want OpenRouter available immediately after deploy, add these literals to
 --from-literal=ANTHROPIC_AUTH_TOKEN='<openrouter-api-key>'
 ```
 
-That enables the Anthropic-compatible OpenRouter path for `Storyforge Agent` and the novel workbench. You can also leave these unset and configure them later in `/app/settings`.
+That enables the Anthropic-compatible OpenRouter path for `Frametale Agent` and the novel workbench. You can also leave these unset and configure them later in `/app/settings`.
 
 ## 3. Apply the manifest
 
 ```bash
-kubectl apply -f deploy/sealos/storyforge.yaml
-kubectl rollout status statefulset/storyforge-postgres -n ns-qkcc8vj1
-kubectl rollout status deployment/storyforge-redis -n ns-qkcc8vj1
-kubectl rollout status deployment/storyforge-backend -n ns-qkcc8vj1
-kubectl rollout status deployment/storyforge-frontend -n ns-qkcc8vj1
+kubectl apply -f deploy/sealos/frametale.yaml
+kubectl rollout status statefulset/frametale-postgres -n ns-qkcc8vj1
+kubectl rollout status deployment/frametale-redis -n ns-qkcc8vj1
+kubectl rollout status deployment/frametale-backend -n ns-qkcc8vj1
+kubectl rollout status deployment/frametale-frontend -n ns-qkcc8vj1
 ```
 
 ## 4. Migrate old SQLite data into PostgreSQL
@@ -72,10 +72,10 @@ kubectl rollout status deployment/storyforge-frontend -n ns-qkcc8vj1
 If you are upgrading from the old single-pod SQLite deployment, copy the legacy `/app/projects` volume first, then run:
 
 ```bash
-kubectl exec -n ns-qkcc8vj1 deploy/storyforge-backend -- \
+kubectl exec -n ns-qkcc8vj1 deploy/frametale-backend -- \
   python scripts/migrate_sqlite_to_postgres.py \
     --source-sqlite /app/projects/.autovideo.db \
-    --target-database-url "postgresql+asyncpg://storyforge:<postgres-password>@storyforge-postgres:5432/storyforge"
+    --target-database-url "postgresql+asyncpg://frametale:<postgres-password>@frametale-postgres:5432/frametale"
 ```
 
 Make sure the target PostgreSQL schema is already on the latest Alembic revision before running the copy.
@@ -93,10 +93,10 @@ Expected result:
 
 - frontend, backend, postgres, and redis pods are all `Running`
 - ingress resolves to the public URL
-- `/health` returns the Storyforge health payload
+- `/health` returns the Frametale health payload
 
 ## 6. Notes
 
-- The Sealos `App` resource in the manifest points at `storyforge-frontend:80`
-- Public brand is `Storyforge / 叙影工场`
+- The Sealos `App` resource in the manifest points at `frametale-frontend:80`
+- Public brand is `Frametale / 叙影工场`
 - Internal compatibility identifiers may still use `autovideo` in filenames and migration scripts

@@ -1,4 +1,4 @@
-const TOKEN_KEY = "storyforge_auth_token";
+const TOKEN_KEY = "frametale_auth_token";
 
 export function getToken(): string | null {
   return localStorage.getItem(TOKEN_KEY);

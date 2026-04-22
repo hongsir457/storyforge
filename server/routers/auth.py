@@ -136,14 +136,14 @@ def _build_auth_email_bodies(
     request: Request,
 ) -> tuple[str, str]:
     base_url = _public_base_url(request)
-    logo_url = f"{base_url}/storyforge-logo.png"
+    logo_url = f"{base_url}/frametale-logo.png"
     if kind == "verify_email":
-        headline = "验证你的 Storyforge 账号"
+        headline = "验证你的 Frametale 账号"
         description = "请使用下面的 6 位验证码完成邮箱验证。验证码 15 分钟内有效。"
         action_label = "打开验证页面"
         action_url = f"{base_url}/verify-email?email={quote(email)}"
     else:
-        headline = "重置你的 Storyforge 密码"
+        headline = "重置你的 Frametale 密码"
         description = "请使用下面的 6 位验证码完成密码重置。验证码 15 分钟内有效。"
         action_label = "打开重置页面"
         action_url = f"{base_url}/forgot-password?email={quote(email)}"
@@ -158,9 +158,9 @@ def _build_auth_email_bodies(
     <div style="margin:0 auto;max-width:640px;padding:32px 16px;">
       <div style="background:linear-gradient(180deg,#121a2d 0%,#0f172a 100%);border:1px solid #22304d;border-radius:24px;overflow:hidden;box-shadow:0 24px 80px rgba(8,15,31,0.45);">
         <div style="padding:28px 32px 12px 32px;border-bottom:1px solid rgba(148,163,184,0.14);">
-          <img src="{logo_url}" alt="Storyforge" style="display:block;width:176px;max-width:100%;height:auto;margin:0 auto 18px auto;" />
+          <img src="{logo_url}" alt="Frametale" style="display:block;width:176px;max-width:100%;height:auto;margin:0 auto 18px auto;" />
           <div style="text-align:center;">
-            <div style="font-size:14px;letter-spacing:0.14em;text-transform:uppercase;color:#f59e0b;font-weight:700;">Storyforge</div>
+            <div style="font-size:14px;letter-spacing:0.14em;text-transform:uppercase;color:#f59e0b;font-weight:700;">Frametale</div>
             <h1 style="margin:12px 0 8px 0;font-size:28px;line-height:1.2;color:#f8fafc;">{headline}</h1>
             <p style="margin:0;font-size:15px;line-height:1.7;color:#cbd5e1;">{description}</p>
           </div>
@@ -182,7 +182,7 @@ def _build_auth_email_bodies(
         </div>
         <div style="padding:18px 32px 28px 32px;">
           <div style="font-size:12px;line-height:1.8;color:#94a3b8;text-align:center;">
-            此邮件由 Storyforge（叙影工场）系统自动发送，请勿直接回复。<br />
+            此邮件由 Frametale（叙影工场）系统自动发送，请勿直接回复。<br />
             登录工作台：<a href="{base_url}/login" style="color:#7dd3fc;text-decoration:none;">{base_url}/login</a>
           </div>
         </div>

@@ -31,7 +31,7 @@ def upgrade() -> None:
     op.execute(
         sa.text(
             "UPDATE users "
-            "SET email = COALESCE(NULLIF(email, ''), LOWER(username || '@storyforge.local')), "
+            "SET email = COALESCE(NULLIF(email, ''), LOWER(username || '@frametale.local')), "
             "display_name = COALESCE(NULLIF(display_name, ''), username), "
             "password_hash = COALESCE(password_hash, ''), "
             "is_email_verified = TRUE"

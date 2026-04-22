@@ -21,10 +21,10 @@ jobs:
         include:
           - target: backend
             dockerfile: Dockerfile.backend
-            image_name: ${{ github.repository_owner }}/storyforge-backend
+            image_name: ${{ github.repository_owner }}/frametale-backend
           - target: frontend
             dockerfile: Dockerfile.frontend
-            image_name: ${{ github.repository_owner }}/storyforge-frontend
+            image_name: ${{ github.repository_owner }}/frametale-frontend
 
     steps:
       - uses: actions/checkout@v6

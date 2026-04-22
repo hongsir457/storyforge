@@ -24,17 +24,17 @@ export function StudioLayout({ children }: StudioLayoutProps) {
   useProjectEventsSSE(currentProjectName);
 
   return (
-    <div className="storyforge-workspace-shell flex h-screen flex-col">
+    <div className="frametale-workspace-shell flex h-screen flex-col">
       <div className="px-4 pt-4">
         <GlobalHeader onNavigateBack={() => setLocation("/app/projects")} />
       </div>
-      <div className="storyforge-shell-main flex flex-1 overflow-hidden px-4 pb-4 pt-3">
-        <AssetSidebar className="storyforge-workspace-rail min-w-[17rem] rounded-[1.9rem]" />
+      <div className="frametale-shell-main flex flex-1 overflow-hidden px-4 pb-4 pt-3">
+        <AssetSidebar className="frametale-workspace-rail min-w-[17rem] rounded-[1.9rem]" />
         <main className="mx-3 flex-1 overflow-auto rounded-[2rem] border border-[rgba(117,132,159,0.16)] bg-[rgba(255,255,255,0.76)] shadow-[0_18px_46px_rgba(23,38,69,0.06)]">
           {children}
         </main>
         <div
-          className={`storyforge-assistant-rail shrink-0 overflow-hidden rounded-[1.9rem] transition-[width,min-width,opacity] duration-300 ease-out ${
+          className={`frametale-assistant-rail shrink-0 overflow-hidden rounded-[1.9rem] transition-[width,min-width,opacity] duration-300 ease-out ${
             assistantPanelOpen ? "opacity-100" : "opacity-0"
           }`}
           style={{
@@ -60,7 +60,7 @@ export function StudioLayout({ children }: StudioLayoutProps) {
       <button
         type="button"
         onClick={toggleAssistantPanel}
-        className={`storyforge-primary-button fixed right-6 top-24 flex h-12 w-12 items-center justify-center rounded-full transition-all duration-300 ease-out ${UI_LAYERS.workspaceFloating} ${
+        className={`frametale-primary-button fixed right-6 top-24 flex h-12 w-12 items-center justify-center rounded-full transition-all duration-300 ease-out ${UI_LAYERS.workspaceFloating} ${
           assistantPanelOpen
             ? "pointer-events-none scale-0 opacity-0"
             : "scale-100 opacity-100 hover:-translate-y-0.5"

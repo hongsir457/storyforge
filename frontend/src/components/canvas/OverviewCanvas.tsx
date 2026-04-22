@@ -214,7 +214,7 @@ export function OverviewCanvas({ projectName, projectData }: OverviewCanvasProps
                 type="button"
                 onClick={() => styleInputRef.current?.click()}
                 disabled={uploadingStyleImage}
-                className="storyforge-secondary-button inline-flex items-center gap-1.5 rounded-[1rem] px-3 py-2 text-sm transition hover:-translate-y-0.5 disabled:translate-y-0 disabled:cursor-not-allowed disabled:opacity-50"
+                className="frametale-secondary-button inline-flex items-center gap-1.5 rounded-[1rem] px-3 py-2 text-sm transition hover:-translate-y-0.5 disabled:translate-y-0 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 <ImagePlus className="h-4 w-4" />
                 {styleImageUrl ? t("replace_reference") : t("upload_reference")}
@@ -259,7 +259,7 @@ export function OverviewCanvas({ projectName, projectData }: OverviewCanvasProps
             value={styleDescriptionDraft}
             onChange={(e) => setStyleDescriptionDraft(e.target.value)}
             rows={8}
-            className="storyforge-input mt-3 min-h-44 w-full rounded-[1rem] px-4 py-3 text-sm leading-relaxed outline-none transition"
+            className="frametale-input mt-3 min-h-44 w-full rounded-[1rem] px-4 py-3 text-sm leading-relaxed outline-none transition"
             placeholder={t("style_desc_textarea_placeholder")}
           />
 
@@ -274,7 +274,7 @@ export function OverviewCanvas({ projectName, projectData }: OverviewCanvasProps
                 type="button"
                 onClick={() => void handleSaveStyleDescription()}
                 disabled={savingStyleDescription}
-                className="storyforge-primary-button rounded-[1rem] px-4 py-2 text-sm font-medium transition hover:-translate-y-0.5 disabled:translate-y-0 disabled:cursor-not-allowed disabled:opacity-50"
+                className="frametale-primary-button rounded-[1rem] px-4 py-2 text-sm font-medium transition hover:-translate-y-0.5 disabled:translate-y-0 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 {savingStyleDescription ? t("common:saving") : t("save_style_description")}
               </button>
@@ -315,7 +315,7 @@ export function OverviewCanvas({ projectName, projectData }: OverviewCanvasProps
                     type="button"
                     onClick={() => void handleRegenerate()}
                     disabled={regenerating}
-                    className="storyforge-secondary-button flex items-center gap-1 rounded-full px-3 py-1.5 text-xs transition hover:-translate-y-0.5 disabled:translate-y-0 disabled:cursor-not-allowed disabled:opacity-50"
+                    className="frametale-secondary-button flex items-center gap-1 rounded-full px-3 py-1.5 text-xs transition hover:-translate-y-0.5 disabled:translate-y-0 disabled:cursor-not-allowed disabled:opacity-50"
                     title={t("regen_overview_title")}
                   >
                     <RefreshCw

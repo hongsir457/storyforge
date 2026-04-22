@@ -4,9 +4,9 @@ from __future__ import annotations
 
 from contextlib import asynccontextmanager
 
+import pytest
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
-import pytest
 from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 
 from lib.db import get_async_session
@@ -37,7 +37,7 @@ def billing_app():
         {
             "stripe_secret_key": "sk_test_router_secret",
             "stripe_webhook_secret": "whsec_router_secret",
-            "public_app_url": "https://storyforge.example.com",
+            "public_app_url": "https://frametale.example.com",
         }
     )
 
@@ -108,14 +108,32 @@ class TestBillingRouter:
             username="writer",
             email="writer@example.com",
         ) as client:
-            res = client.get("/api/v1/billing/me")
+            response = client.get("/api/v1/billing/me")
 
-        assert res.status_code == 200
-        body = res.json()
+        assert response.status_code == 200
+        body = response.json()
         assert body["balances"][0]["currency"] == "USD"
         assert body["balances"][0]["balance"] == pytest.approx(25)
         assert body["recent_transactions"][0]["entry_type"] == "topup"
         assert body["recent_orders"] == []
+
+    def test_checkout_config_exposes_dynamic_amount_constraints(self, billing_app):
+        with _client(
+            billing_app,
+            role="user",
+            user_id=USER_ID,
+            username="writer",
+            email="writer@example.com",
+        ) as client:
+            response = client.get("/api/v1/billing/checkout/config")
+
+        assert response.status_code == 200
+        body = response.json()
+        assert body["enabled"] is True
+        assert body["currency"] == "SGD"
+        assert body["min_amount"] == pytest.approx(1)
+        assert body["max_amount"] == pytest.approx(10_000)
+        assert body["amount_step"] == pytest.approx(0.01)
 
     def test_user_can_create_checkout_session(self, billing_app, monkeypatch: pytest.MonkeyPatch):
         recorded: dict[str, object] = {}
@@ -133,17 +151,46 @@ class TestBillingRouter:
             username="writer",
             email="writer@example.com",
         ) as client:
-            res = client.post("/api/v1/billing/checkout/session", json={"package_id": "creator-25"})
+            response = client.post("/api/v1/billing/checkout/session", json={"amount": 25, "currency": "SGD"})
 
-        assert res.status_code == 200
-        body = res.json()
+        assert response.status_code == 200
+        body = response.json()
         assert body["checkout_url"] == "https://checkout.stripe.test/session"
         assert body["order"]["status"] == "open"
-        assert recorded["client_reference_id"] == str(body["order"]["id"])
-        assert recorded["success_url"] == "https://storyforge.example.com/app/billing/return?session_id={CHECKOUT_SESSION_ID}"
-        assert recorded["cancel_url"] == "https://storyforge.example.com/app/billing/return?status=cancelled"
+        assert body["order"]["amount"] == pytest.approx(25)
+        assert recorded["client_reference_id"] == USER_ID
+        assert (
+            recorded["success_url"]
+            == "https://frametale.example.com/app/billing/return?session_id={CHECKOUT_SESSION_ID}"
+        )
+        assert recorded["cancel_url"] == "https://frametale.example.com/app/billing/return?status=cancelled"
+        assert recorded["metadata"] == {
+            "order_id": str(body["order"]["id"]),
+            "user_id": USER_ID,
+            "type": "topup",
+            "amount": "25.00",
+            "currency": "SGD",
+        }
+        line_item = recorded["line_items"][0]
+        assert line_item["price_data"]["currency"] == "sgd"
+        assert line_item["price_data"]["unit_amount"] == 2500
+
+    def test_checkout_session_rejects_amount_below_minimum(self, billing_app):
+        with _client(
+            billing_app,
+            role="user",
+            user_id=USER_ID,
+            username="writer",
+            email="writer@example.com",
+        ) as client:
+            response = client.post("/api/v1/billing/checkout/session", json={"amount": 0.5, "currency": "SGD"})
+
+        assert response.status_code == 400
+        assert "Top-up amount must be between" in response.json()["detail"]
 
     def test_status_endpoint_fulfills_successful_checkout(self, billing_app, monkeypatch: pytest.MonkeyPatch):
+        created_order_id: dict[str, int | None] = {"value": None}
+
         def _fake_create(**_kwargs):
             return {"id": "cs_test_status", "url": "https://checkout.stripe.test/status"}
 
@@ -154,7 +201,13 @@ class TestBillingRouter:
                 "payment_status": "paid",
                 "payment_intent": "pi_test_status",
                 "url": "https://checkout.stripe.test/status",
-                "metadata": {"order_id": "2"},
+                "metadata": {
+                    "order_id": str(created_order_id["value"]),
+                    "user_id": USER_ID,
+                    "type": "topup",
+                    "amount": "25.00",
+                    "currency": "SGD",
+                },
             }
 
         monkeypatch.setattr(billing.stripe.checkout.Session, "create", _fake_create)
@@ -167,28 +220,47 @@ class TestBillingRouter:
             username="writer",
             email="writer@example.com",
         ) as client:
-            create_res = client.post("/api/v1/billing/checkout/session", json={"package_id": "creator-25"})
-            assert create_res.status_code == 200
-            status_res = client.get("/api/v1/billing/checkout/session-status?session_id=cs_test_status")
-            summary_res = client.get("/api/v1/billing/me")
+            create_response = client.post("/api/v1/billing/checkout/session", json={"amount": 25, "currency": "SGD"})
+            assert create_response.status_code == 200
+            created_order_id["value"] = create_response.json()["order"]["id"]
 
-        assert status_res.status_code == 200
-        status_body = status_res.json()
+            status_response = client.get("/api/v1/billing/checkout/session-status?session_id=cs_test_status")
+            summary_response = client.get("/api/v1/billing/me")
+
+        assert status_response.status_code == 200
+        status_body = status_response.json()
         assert status_body["order"]["status"] == "paid"
         assert status_body["stripe_payment_status"] == "paid"
 
-        assert summary_res.status_code == 200
-        balances = summary_res.json()["balances"]
-        assert balances[0]["balance"] == pytest.approx(50)
+        assert summary_response.status_code == 200
+        balances = summary_response.json()["balances"]
+        sgd_balance = next(balance for balance in balances if balance["currency"] == "SGD")
+        usd_balance = next(balance for balance in balances if balance["currency"] == "USD")
+        assert sgd_balance["balance"] == pytest.approx(25)
+        assert usd_balance["balance"] == pytest.approx(25)
 
     def test_webhook_marks_checkout_paid_and_credits_balance(self, billing_app, monkeypatch: pytest.MonkeyPatch):
+        created_order_id: dict[str, int | None] = {"value": None}
+
         def _fake_create(**_kwargs):
             return {"id": "cs_test_hook", "url": "https://checkout.stripe.test/hook"}
 
         def _fake_construct_event(_payload, _signature, _secret):
             return {
                 "type": "checkout.session.completed",
-                "data": {"object": {"id": "cs_test_hook", "payment_intent": "pi_test_hook"}},
+                "data": {
+                    "object": {
+                        "id": "cs_test_hook",
+                        "payment_intent": "pi_test_hook",
+                        "metadata": {
+                            "order_id": str(created_order_id["value"]),
+                            "user_id": USER_ID,
+                            "type": "topup",
+                            "amount": "25.00",
+                            "currency": "SGD",
+                        },
+                    }
+                },
             }
 
         def _fake_retrieve(session_id: str):
@@ -198,7 +270,13 @@ class TestBillingRouter:
                 "payment_status": "paid",
                 "payment_intent": "pi_test_hook",
                 "url": "https://checkout.stripe.test/hook",
-                "metadata": {"order_id": "2"},
+                "metadata": {
+                    "order_id": str(created_order_id["value"]),
+                    "user_id": USER_ID,
+                    "type": "topup",
+                    "amount": "25.00",
+                    "currency": "SGD",
+                },
             }
 
         monkeypatch.setattr(billing.stripe.checkout.Session, "create", _fake_create)
@@ -212,20 +290,25 @@ class TestBillingRouter:
             username="writer",
             email="writer@example.com",
         ) as client:
-            create_res = client.post("/api/v1/billing/checkout/session", json={"package_id": "creator-25"})
-            assert create_res.status_code == 200
-            webhook_res = client.post(
+            create_response = client.post("/api/v1/billing/checkout/session", json={"amount": 25, "currency": "SGD"})
+            assert create_response.status_code == 200
+            created_order_id["value"] = create_response.json()["order"]["id"]
+
+            webhook_response = client.post(
                 "/api/v1/billing/stripe/webhook",
                 content=b"{}",
                 headers={"stripe-signature": "sig_test"},
             )
-            summary_res = client.get("/api/v1/billing/me")
+            summary_response = client.get("/api/v1/billing/me")
 
-        assert webhook_res.status_code == 200
-        assert webhook_res.json() == {"received": True}
-        assert summary_res.status_code == 200
-        balances = summary_res.json()["balances"]
-        assert balances[0]["balance"] == pytest.approx(50)
+        assert webhook_response.status_code == 200
+        assert webhook_response.json() == {"received": True}
+        assert summary_response.status_code == 200
+        balances = summary_response.json()["balances"]
+        sgd_balance = next(balance for balance in balances if balance["currency"] == "SGD")
+        usd_balance = next(balance for balance in balances if balance["currency"] == "USD")
+        assert sgd_balance["balance"] == pytest.approx(25)
+        assert usd_balance["balance"] == pytest.approx(25)
 
     def test_admin_can_topup_and_view_overview(self, billing_app):
         with _client(
@@ -235,7 +318,7 @@ class TestBillingRouter:
             username="admin",
             email="admin@example.com",
         ) as client:
-            topup = client.post(
+            topup_response = client.post(
                 "/api/v1/billing/admin/topups",
                 json={
                     "user_id": USER_ID,
@@ -244,13 +327,13 @@ class TestBillingRouter:
                     "note": "Bonus",
                 },
             )
-            assert topup.status_code == 200
-            assert topup.json()["transaction"]["amount"] == pytest.approx(5)
+            assert topup_response.status_code == 200
+            assert topup_response.json()["transaction"]["amount"] == pytest.approx(5)
 
-            overview = client.get("/api/v1/billing/admin/overview")
+            overview_response = client.get("/api/v1/billing/admin/overview")
 
-        assert overview.status_code == 200
-        body = overview.json()
+        assert overview_response.status_code == 200
+        body = overview_response.json()
         target = next(user for user in body["users"] if user["username"] == "writer")
         usd_balance = next(balance for balance in target["balances"] if balance["currency"] == "USD")
         assert usd_balance["balance"] == pytest.approx(30)
@@ -263,7 +346,7 @@ class TestBillingRouter:
             username="writer",
             email="writer@example.com",
         ) as client:
-            res = client.post(
+            response = client.post(
                 "/api/v1/billing/admin/topups",
                 json={
                     "user_id": USER_ID,
@@ -272,5 +355,5 @@ class TestBillingRouter:
                 },
             )
 
-        assert res.status_code == 403
-        assert res.json()["detail"] == "Admin access required"
+        assert response.status_code == 403
+        assert response.json()["detail"] == "Admin access required"

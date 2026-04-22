@@ -239,7 +239,7 @@ export function GlobalHeader({ onNavigateBack }: GlobalHeaderProps) {
 
   return (
     <>
-    <header className="storyforge-workspace-header flex min-h-[4.4rem] shrink-0 items-center justify-between rounded-[1.8rem] px-5 py-3">
+    <header className="frametale-workspace-header flex min-h-[4.4rem] shrink-0 items-center justify-between rounded-[1.8rem] px-5 py-3">
       {/* ---- Left section ---- */}
       <div className="flex min-w-0 items-center gap-4">
         {/* Logo */}
@@ -249,7 +249,7 @@ export function GlobalHeader({ onNavigateBack }: GlobalHeaderProps) {
         <button
           type="button"
           onClick={onNavigateBack}
-          className="storyforge-rail-button flex items-center gap-1 rounded-full px-3 py-2 text-sm font-medium transition hover:-translate-y-0.5"
+          className="frametale-rail-button flex items-center gap-1 rounded-full px-3 py-2 text-sm font-medium transition hover:-translate-y-0.5"
           aria-label={t("dashboard:projects")}
         >
           <ChevronLeft className="h-4 w-4" />
@@ -262,7 +262,7 @@ export function GlobalHeader({ onNavigateBack }: GlobalHeaderProps) {
         {/* Project name */}
         <div className="min-w-0">
           <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[var(--sf-text-soft)]">
-            Storyforge Workspace
+            Frametale Workspace
           </div>
           <span className="block max-w-56 truncate text-sm font-semibold text-[var(--sf-text)]">
             {displayProjectTitle}
@@ -291,7 +291,7 @@ export function GlobalHeader({ onNavigateBack }: GlobalHeaderProps) {
             className={`relative flex items-center gap-1 rounded-full px-3 py-2 text-xs font-medium transition ${
               notificationDrawerOpen
                 ? "border border-amber-300/60 bg-amber-100 text-amber-900"
-                : "storyforge-rail-button"
+                : "frametale-rail-button"
             }`}
             title={t("dashboard:notification_tooltip", { count: workspaceNotifications.length })}
             aria-label={t("dashboard:open_notification_center")}
@@ -319,7 +319,7 @@ export function GlobalHeader({ onNavigateBack }: GlobalHeaderProps) {
             className={`flex items-center gap-1 rounded-full px-3 py-2 text-xs font-medium transition ${
               usageDrawerOpen
                 ? "border border-sky-300/60 bg-sky-100 text-sky-900"
-                : "storyforge-rail-button"
+                : "frametale-rail-button"
             }`}
             title={t("dashboard:cost_tooltip", { cost: costText })}
           >
@@ -341,7 +341,7 @@ export function GlobalHeader({ onNavigateBack }: GlobalHeaderProps) {
             className={`relative rounded-full p-2.5 transition ${
               taskHudOpen
                 ? "border border-sky-300/60 bg-sky-100 text-sky-900"
-                : "storyforge-rail-button"
+                : "frametale-rail-button"
             }`}
             title={t("dashboard:task_status_tooltip", { running: stats.running, queued: stats.queued })}
             aria-label={t("dashboard:toggle_task_panel")}
@@ -365,7 +365,7 @@ export function GlobalHeader({ onNavigateBack }: GlobalHeaderProps) {
             type="button"
             onClick={() => setExportDialogOpen(!exportDialogOpen)}
             disabled={!currentProjectName || exportingProject}
-            className="storyforge-rail-button inline-flex items-center gap-1 rounded-full px-3 py-2 text-xs font-medium transition hover:-translate-y-0.5 disabled:translate-y-0 disabled:cursor-not-allowed disabled:opacity-50"
+            className="frametale-rail-button inline-flex items-center gap-1 rounded-full px-3 py-2 text-xs font-medium transition hover:-translate-y-0.5 disabled:translate-y-0 disabled:cursor-not-allowed disabled:opacity-50"
             title={t("dashboard:export_project_zip")}
             aria-label={t("dashboard:export_project_zip")}
           >
@@ -393,7 +393,7 @@ export function GlobalHeader({ onNavigateBack }: GlobalHeaderProps) {
           <button
             type="button"
             onClick={() => setLocation("/app/admin")}
-            className="storyforge-rail-button relative inline-flex items-center gap-1 rounded-full px-3 py-2 text-xs font-medium transition hover:-translate-y-0.5"
+            className="frametale-rail-button relative inline-flex items-center gap-1 rounded-full px-3 py-2 text-xs font-medium transition hover:-translate-y-0.5"
             title={globalConfigLabel}
             aria-label={globalConfigLabel}
           >
@@ -408,7 +408,7 @@ export function GlobalHeader({ onNavigateBack }: GlobalHeaderProps) {
         <button
           type="button"
           onClick={() => setLocation("/app/account")}
-          className="storyforge-rail-button rounded-full px-4 py-2 text-xs font-medium transition hover:-translate-y-0.5"
+          className="frametale-rail-button rounded-full px-4 py-2 text-xs font-medium transition hover:-translate-y-0.5"
           title={user?.display_name || user?.username || t("auth:account_settings")}
         >
           {user?.display_name || user?.username || t("auth:account_settings")}
@@ -425,7 +425,7 @@ export function GlobalHeader({ onNavigateBack }: GlobalHeaderProps) {
                   : "/app/account",
             )
           }
-          className="storyforge-rail-button relative rounded-full p-2.5 transition hover:-translate-y-0.5"
+          className="frametale-rail-button relative rounded-full p-2.5 transition hover:-translate-y-0.5"
           title={projectSettingsLabel}
           aria-label={projectSettingsLabel}
         >

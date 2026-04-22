@@ -1,6 +1,6 @@
 # Migrate from SQLite to PostgreSQL
 
-Use this when upgrading an existing Storyforge deployment that still stores relational data in `projects/.autovideo.db`.
+Use this when upgrading an existing Frametale deployment that still stores relational data in `projects/.autovideo.db`.
 
 ## Prerequisites
 
@@ -23,7 +23,7 @@ cp projects/.autovideo.db projects/.autovideo.db.bak
 ```bash
 python scripts/migrate_sqlite_to_postgres.py \
   --source-sqlite projects/.autovideo.db \
-  --target-database-url "postgresql+asyncpg://storyforge:<postgres-password>@postgres:5432/storyforge"
+  --target-database-url "postgresql+asyncpg://frametale:<postgres-password>@postgres:5432/frametale"
 ```
 
 The script reflects both databases, truncates target application tables, then copies rows in dependency order.
@@ -37,7 +37,7 @@ sqlite3 projects/.autovideo.db "SELECT 'users', COUNT(*) FROM users UNION ALL SE
 ```
 
 ```bash
-psql "postgresql://storyforge:<postgres-password>@postgres:5432/storyforge" \
+psql "postgresql://frametale:<postgres-password>@postgres:5432/frametale" \
   -c "SELECT 'users', COUNT(*) FROM users UNION ALL SELECT 'tasks', COUNT(*) FROM tasks;"
 ```
 

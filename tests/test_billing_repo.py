@@ -6,7 +6,7 @@ import pytest
 from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 
 from lib.db.base import Base
-from lib.db.models import BillingAccount, BillingTransaction
+from lib.db.models import BillingTransaction
 from lib.db.repositories.billing_repo import BillingRepository
 from lib.db.repositories.user_repository import UserRepository
 
@@ -112,7 +112,9 @@ class TestBillingRepository:
             provider="stripe",
             description="Stripe top-up",
         )
-        await repo.attach_checkout_session(order=order, checkout_session_id="cs_test_123", checkout_url="https://checkout")
+        await repo.attach_checkout_session(
+            order=order, checkout_session_id="cs_test_123", checkout_url="https://checkout"
+        )
         first = await repo.fulfill_checkout_order(order, checkout_session_id="cs_test_123", payment_intent_id="pi_123")
         second = await repo.fulfill_checkout_order(order, checkout_session_id="cs_test_123", payment_intent_id="pi_123")
         await db_session.commit()

@@ -30,12 +30,12 @@ const STEPS = [
   {
     step: "02",
     title: "OpenClaw 从 Skill 文档学习能力",
-    desc: "OpenClaw 会自动读取 Storyforge Skill 文档，获取所有可用工具与 API 的使用方式",
+    desc: "OpenClaw 会自动读取 Frametale Skill 文档，获取所有可用工具与 API 的使用方式",
   },
   {
     step: "03",
-    title: "OpenClaw 与 Storyforge 交互并创建视频",
-    desc: "描述你的创作需求，OpenClaw 将调用 Storyforge 完成项目管理、剧本生成和视频创作",
+    title: "OpenClaw 与 Frametale 交互并创建视频",
+    desc: "描述你的创作需求，OpenClaw 将调用 Frametale 完成项目管理、剧本生成和视频创作",
   },
 ] as const;
 
@@ -50,7 +50,7 @@ export function OpenClawModal({ onClose }: OpenClawModalProps) {
   );
 
   const systemPrompt = useMemo(
-    () => `学习 ${skillUrl} 然后遵循 skill，了解如何使用 Storyforge 创作视频`,
+    () => `学习 ${skillUrl} 然后遵循 skill，了解如何使用 Frametale 创作视频`,
     [skillUrl],
   );
 
@@ -93,7 +93,7 @@ export function OpenClawModal({ onClose }: OpenClawModalProps) {
             <LobsterIcon className="text-xl leading-none" />
             <div>
               <h2 className="text-sm font-semibold text-gray-100">OpenClaw 集成指南</h2>
-              <p className="text-xs text-gray-500">将 Storyforge 接入 OpenClaw AI Agent</p>
+              <p className="text-xs text-gray-500">将 Frametale 接入 OpenClaw AI Agent</p>
             </div>
           </div>
           <button

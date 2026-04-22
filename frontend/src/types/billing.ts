@@ -72,24 +72,20 @@ export interface BillingPaymentOrder {
   updated_at: string;
 }
 
-export interface BillingCheckoutPackage {
-  id: string;
-  currency: string;
-  amount: number;
-  label: string;
-  description: string;
-}
-
 export interface BillingCheckoutConfig {
   enabled: boolean;
   mode: string;
   public_app_url: string | null;
   webhook_endpoint: string | null;
-  packages: BillingCheckoutPackage[];
+  currency: string;
+  min_amount: number;
+  max_amount: number;
+  amount_step: number;
 }
 
 export interface BillingCheckoutSessionPayload {
-  package_id: string;
+  amount: number;
+  currency?: string;
 }
 
 export interface BillingCheckoutSessionResponse {

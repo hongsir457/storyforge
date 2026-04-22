@@ -2,14 +2,14 @@
   postgres:
     image: postgres:16-alpine
     environment:
-      POSTGRES_USER: storyforge
+      POSTGRES_USER: frametale
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in deploy/.env}
-      POSTGRES_DB: storyforge`r`n      PGDATA: /var/lib/postgresql/data/pgdata
+      POSTGRES_DB: frametale`r`n      PGDATA: /var/lib/postgresql/data/pgdata
     volumes:
       - ./pgdata:/var/lib/postgresql/data
     restart: unless-stopped
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U storyforge -d storyforge"]
+      test: ["CMD-SHELL", "pg_isready -U frametale -d frametale"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -26,14 +26,14 @@
       timeout: 5s
       retries: 5
 
-  storyforge-backend:
+  frametale-backend:
     build:
       context: ..
       dockerfile: Dockerfile.backend
-    image: storyforge-backend-local:latest
+    image: frametale-backend-local:latest
     env_file: .env
     environment:
-      DATABASE_URL: postgresql+asyncpg://storyforge:${POSTGRES_PASSWORD}@postgres:5432/storyforge?ssl=disable
+      DATABASE_URL: postgresql+asyncpg://frametale:${POSTGRES_PASSWORD}@postgres:5432/frametale?ssl=disable
       REDIS_URL: redis://redis:6379/0
     volumes:
       - ./projects:/app/projects
@@ -51,15 +51,15 @@
       timeout: 5s
       retries: 3
 
-  storyforge-frontend:
+  frametale-frontend:
     build:
       context: ..
       dockerfile: Dockerfile.frontend
-    image: storyforge-frontend-local:latest
+    image: frametale-frontend-local:latest
     ports:
       - "1241:8080"
     depends_on:
-      storyforge-backend:
+      frametale-backend:
         condition: service_healthy
     restart: unless-stopped
 

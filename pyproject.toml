@@ -1,5 +1,5 @@
 [project]
-name = "storyforge"
+name = "frametale"
 version = "0.8.1"
 description = "AI novel and video studio"
 readme = "README.md"

@@ -78,7 +78,7 @@ describe("AppRoutes", () => {
     useAuthStore.setState({
       user: {
         id: "user-1",
-        username: "storyforge_demo",
+        username: "frametale_demo",
         email: "demo@example.com",
         display_name: "Demo",
         role: "user",

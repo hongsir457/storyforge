@@ -35,7 +35,7 @@ export default {
   back_home: "Back home",
   home_hero_title: "Turn long-form stories into reusable visual IP.",
   home_hero_body:
-    "Storyforge is a novel and video studio for building worlds, characters, chapters, storyboards, and production assets in one pipeline.",
+    "Frametale is a novel and video studio for building worlds, characters, chapters, storyboards, and production assets in one pipeline.",
   home_primary_cta: "Open studio",
   home_secondary_cta: "Create account",
   home_feature_story_title: "Narrative consistency first",

@@ -62,7 +62,7 @@ class CharacterRecord:
 def parse_args() -> argparse.Namespace:
     repo_root = Path(__file__).resolve().parent.parent
     parser = argparse.ArgumentParser(
-        description="Import a completed autonovel manuscript into Storyforge as a narration project."
+        description="Import a completed autonovel manuscript into Frametale as a narration project."
     )
     parser.add_argument(
         "--autonovel-dir",
@@ -75,17 +75,17 @@ def parse_args() -> argparse.Namespace:
         "--autovedio-dir",
         type=Path,
         default=repo_root,
-        help="Path to the Storyforge repository.",
+        help="Path to the Frametale repository.",
     )
     parser.add_argument(
         "--project-name",
         required=True,
-        help="Storyforge project id. Letters, numbers, and hyphens only.",
+        help="Frametale project id. Letters, numbers, and hyphens only.",
     )
     parser.add_argument(
         "--project-title",
         default="",
-        help="Display title used inside Storyforge. Falls back to metadata or project name.",
+        help="Display title used inside Frametale. Falls back to metadata or project name.",
     )
     parser.add_argument(
         "--style",
@@ -96,7 +96,7 @@ def parse_args() -> argparse.Namespace:
         "--aspect-ratio",
         choices=("9:16", "16:9"),
         default="9:16",
-        help="Storyforge project aspect ratio.",
+        help="Frametale project aspect ratio.",
     )
     parser.add_argument(
         "--default-duration",
@@ -531,13 +531,13 @@ def main() -> None:
     if not autonovel_dir.exists():
         raise SystemExit(f"autonovel directory does not exist: {autonovel_dir}")
     if not autovideo_dir.exists():
-        raise SystemExit(f"Storyforge directory does not exist: {autovideo_dir}")
+        raise SystemExit(f"Frametale directory does not exist: {autovideo_dir}")
     if not projects_root.exists():
-        raise SystemExit(f"Storyforge projects directory does not exist: {projects_root}")
+        raise SystemExit(f"Frametale projects directory does not exist: {projects_root}")
 
     final_project_dir = projects_root / args.project_name
     if final_project_dir.exists():
-        raise SystemExit(f"Storyforge project already exists: {final_project_dir}")
+        raise SystemExit(f"Frametale project already exists: {final_project_dir}")
 
     chapter_paths = chapter_files(autonovel_dir)
     project_title = coalesce_title(args.project_title, args.project_name, autonovel_dir)
@@ -655,14 +655,14 @@ def main() -> None:
     if not valid:
         joined = "\n".join(f"- {item}" for item in errors)
         raise SystemExit(
-            "Storyforge validation failed for the imported project.\n"
+            "Frametale validation failed for the imported project.\n"
             f"Temporary project left at: {temp_project_dir}\n"
             f"{joined}"
         )
 
     temp_project_dir.rename(final_project_dir)
 
-    print(f"Imported autonovel manuscript into Storyforge: {final_project_dir}")
+    print(f"Imported autonovel manuscript into Frametale: {final_project_dir}")
     print(f"Chapters: {len(chapter_paths)}")
     print(f"Segments: {total_segments}")
     if warnings:

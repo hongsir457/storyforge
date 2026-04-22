@@ -59,10 +59,10 @@ export function RegisterPage() {
     <PublicShell
       eyebrow={t("dashboard:app_title")}
       title="为你的叙事工作间建立一个清晰入口。"
-      description="注册完成后，Storyforge 会把小说工作台、项目库和工作区都收进同一品牌系统里。"
+      description="注册完成后，Frametale 会把小说工作台、项目库和工作区都收进同一品牌系统里。"
     >
       <div className="mb-7">
-        <div className="storyforge-kicker">Create Workspace</div>
+        <div className="frametale-kicker">Create Workspace</div>
         <h2
           className="mt-4 text-[2rem] font-semibold tracking-[-0.04em] text-[var(--sf-text)]"
           style={{ fontFamily: "var(--font-display)" }}
@@ -87,7 +87,7 @@ export function RegisterPage() {
         <button
           type="submit"
           disabled={loading}
-          className="storyforge-primary-button w-full rounded-[1rem] px-4 py-3 text-sm font-semibold transition hover:-translate-y-0.5 disabled:translate-y-0 disabled:opacity-60"
+          className="frametale-primary-button w-full rounded-[1rem] px-4 py-3 text-sm font-semibold transition hover:-translate-y-0.5 disabled:translate-y-0 disabled:opacity-60"
         >
           {loading ? t("registering") : t("create_account")}
         </button>
@@ -123,7 +123,7 @@ function Field({
         type={type}
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="storyforge-input w-full rounded-[1rem] px-4 py-3.5 text-[15px] outline-none transition"
+        className="frametale-input w-full rounded-[1rem] px-4 py-3.5 text-[15px] outline-none transition"
         required
       />
     </label>

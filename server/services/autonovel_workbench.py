@@ -216,7 +216,7 @@ class NovelWorkbenchService:
                 target_project_name = self.pm.generate_project_name(title)
 
             if (self.projects_root / target_project_name).exists():
-                raise NovelWorkbenchError(f"Storyforge project already exists: {target_project_name}")
+                raise NovelWorkbenchError(f"Frametale project already exists: {target_project_name}")
 
             for existing in self._jobs.values():
                 if (
@@ -837,8 +837,8 @@ class NovelWorkbenchService:
 
         commands = (
             ["git", "init"],
-            ["git", "config", "user.name", "Storyforge Autonovel"],
-            ["git", "config", "user.email", "noreply@storyforge.local"],
+            ["git", "config", "user.name", "Frametale Autonovel"],
+            ["git", "config", "user.email", "noreply@frametale.local"],
             ["git", "add", "-A"],
             ["git", "commit", "-m", "workspace bootstrap", "--allow-empty"],
         )

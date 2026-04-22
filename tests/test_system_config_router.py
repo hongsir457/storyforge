@@ -351,14 +351,14 @@ class TestPatchSystemConfig:
                 json={
                     "stripe_secret_key": "sk_test_123",
                     "stripe_webhook_secret": "whsec_123",
-                    "public_app_url": "https://storyforge.example.com",
+                    "public_app_url": "https://frametale.example.com",
                 },
             )
         assert res.status_code == 200
         settings = res.json()["settings"]
         assert settings["stripe_secret_key"]["is_set"] is True
         assert settings["stripe_webhook_secret"]["is_set"] is True
-        assert settings["public_app_url"] == "https://storyforge.example.com"
+        assert settings["public_app_url"] == "https://frametale.example.com"
 
     def test_patch_sets_anthropic_base_url(self):
         mock_svc = _make_mock_svc()

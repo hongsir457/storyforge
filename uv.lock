@@ -2206,7 +2206,7 @@ wheels = [
 ]
 
 [[package]]
-name = "storyforge"
+name = "frametale"
 version = "0.8.1"
 source = { editable = "." }
 dependencies = [

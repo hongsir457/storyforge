@@ -37,7 +37,7 @@ export default {
   back_home: "返回首页",
   home_hero_title: "把长篇故事做成可复用的视觉 IP。",
   home_hero_body:
-    "Storyforge 是面向小说与视频的一体化工作台，用同一条生产线管理世界观、角色、章节、分镜与制作资产。",
+    "Frametale 是面向小说与视频的一体化工作台，用同一条生产线管理世界观、角色、章节、分镜与制作资产。",
   home_primary_cta: "进入工作台",
   home_secondary_cta: "创建账号",
   home_feature_story_title: "先解决叙事一致性",

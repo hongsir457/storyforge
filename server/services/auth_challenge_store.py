@@ -86,16 +86,16 @@ class AuthChallengeStore:
             self._backend = _InMemoryStore()
 
     def _challenge_key(self, kind: ChallengeKind, subject: str) -> str:
-        return f"storyforge:auth:{kind}:{_normalize_subject(subject)}"
+        return f"frametale:auth:{kind}:{_normalize_subject(subject)}"
 
     def _cooldown_key(self, kind: ChallengeKind, subject: str) -> str:
-        return f"storyforge:auth:cooldown:{kind}:{_normalize_subject(subject)}"
+        return f"frametale:auth:cooldown:{kind}:{_normalize_subject(subject)}"
 
     def _pending_registration_key(self, email: str) -> str:
-        return f"storyforge:auth:pending-registration:{_normalize_subject(email)}"
+        return f"frametale:auth:pending-registration:{_normalize_subject(email)}"
 
     def _pending_registration_username_key(self, username: str) -> str:
-        return f"storyforge:auth:pending-registration-username:{_normalize_username(username)}"
+        return f"frametale:auth:pending-registration-username:{_normalize_username(username)}"
 
     async def issue_code(
         self,

@@ -1,12 +1,150 @@
 import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { useLocation } from "wouter";
-import { ArrowDownLeft, ArrowLeft, ArrowUpRight, CreditCard, Loader2, ShieldCheck, Wallet } from "lucide-react";
+import {
+  ArrowDownLeft,
+  ArrowLeft,
+  ArrowUpRight,
+  CreditCard,
+  Loader2,
+  ShieldCheck,
+  Wallet,
+} from "lucide-react";
 import { useTranslation } from "react-i18next";
+
 import { API } from "@/api";
 import { BrandLogo } from "@/components/brand/BrandLogo";
 import { SiteLegalFooter } from "@/components/legal/SiteLegalFooter";
 import { useAuthStore } from "@/stores/auth-store";
 import type { BillingCheckoutConfig, BillingSummary, BillingTransaction } from "@/types";
+
+function getAmountPrecision(step: number): number {
+  const text = step.toString();
+  if (!text.includes(".")) {
+    return 0;
+  }
+  return text.split(".")[1]?.length ?? 0;
+}
+
+function isStepAligned(value: number, step: number): boolean {
+  if (step <= 0) {
+    return true;
+  }
+  const ratio = value / step;
+  return Math.abs(ratio - Math.round(ratio)) < 1e-8;
+}
+
+function formatMoney(amount: number, currency: string, isZh: boolean): string {
+  try {
+    return new Intl.NumberFormat(isZh ? "zh-CN" : "en-US", {
+      style: "currency",
+      currency,
+      minimumFractionDigits: amount % 1 === 0 ? 0 : 2,
+      maximumFractionDigits: 4,
+    }).format(amount);
+  } catch {
+    return `${amount.toFixed(4)} ${currency}`;
+  }
+}
+
+function Notice({
+  children,
+  tone,
+  className,
+}: {
+  children: string;
+  tone: "error" | "success";
+  className?: string;
+}) {
+  const base = tone === "error"
+    ? "border-rose-300/55 bg-rose-100/72 text-rose-900"
+    : "border-emerald-300/55 bg-emerald-100/72 text-emerald-900";
+  return <p className={`rounded-[1rem] border px-4 py-3 text-sm ${base} ${className ?? ""}`}>{children}</p>;
+}
+
+function DetailBlock({
+  label,
+  value,
+}: {
+  label: string;
+  value: string;
+}) {
+  return (
+    <div>
+      <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[var(--sf-text-soft)]">{label}</div>
+      <div className="mt-2 rounded-[1rem] border border-[rgba(117,132,159,0.18)] bg-[rgba(248,250,253,0.92)] px-4 py-3 text-[var(--sf-text)]">
+        {value}
+      </div>
+    </div>
+  );
+}
+
+function Field({
+  label,
+  value,
+  onChange,
+  type,
+}: {
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+  type: string;
+}) {
+  return (
+    <label className="block">
+      <span className="mb-2 block text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--sf-text-soft)]">
+        {label}
+      </span>
+      <input
+        type={type}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        className="frametale-input w-full rounded-[1rem] px-4 py-3.5 text-[15px] outline-none transition"
+        required
+      />
+    </label>
+  );
+}
+
+function TransactionRow({
+  tx,
+  isZh,
+}: {
+  tx: BillingTransaction;
+  isZh: boolean;
+}) {
+  const credit = tx.amount > 0;
+  const signedAmount = `${credit ? "+" : ""}${formatMoney(tx.amount, tx.currency, isZh)}`;
+
+  return (
+    <div className="rounded-[1.4rem] border border-[rgba(117,132,159,0.18)] bg-[rgba(248,250,253,0.92)] p-4">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div className="flex min-w-0 items-start gap-3">
+          <div
+            className={`mt-0.5 flex h-9 w-9 items-center justify-center rounded-full ${
+              credit ? "bg-emerald-100 text-emerald-700" : "bg-amber-100 text-amber-700"
+            }`}
+          >
+            {credit ? <ArrowDownLeft className="h-4 w-4" /> : <ArrowUpRight className="h-4 w-4" />}
+          </div>
+          <div className="min-w-0">
+            <div className="font-medium text-[var(--sf-text)]">{tx.description ?? tx.entry_type}</div>
+            <div className="mt-1 text-sm text-[var(--sf-text-muted)]">
+              {new Date(tx.created_at).toLocaleString(isZh ? "zh-CN" : "en-US")}
+            </div>
+          </div>
+        </div>
+        <div className="text-right">
+          <div className={`text-sm font-semibold ${credit ? "text-emerald-700" : "text-amber-700"}`}>
+            {signedAmount}
+          </div>
+          <div className="mt-1 text-xs text-[var(--sf-text-soft)]">
+            {isZh ? "余额" : "Balance"}: {formatMoney(tx.balance_after, tx.currency, isZh)}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 export function AccountPage() {
   const { t, i18n } = useTranslation(["auth", "dashboard"]);
@@ -30,11 +168,15 @@ export function AccountPage() {
   const [billingLoading, setBillingLoading] = useState(true);
   const [billingError, setBillingError] = useState("");
   const [checkoutConfig, setCheckoutConfig] = useState<BillingCheckoutConfig | null>(null);
+  const [checkoutAmount, setCheckoutAmount] = useState("");
   const [checkoutLoading, setCheckoutLoading] = useState(true);
   const [checkoutError, setCheckoutError] = useState("");
-  const [startingCheckoutId, setStartingCheckoutId] = useState("");
+  const [startingCheckout, setStartingCheckout] = useState(false);
 
-  const isZh = useMemo(() => (i18n.resolvedLanguage ?? i18n.language ?? "").startsWith("zh"), [i18n.language, i18n.resolvedLanguage]);
+  const isZh = useMemo(
+    () => (i18n.resolvedLanguage ?? i18n.language ?? "").startsWith("zh"),
+    [i18n.language, i18n.resolvedLanguage],
+  );
 
   useEffect(() => {
     setDisplayName(user?.display_name ?? "");
@@ -76,6 +218,7 @@ export function AccountPage() {
       .then((config) => {
         if (!cancelled) {
           setCheckoutConfig(config);
+          setCheckoutAmount((current) => current || config.min_amount.toFixed(getAmountPrecision(config.amount_step)));
         }
       })
       .catch((err) => {
@@ -94,15 +237,46 @@ export function AccountPage() {
     };
   }, [user?.id]);
 
-  const startCheckout = async (packageId: string) => {
-    setStartingCheckoutId(packageId);
+  const startCheckout = async () => {
+    if (!checkoutConfig) {
+      return;
+    }
+
+    const amount = Number.parseFloat(checkoutAmount);
+    if (!Number.isFinite(amount)) {
+      setCheckoutError(isZh ? "请输入有效充值金额。" : "Enter a valid top-up amount.");
+      return;
+    }
+
+    if (amount < checkoutConfig.min_amount || amount > checkoutConfig.max_amount) {
+      setCheckoutError(
+        isZh
+          ? `单次充值范围为 ${formatMoney(checkoutConfig.min_amount, checkoutConfig.currency, true)} 到 ${formatMoney(checkoutConfig.max_amount, checkoutConfig.currency, true)}。`
+          : `Top-ups must stay between ${formatMoney(checkoutConfig.min_amount, checkoutConfig.currency, false)} and ${formatMoney(checkoutConfig.max_amount, checkoutConfig.currency, false)}.`,
+      );
+      return;
+    }
+
+    if (!isStepAligned(amount, checkoutConfig.amount_step)) {
+      setCheckoutError(
+        isZh
+          ? `金额步长必须是 ${checkoutConfig.amount_step}。`
+          : `Amount increments must follow a step of ${checkoutConfig.amount_step}.`,
+      );
+      return;
+    }
+
+    setStartingCheckout(true);
     setCheckoutError("");
     try {
-      const res = await API.createBillingCheckoutSession({ package_id: packageId });
+      const res = await API.createBillingCheckoutSession({
+        amount,
+        currency: checkoutConfig.currency,
+      });
       globalThis.location.assign(res.checkout_url);
     } catch (err) {
       setCheckoutError(err instanceof Error ? err.message : "Failed to start Stripe checkout");
-      setStartingCheckoutId("");
+      setStartingCheckout(false);
     }
   };
 
@@ -144,7 +318,10 @@ export function AccountPage() {
   };
 
   const resendVerification = async () => {
-    if (!user?.email) return;
+    if (!user?.email) {
+      return;
+    }
+
     setSendingVerification(true);
     setError("");
     setVerificationNotice("");
@@ -161,27 +338,29 @@ export function AccountPage() {
   return (
     <div className="sf-editorial-page flex min-h-screen flex-col px-6 py-8 text-[var(--sf-text)]">
       <div className="mx-auto flex w-full max-w-6xl flex-1 flex-col space-y-6">
-        <header className="storyforge-page-header flex flex-col gap-5 rounded-[2rem] px-6 py-5 lg:flex-row lg:items-center lg:justify-between">
+        <header className="frametale-page-header flex flex-col gap-5 rounded-[2rem] px-6 py-5 lg:flex-row lg:items-center lg:justify-between">
           <div className="flex items-start gap-4">
             <button
               type="button"
               onClick={() => setLocation("/app/projects")}
-              className="storyforge-secondary-button inline-flex h-11 w-11 items-center justify-center rounded-full transition hover:-translate-y-0.5"
+              className="frametale-secondary-button inline-flex h-11 w-11 items-center justify-center rounded-full transition hover:-translate-y-0.5"
               aria-label={t("enter_studio")}
             >
               <ArrowLeft className="h-5 w-5" />
             </button>
             <div className="space-y-2">
-              <BrandLogo alt={t("dashboard:app_title")} className="h-14 w-auto max-w-[17rem]" />
+              <BrandLogo alt="Frametale" className="h-14 w-auto max-w-[17rem]" />
               <div>
                 <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[var(--sf-text-soft)]">
-                  Account Surface
+                  {isZh ? "账户中心" : "Account surface"}
                 </p>
                 <h1 className="mt-2 text-[2rem] font-semibold tracking-[-0.04em]" style={{ fontFamily: "var(--font-display)" }}>
                   {t("account_settings")}
                 </h1>
                 <p className="mt-2 max-w-2xl text-sm leading-7 text-[var(--sf-text-muted)]">
-                  账号信息、邮箱验证和密码管理统一放在一个清晰的品牌页面里。
+                  {isZh
+                    ? "把账户资料、邮箱验证、密码和预付费余额收在同一个清晰的 Frametale 品牌页面里。"
+                    : "Keep profile details, email trust, password changes, and prepaid billing inside one clear Frametale surface."}
                 </p>
               </div>
             </div>
@@ -190,7 +369,7 @@ export function AccountPage() {
             <button
               type="button"
               onClick={() => setLocation("/app/projects")}
-              className="storyforge-secondary-button rounded-full px-4 py-2.5 text-sm font-medium transition hover:-translate-y-0.5"
+              className="frametale-secondary-button rounded-full px-4 py-2.5 text-sm font-medium transition hover:-translate-y-0.5"
             >
               {t("enter_studio")}
             </button>
@@ -217,7 +396,9 @@ export function AccountPage() {
               </div>
               <div>
                 <h2 className="text-xl font-semibold text-[var(--sf-text)]">{t("save_profile")}</h2>
-                <p className="text-sm text-[var(--sf-text-muted)]">基础身份信息与邮箱信任状态。</p>
+                <p className="text-sm text-[var(--sf-text-muted)]">
+                  {isZh ? "基础身份信息与邮箱信任状态。" : "Core identity details and email trust status."}
+                </p>
               </div>
             </div>
 
@@ -233,9 +414,7 @@ export function AccountPage() {
                     </div>
                     <div
                       className={`mt-2 inline-flex rounded-full px-3 py-1 text-xs font-semibold ${
-                        user?.is_email_verified
-                          ? "bg-emerald-100 text-emerald-900"
-                          : "bg-amber-100 text-amber-900"
+                        user?.is_email_verified ? "bg-emerald-100 text-emerald-900" : "bg-amber-100 text-amber-900"
                       }`}
                     >
                       {user?.is_email_verified ? t("verified") : t("unverified")}
@@ -246,7 +425,7 @@ export function AccountPage() {
                       type="button"
                       onClick={() => void resendVerification()}
                       disabled={sendingVerification}
-                      className="storyforge-secondary-button rounded-full px-4 py-2 text-sm font-medium transition hover:-translate-y-0.5 disabled:translate-y-0 disabled:opacity-60"
+                      className="frametale-secondary-button rounded-full px-4 py-2 text-sm font-medium transition hover:-translate-y-0.5 disabled:translate-y-0 disabled:opacity-60"
                     >
                       {sendingVerification ? t("sending_code") : t("resend_verification_code")}
                     </button>
@@ -260,17 +439,12 @@ export function AccountPage() {
             </div>
 
             <form onSubmit={(e) => void saveProfile(e)} className="mt-6 space-y-4">
-              <Field
-                label={t("display_name")}
-                value={displayName}
-                onChange={setDisplayName}
-                type="text"
-              />
+              <Field label={t("display_name")} value={displayName} onChange={setDisplayName} type="text" />
               {profileNotice && <Notice tone="success">{profileNotice}</Notice>}
               <button
                 type="submit"
                 disabled={savingProfile}
-                className="storyforge-primary-button rounded-[1rem] px-5 py-3 text-sm font-semibold transition hover:-translate-y-0.5 disabled:translate-y-0 disabled:opacity-60"
+                className="frametale-primary-button rounded-[1rem] px-5 py-3 text-sm font-semibold transition hover:-translate-y-0.5 disabled:translate-y-0 disabled:opacity-60"
               >
                 {savingProfile ? t("saving") : t("save_profile")}
               </button>
@@ -280,7 +454,7 @@ export function AccountPage() {
           <section className="sf-panel rounded-[2rem] p-6">
             <h2 className="text-xl font-semibold text-[var(--sf-text)]">{t("change_password")}</h2>
             <p className="mt-2 text-sm leading-7 text-[var(--sf-text-muted)]">
-              这里保留最必要的安全动作，不额外塞入系统级配置。
+              {isZh ? "只保留必要的账户安全动作，不把系统级配置混进来。" : "Keep only the essential account security actions here."}
             </p>
             <form onSubmit={(e) => void savePassword(e)} className="mt-6 space-y-4">
               <Field label={t("current_password")} value={currentPassword} onChange={setCurrentPassword} type="password" />
@@ -290,7 +464,7 @@ export function AccountPage() {
               <button
                 type="submit"
                 disabled={savingPassword}
-                className="storyforge-primary-button rounded-[1rem] px-5 py-3 text-sm font-semibold transition hover:-translate-y-0.5 disabled:translate-y-0 disabled:opacity-60"
+                className="frametale-primary-button rounded-[1rem] px-5 py-3 text-sm font-semibold transition hover:-translate-y-0.5 disabled:translate-y-0 disabled:opacity-60"
               >
                 {savingPassword ? t("saving") : t("change_password")}
               </button>
@@ -323,12 +497,12 @@ export function AccountPage() {
                   Stripe Checkout
                 </div>
                 <h3 className="text-lg font-semibold text-[var(--sf-text)]">
-                  {isZh ? "实时充值" : "Top up instantly"}
+                  {isZh ? "即时充值" : "Top up instantly"}
                 </h3>
                 <p className="max-w-2xl text-sm leading-7 text-[var(--sf-text-muted)]">
                   {isZh
-                    ? "直接跳转到 Stripe 托管收银台，支付成功后通过 webhook 幂等入账。"
-                    : "Jump to Stripe hosted checkout. Successful payments are credited through an idempotent webhook flow."}
+                    ? "输入金额后跳转到 Stripe 托管收银台，支付成功后通过 webhook 幂等入账。"
+                    : "Enter an amount and jump to hosted Stripe checkout. Successful payments are credited through an idempotent webhook flow."}
                 </p>
               </div>
               {checkoutConfig?.mode && checkoutConfig.mode !== "disabled" && (
@@ -343,43 +517,75 @@ export function AccountPage() {
             {checkoutLoading ? (
               <div className="mt-4 flex items-center gap-2 text-sm text-[var(--sf-text-muted)]">
                 <Loader2 className="h-4 w-4 animate-spin" />
-                {isZh ? "正在加载 Stripe 充值包..." : "Loading Stripe checkout packages..."}
+                {isZh ? "正在加载 Stripe 充值配置..." : "Loading Stripe checkout settings..."}
               </div>
             ) : checkoutConfig?.enabled ? (
-              <div className="mt-4 grid gap-4 md:grid-cols-3">
-                {checkoutConfig.packages.map((pkg) => {
-                  const busy = startingCheckoutId === pkg.id;
-                  return (
-                    <div
-                      key={pkg.id}
-                      className="rounded-[1.3rem] border border-[rgba(117,132,159,0.18)] bg-white/90 p-4 shadow-[0_18px_40px_rgba(23,38,69,0.04)]"
-                    >
-                      <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[var(--sf-text-soft)]">
-                        {pkg.label}
+              <div className="mt-4 grid gap-4 lg:grid-cols-[minmax(0,1fr)_18rem]">
+                <div className="rounded-[1.3rem] border border-[rgba(117,132,159,0.18)] bg-white/90 p-4 shadow-[0_18px_40px_rgba(23,38,69,0.04)]">
+                  <label className="block">
+                    <span className="mb-2 block text-[11px] font-semibold uppercase tracking-[0.22em] text-[var(--sf-text-soft)]">
+                      {isZh ? "充值金额" : "Top-up amount"}
+                    </span>
+                    <input
+                      type="number"
+                      min={checkoutConfig.min_amount}
+                      max={checkoutConfig.max_amount}
+                      step={checkoutConfig.amount_step}
+                      value={checkoutAmount}
+                      onChange={(e) => setCheckoutAmount(e.target.value)}
+                      className="frametale-input w-full rounded-[1rem] px-4 py-3.5 text-[15px] outline-none transition"
+                    />
+                  </label>
+
+                  <div className="mt-4 grid gap-3 text-sm text-[var(--sf-text-muted)] sm:grid-cols-3">
+                    <div>
+                      <div className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[var(--sf-text-soft)]">
+                        {isZh ? "币种" : "Currency"}
                       </div>
-                      <div className="mt-3 text-[1.8rem] font-semibold tracking-[-0.03em] text-[var(--sf-text)]">
-                        {formatMoney(pkg.amount, pkg.currency, isZh)}
-                      </div>
-                      <p className="mt-2 text-sm leading-6 text-[var(--sf-text-muted)]">{pkg.description}</p>
-                      <button
-                        type="button"
-                        onClick={() => void startCheckout(pkg.id)}
-                        disabled={Boolean(startingCheckoutId)}
-                        className="storyforge-primary-button mt-4 w-full rounded-[1rem] px-4 py-3 text-sm font-semibold transition hover:-translate-y-0.5 disabled:translate-y-0 disabled:opacity-60"
-                      >
-                        {busy
-                          ? (isZh ? "跳转中..." : "Redirecting...")
-                          : (isZh ? "前往 Stripe 支付" : "Pay with Stripe")}
-                      </button>
+                      <div className="mt-1">{checkoutConfig.currency}</div>
                     </div>
-                  );
-                })}
+                    <div>
+                      <div className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[var(--sf-text-soft)]">
+                        {isZh ? "最小值" : "Minimum"}
+                      </div>
+                      <div className="mt-1">{formatMoney(checkoutConfig.min_amount, checkoutConfig.currency, isZh)}</div>
+                    </div>
+                    <div>
+                      <div className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[var(--sf-text-soft)]">
+                        {isZh ? "步长" : "Step"}
+                      </div>
+                      <div className="mt-1">{checkoutConfig.amount_step}</div>
+                    </div>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => void startCheckout()}
+                    disabled={startingCheckout}
+                    className="frametale-primary-button mt-5 w-full rounded-[1rem] px-4 py-3 text-sm font-semibold transition hover:-translate-y-0.5 disabled:translate-y-0 disabled:opacity-60"
+                  >
+                    {startingCheckout
+                      ? (isZh ? "跳转中..." : "Redirecting...")
+                      : (isZh ? "前往 Stripe 支付" : "Continue to Stripe")}
+                  </button>
+                </div>
+
+                <div className="rounded-[1.3rem] border border-[rgba(117,132,159,0.18)] bg-[rgba(248,250,253,0.92)] p-4">
+                  <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[var(--sf-text-soft)]">
+                    {isZh ? "支付链路" : "Payment flow"}
+                  </div>
+                  <ol className="mt-3 space-y-3 text-sm leading-6 text-[var(--sf-text-muted)]">
+                    <li>{isZh ? "1. Frametale 后端创建 Stripe Checkout Session。" : "1. Frametale creates the Stripe Checkout Session on the server."}</li>
+                    <li>{isZh ? "2. Stripe 完成实付后回调 webhook。" : "2. Stripe completes payment and sends the webhook."}</li>
+                    <li>{isZh ? "3. 订单按 metadata 幂等入账到你的余额。" : "3. The order is fulfilled idempotently into your balance."}</li>
+                  </ol>
+                </div>
               </div>
             ) : (
               <p className="mt-4 text-sm leading-7 text-[var(--sf-text-muted)]">
                 {isZh
-                  ? "管理员还没有完成 Stripe secret key / webhook secret 配置，所以当前不能发起实付充值。"
-                  : "Stripe secret and webhook configuration are still missing, so hosted checkout is not available yet."}
+                  ? "管理员还没有完成 Stripe Secret / Webhook / Public App URL 配置，所以当前不能发起实付充值。"
+                  : "Stripe secret, webhook, or public app URL configuration is still missing, so hosted checkout is not available yet."}
               </p>
             )}
           </div>
@@ -440,119 +646,6 @@ export function AccountPage() {
       </div>
 
       <SiteLegalFooter className="mt-8 bg-transparent" contentClassName="max-w-6xl px-0 py-5" />
-    </div>
-  );
-}
-
-function DetailBlock({
-  label,
-  value,
-}: {
-  label: string;
-  value: string;
-}) {
-  return (
-    <div>
-      <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[var(--sf-text-soft)]">{label}</div>
-      <div className="mt-2 rounded-[1rem] border border-[rgba(117,132,159,0.18)] bg-[rgba(248,250,253,0.92)] px-4 py-3 text-[var(--sf-text)]">
-        {value}
-      </div>
-    </div>
-  );
-}
-
-function Field({
-  label,
-  value,
-  onChange,
-  type,
-}: {
-  label: string;
-  value: string;
-  onChange: (value: string) => void;
-  type: string;
-}) {
-  return (
-    <label className="block">
-      <span className="mb-2 block text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--sf-text-soft)]">
-        {label}
-      </span>
-      <input
-        type={type}
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        className="storyforge-input w-full rounded-[1rem] px-4 py-3.5 text-[15px] outline-none transition"
-        required
-      />
-    </label>
-  );
-}
-
-function Notice({
-  children,
-  tone,
-  className,
-}: {
-  children: string;
-  tone: "error" | "success";
-  className?: string;
-}) {
-  const base = tone === "error"
-    ? "border-rose-300/55 bg-rose-100/72 text-rose-900"
-    : "border-emerald-300/55 bg-emerald-100/72 text-emerald-900";
-  return <p className={`rounded-[1rem] border px-4 py-3 text-sm ${base} ${className ?? ""}`}>{children}</p>;
-}
-
-function formatMoney(amount: number, currency: string, isZh: boolean): string {
-  try {
-    return new Intl.NumberFormat(isZh ? "zh-CN" : "en-US", {
-      style: "currency",
-      currency,
-      minimumFractionDigits: amount % 1 === 0 ? 0 : 2,
-      maximumFractionDigits: 4,
-    }).format(amount);
-  } catch {
-    return `${amount.toFixed(4)} ${currency}`;
-  }
-}
-
-function TransactionRow({
-  tx,
-  isZh,
-}: {
-  tx: BillingTransaction;
-  isZh: boolean;
-}) {
-  const credit = tx.amount > 0;
-  const signedAmount = `${credit ? "+" : ""}${formatMoney(tx.amount, tx.currency, isZh)}`;
-
-  return (
-    <div className="rounded-[1.4rem] border border-[rgba(117,132,159,0.18)] bg-[rgba(248,250,253,0.92)] p-4">
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div className="flex min-w-0 items-start gap-3">
-          <div
-            className={`mt-0.5 flex h-9 w-9 items-center justify-center rounded-full ${
-              credit ? "bg-emerald-100 text-emerald-700" : "bg-amber-100 text-amber-700"
-            }`}
-          >
-            {credit ? <ArrowDownLeft className="h-4 w-4" /> : <ArrowUpRight className="h-4 w-4" />}
-          </div>
-          <div className="min-w-0">
-            <div className="font-medium text-[var(--sf-text)]">{tx.description ?? tx.entry_type}</div>
-            <div className="mt-1 text-sm text-[var(--sf-text-muted)]">
-              {new Date(tx.created_at).toLocaleString()}
-            </div>
-          </div>
-        </div>
-        <div className="text-right">
-          <div className={`text-sm font-semibold ${credit ? "text-emerald-700" : "text-amber-700"}`}>
-            {signedAmount}
-          </div>
-          <div className="mt-1 text-xs text-[var(--sf-text-soft)]">
-            {isZh ? "余额" : "Balance"}: {formatMoney(tx.balance_after, tx.currency, isZh)}
-          </div>
-        </div>
-      </div>
     </div>
   );
 }

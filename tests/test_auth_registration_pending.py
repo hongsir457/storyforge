@@ -111,7 +111,7 @@ def test_register_does_not_persist_user_before_email_verification(client):
         "username": "pending-user",
         "email": "pending@example.com",
         "display_name": "Pending User",
-        "password": "StoryforgeTest2026!",
+        "password": "FrametaleTest2026!",
     }
 
     response = test_client.post("/api/v1/auth/register", json=payload)
@@ -122,7 +122,7 @@ def test_register_does_not_persist_user_before_email_verification(client):
 
     login_response = test_client.post(
         "/api/v1/auth/token",
-        data={"username": "pending-user", "password": "StoryforgeTest2026!"},
+        data={"username": "pending-user", "password": "FrametaleTest2026!"},
     )
     assert login_response.status_code == 403
     assert login_response.json()["detail"] == "Please verify your email before logging in"
@@ -147,7 +147,7 @@ def test_register_same_email_and_username_can_retry_before_verification(client):
             "username": "retry-user",
             "email": "retry@example.com",
             "display_name": "Retry One",
-            "password": "StoryforgeTest2026!",
+            "password": "FrametaleTest2026!",
         },
     )
     second_response = test_client.post(
@@ -156,7 +156,7 @@ def test_register_same_email_and_username_can_retry_before_verification(client):
             "username": "retry-user",
             "email": "retry@example.com",
             "display_name": "Retry Two",
-            "password": "StoryforgeTest2027!",
+            "password": "FrametaleTest2027!",
         },
     )
 
@@ -172,7 +172,7 @@ def test_register_same_email_and_username_can_retry_before_verification(client):
 
     login_response = test_client.post(
         "/api/v1/auth/token",
-        data={"username": "retry-user", "password": "StoryforgeTest2027!"},
+        data={"username": "retry-user", "password": "FrametaleTest2027!"},
     )
     assert login_response.status_code == 200
 
@@ -196,7 +196,7 @@ def test_register_replaces_legacy_unverified_user_without_blocking(client):
             "username": "legacy-user",
             "email": "legacy@example.com",
             "display_name": "Fresh User",
-            "password": "StoryforgeFresh2027!",
+            "password": "FrametaleFresh2027!",
         },
     )
 
@@ -216,6 +216,6 @@ def test_register_replaces_legacy_unverified_user_without_blocking(client):
 
     login_response = test_client.post(
         "/api/v1/auth/token",
-        data={"username": "legacy-user", "password": "StoryforgeFresh2027!"},
+        data={"username": "legacy-user", "password": "FrametaleFresh2027!"},
     )
     assert login_response.status_code == 200

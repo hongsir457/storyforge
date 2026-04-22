@@ -59,9 +59,9 @@ describe("useAuthStore.initialize", () => {
     const initializePromise = useAuthStore.getState().initialize();
     useAuthStore.getState().login("fresh-token", {
       id: "user-1",
-      username: "storyforge_demo",
-      email: "demo@storyforge.local",
-      display_name: "Storyforge Demo",
+      username: "frametale_demo",
+      email: "demo@frametale.local",
+      display_name: "Frametale Demo",
       role: "user",
       is_active: true,
       is_email_verified: true,
@@ -73,7 +73,7 @@ describe("useAuthStore.initialize", () => {
     expect(authUtilsMocks.clearToken).not.toHaveBeenCalled();
     expect(useAuthStore.getState().token).toBe("fresh-token");
     expect(useAuthStore.getState().isAuthenticated).toBe(true);
-    expect(useAuthStore.getState().user?.username).toBe("storyforge_demo");
+    expect(useAuthStore.getState().user?.username).toBe("frametale_demo");
   });
 
   it("does not overwrite a newer login when stale initialization succeeds late", async () => {

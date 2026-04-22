@@ -112,7 +112,7 @@ export function SourceFileViewer({ projectName, filename }: SourceFileViewerProp
               <button
                 type="button"
                 onClick={() => { setEditing(false); setEditContent(content); }}
-                className="storyforge-secondary-button flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-xs transition-colors"
+                className="frametale-secondary-button flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-xs transition-colors"
               >
                 <X className="h-3.5 w-3.5" />
                 {t("common:cancel")}
@@ -123,7 +123,7 @@ export function SourceFileViewer({ projectName, filename }: SourceFileViewerProp
               <button
                 type="button"
                 onClick={() => setEditing(true)}
-                className="storyforge-secondary-button flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-xs transition-colors"
+                className="frametale-secondary-button flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-xs transition-colors"
               >
                 <Edit3 className="h-3.5 w-3.5" />
                 {t("common:edit")}

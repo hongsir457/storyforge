@@ -1,4 +1,4 @@
-"""Copy Storyforge relational data from SQLite to PostgreSQL."""
+"""Copy Frametale relational data from SQLite to PostgreSQL."""
 
 from __future__ import annotations
 
@@ -73,7 +73,7 @@ def _coerce_value(column: sa.Column[Any], value: Any) -> Any:
 
 def _legacy_user_fallbacks(row: dict[str, Any]) -> dict[str, Any]:
     username = str(row.get("username") or row.get("id") or "user").strip() or "user"
-    email = str(row.get("email") or f"{username.lower()}@storyforge.local").strip().lower()
+    email = str(row.get("email") or f"{username.lower()}@frametale.local").strip().lower()
     display_name = str(row.get("display_name") or username).strip() or username
     password_hash = str(row.get("password_hash") or "").strip()
     last_login_at = row.get("last_login_at") or row.get("updated_at") or row.get("created_at")

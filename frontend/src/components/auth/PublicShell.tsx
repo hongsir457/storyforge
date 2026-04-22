@@ -17,7 +17,7 @@ export function PublicShell({ eyebrow, title, description, children, aside }: Pu
   const { t } = useTranslation(["auth", "dashboard"]);
 
   return (
-    <div className="storyforge-public-shell flex min-h-screen flex-col">
+    <div className="frametale-public-shell flex min-h-screen flex-col">
       <div className="landing-grid pointer-events-none" />
       <div className="landing-orb landing-orb-a" />
       <div className="landing-orb landing-orb-b" />
@@ -41,11 +41,11 @@ export function PublicShell({ eyebrow, title, description, children, aside }: Pu
       </header>
 
       <main className="mx-auto grid max-w-7xl flex-1 gap-8 px-6 pb-16 pt-2 xl:grid-cols-[minmax(0,1.18fr)_28rem] xl:items-start">
-        <section className="storyforge-stage-card relative overflow-hidden rounded-[2.4rem] p-8 sm:p-10 lg:p-12">
+        <section className="frametale-stage-card relative overflow-hidden rounded-[2.4rem] p-8 sm:p-10 lg:p-12">
           <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(24,151,214,0.12),transparent_26%),radial-gradient(circle_at_bottom_left,rgba(216,165,90,0.12),transparent_24%)]" />
           <div className="relative space-y-8">
             {eyebrow && (
-              <div className="storyforge-kicker">
+              <div className="frametale-kicker">
                 <Sparkles className="h-3.5 w-3.5" />
                 {eyebrow}
               </div>
@@ -65,7 +65,7 @@ export function PublicShell({ eyebrow, title, description, children, aside }: Pu
           </div>
         </section>
 
-        <section className="storyforge-form-card rounded-[2rem] p-7 sm:p-8">
+        <section className="frametale-form-card rounded-[2rem] p-7 sm:p-8">
           {children}
         </section>
       </main>

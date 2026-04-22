@@ -33,7 +33,7 @@ const HOME_COPY = {
       titleLead: "From a single spark,",
       titleAccent: "forge images that endure.",
       body:
-        "Storyforge is a narrative-to-video production studio for creators. Turn a loose idea into a novel structure, storyboard logic, asset system, and cinematic delivery inside one workflow.",
+        "Frametale is a narrative-to-video production studio for creators. Turn a loose idea into a novel structure, storyboard logic, asset system, and cinematic delivery inside one workflow.",
       primary: "Start Creating",
       secondary: "Watch Demo",
       steps: [
@@ -58,7 +58,7 @@ const HOME_COPY = {
       title: "AutoNovel",
       accent: "reshapes narrative scale",
       body:
-        "More than text generation. Storyforge analyzes pacing, character arcs, conflict, and structural tension so the novel layer can mature before visual production begins.",
+        "More than text generation. Frametale analyzes pacing, character arcs, conflict, and structural tension so the novel layer can mature before visual production begins.",
       quote: '"Every line should carry emotional resonance."',
       engine: "AutoNovel Engine v4.0",
       link: "Explore the novel workspace",
@@ -79,7 +79,7 @@ const HOME_COPY = {
     video: {
       title: "AutoVideo cinematic production",
       body:
-        "From text to 4K visual sequences, Storyforge compresses months of production iteration into a tighter creative loop.",
+        "From text to 4K visual sequences, Frametale compresses months of production iteration into a tighter creative loop.",
       mainLabel: "Main Engine",
       mainTitle: "Dynamic visual capture",
       mainBody:
@@ -113,12 +113,12 @@ const HOME_COPY = {
       productTitle: "Product",
       studioTitle: "Studio",
       body:
-        "Storyforge is an AI-native narrative production studio for creators shaping fiction, story worlds, and visual output in one system.",
+        "Frametale is an AI-native narrative production studio for creators shaping fiction, story worlds, and visual output in one system.",
       updatesTitle: "Next steps",
       updatesBody:
         "Continue into the studio, review plan options, or contact the team about deployment and production support.",
       actions: {
-        primary: "Enter Storyforge",
+        primary: "Enter Frametale",
         secondary: "Contact us",
       },
       product: [
@@ -155,7 +155,7 @@ const HOME_COPY = {
       titleLead: "从一个灵感，",
       titleAccent: "铸就不朽影像",
       body:
-        "Storyforge 是一套把叙事推进到视频生产的创作工作室。你可以把松散的灵感收束成小说结构、分镜逻辑、资产系统和可交付的视觉成品，全程停留在同一套工作流里。",
+        "Frametale 是一套把叙事推进到视频生产的创作工作室。你可以把松散的灵感收束成小说结构、分镜逻辑、资产系统和可交付的视觉成品，全程停留在同一套工作流里。",
       primary: "立即开始创作",
       secondary: "查看演示",
       steps: [
@@ -180,7 +180,7 @@ const HOME_COPY = {
       title: "AutoNovel",
       accent: "重塑叙事维度",
       body:
-        "它不只是文字生成。Storyforge 会先分析节奏、角色弧光、冲突密度与结构张力，让小说层先成熟，再把稳定结果交给视觉生产。",
+        "它不只是文字生成。Frametale 会先分析节奏、角色弧光、冲突密度与结构张力，让小说层先成熟，再把稳定结果交给视觉生产。",
       quote: "“每一行文字都应该承载情绪的共鸣。”",
       engine: "AutoNovel Engine v4.0",
       link: "进入小说工作台",
@@ -200,7 +200,7 @@ const HOME_COPY = {
     video: {
       title: "AutoVideo 电影级视觉生产",
       body:
-        "从文本到 4K 视觉序列，Storyforge 把原本按月计算的生产迭代压缩成更短的创作闭环。",
+        "从文本到 4K 视觉序列，Frametale 把原本按月计算的生产迭代压缩成更短的创作闭环。",
       mainLabel: "Main Engine",
       mainTitle: "动态视觉捕捉",
       mainBody:
@@ -234,12 +234,12 @@ const HOME_COPY = {
       productTitle: "产品",
       studioTitle: "工作室",
       body:
-        "Storyforge 是一套面向创作者的 AI 叙事生产系统，把小说、故事世界、分镜与视觉输出收进同一个工作流。",
+        "Frametale 是一套面向创作者的 AI 叙事生产系统，把小说、故事世界、分镜与视觉输出收进同一个工作流。",
       updatesTitle: "下一步",
       updatesBody:
         "你可以直接进入工作台、查看价格方案，或者联系我们了解部署与生产支持。",
       actions: {
-        primary: "进入 Storyforge",
+        primary: "进入 Frametale",
         secondary: "联系我们",
       },
       product: [
@@ -282,7 +282,7 @@ export function HomePage() {
   const novelWorkspaceHref = isAuthenticated ? "/app/novel-workbench" : "/login";
 
   return (
-    <div className="storyforge-public-shell min-h-screen text-[var(--sf-text)]">
+    <div className="frametale-public-shell min-h-screen text-[var(--sf-text)]">
       <div className="landing-grid pointer-events-none" />
       <div className="landing-orb landing-orb-a" />
       <div className="landing-orb landing-orb-b" />
@@ -290,7 +290,7 @@ export function HomePage() {
       <nav className="fixed left-0 top-0 z-50 w-full border-b border-[rgba(117,132,159,0.1)] bg-white/66 backdrop-blur-xl">
         <div className="mx-auto flex max-w-[1400px] items-center justify-between px-6 py-4 lg:px-10">
           <Link href="/" className="rounded-[1rem] transition-transform hover:-translate-y-0.5">
-            <BrandLogo alt="Storyforge" className="h-12 w-auto max-w-[15rem]" />
+            <BrandLogo alt="Frametale" className="h-12 w-auto max-w-[15rem]" />
           </Link>
 
           <div className="hidden items-center gap-10 md:flex">
@@ -311,19 +311,19 @@ export function HomePage() {
           <div className="flex items-center gap-3">
             <SmartLink
               href="/pricing"
-              className="storyforge-secondary-button hidden rounded-full px-4 py-2 text-sm font-medium transition hover:-translate-y-0.5 lg:inline-flex"
+              className="frametale-secondary-button hidden rounded-full px-4 py-2 text-sm font-medium transition hover:-translate-y-0.5 lg:inline-flex"
             >
               {copy.nav.pricing}
             </SmartLink>
             <SmartLink
               href="/contact"
-              className="storyforge-secondary-button hidden rounded-full px-4 py-2 text-sm font-medium transition hover:-translate-y-0.5 lg:inline-flex"
+              className="frametale-secondary-button hidden rounded-full px-4 py-2 text-sm font-medium transition hover:-translate-y-0.5 lg:inline-flex"
             >
               {copy.nav.contact}
             </SmartLink>
             <SmartLink
               href={studioHref}
-              className="storyforge-primary-button inline-flex h-11 items-center justify-center rounded-full px-5 text-sm font-semibold transition hover:-translate-y-0.5"
+              className="frametale-primary-button inline-flex h-11 items-center justify-center rounded-full px-5 text-sm font-semibold transition hover:-translate-y-0.5"
             >
               {copy.nav.cta}
             </SmartLink>
@@ -338,7 +338,7 @@ export function HomePage() {
           </div>
 
           <div className="relative z-10 max-w-4xl">
-            <span className="storyforge-kicker">{copy.hero.eyebrow}</span>
+            <span className="frametale-kicker">{copy.hero.eyebrow}</span>
             <h1
               className="mt-8 text-5xl font-extrabold leading-[0.94] tracking-[-0.06em] text-[var(--sf-text)] md:text-7xl xl:text-[5.6rem]"
               style={{ fontFamily: "var(--font-display)" }}
@@ -354,13 +354,13 @@ export function HomePage() {
             <div className="mt-12 flex flex-wrap gap-4">
               <SmartLink
                 href={studioHref}
-                className="storyforge-primary-button inline-flex h-14 items-center justify-center rounded-[1rem] px-8 text-lg font-semibold transition hover:-translate-y-0.5"
+                className="frametale-primary-button inline-flex h-14 items-center justify-center rounded-[1rem] px-8 text-lg font-semibold transition hover:-translate-y-0.5"
               >
                 {copy.hero.primary}
               </SmartLink>
               <SmartLink
                 href="#autovideo"
-                className="storyforge-secondary-button inline-flex h-14 items-center justify-center gap-2 rounded-[1rem] px-8 text-lg font-semibold transition hover:-translate-y-0.5"
+                className="frametale-secondary-button inline-flex h-14 items-center justify-center gap-2 rounded-[1rem] px-8 text-lg font-semibold transition hover:-translate-y-0.5"
               >
                 <PlayCircle className="h-5 w-5" />
                 {copy.hero.secondary}
@@ -498,7 +498,7 @@ export function HomePage() {
           className="mx-auto grid max-w-[1400px] gap-6 rounded-[2rem] border border-[rgba(117,132,159,0.16)] bg-white/84 px-8 py-10 shadow-[0_20px_50px_rgba(23,38,69,0.07)] lg:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)]"
         >
           <div>
-            <div className="storyforge-kicker">{copy.workflow.eyebrow}</div>
+            <div className="frametale-kicker">{copy.workflow.eyebrow}</div>
             <h2
               className="mt-6 text-4xl font-semibold leading-[1.02] tracking-[-0.05em]"
               style={{ fontFamily: "var(--font-display)" }}
@@ -551,7 +551,7 @@ export function HomePage() {
             <div className="mb-14 grid grid-cols-1 gap-12 md:grid-cols-12">
               <div className="md:col-span-4">
                 <div className="mb-6">
-                  <BrandLogo alt="Storyforge" className="h-11 w-auto max-w-[14rem]" />
+                  <BrandLogo alt="Frametale" className="h-11 w-auto max-w-[14rem]" />
                 </div>
                 <p className="max-w-xs text-sm leading-7 text-slate-500">{copy.footer.body}</p>
                 <div className="mt-8 flex gap-4">
@@ -570,13 +570,13 @@ export function HomePage() {
                 <div className="mt-6 flex flex-wrap gap-3">
                   <SmartLink
                     href={studioHref}
-                    className="storyforge-primary-button inline-flex rounded-[1rem] px-5 py-3 text-sm font-semibold transition hover:-translate-y-0.5"
+                    className="frametale-primary-button inline-flex rounded-[1rem] px-5 py-3 text-sm font-semibold transition hover:-translate-y-0.5"
                   >
                     {copy.footer.actions.primary}
                   </SmartLink>
                   <SmartLink
                     href="/contact"
-                    className="storyforge-secondary-button inline-flex rounded-[1rem] px-5 py-3 text-sm font-medium transition hover:-translate-y-0.5"
+                    className="frametale-secondary-button inline-flex rounded-[1rem] px-5 py-3 text-sm font-medium transition hover:-translate-y-0.5"
                   >
                     {copy.footer.actions.secondary}
                   </SmartLink>

@@ -12,7 +12,7 @@ const LEGAL_PAGE_COPY = {
       eyebrow: "Privacy",
       title: "Privacy Policy",
       intro:
-        "Storyforge stores the minimum account, project, and runtime data needed to authenticate users, run creative jobs, and keep the studio stable.",
+        "Frametale stores the minimum account, project, and runtime data needed to authenticate users, run creative jobs, and keep the studio stable.",
       sections: [
         {
           title: "What we collect",
@@ -27,7 +27,7 @@ const LEGAL_PAGE_COPY = {
         {
           title: "How data is shared",
           body:
-            "Storyforge does not sell user data. Information is only shared with infrastructure or model providers when that is necessary to deliver the requested generation or hosting service.",
+            "Frametale does not sell user data. Information is only shared with infrastructure or model providers when that is necessary to deliver the requested generation or hosting service.",
         },
       ],
     },
@@ -35,7 +35,7 @@ const LEGAL_PAGE_COPY = {
       eyebrow: "Terms",
       title: "Terms of Service",
       intro:
-        "Use Storyforge lawfully, respect intellectual property, and review generated output before publishing or distributing it.",
+        "Use Frametale lawfully, respect intellectual property, and review generated output before publishing or distributing it.",
       sections: [
         {
           title: "Acceptable use",
@@ -63,7 +63,7 @@ const LEGAL_PAGE_COPY = {
         {
           title: "Product support",
           body:
-            "For bug reports or product issues, open a GitHub issue or contact the deployment administrator that manages your Storyforge environment.",
+            "For bug reports or product issues, open a GitHub issue or contact the deployment administrator that manages your Frametale environment.",
         },
         {
           title: "Privacy and legal requests",
@@ -78,7 +78,7 @@ const LEGAL_PAGE_COPY = {
       ],
       actions: {
         repo: "Open GitHub Issues",
-        repoHref: "https://github.com/hongsir457/storyforge/issues",
+        repoHref: "https://github.com/hongsir457/frametale/issues",
       },
     },
   },
@@ -88,7 +88,7 @@ const LEGAL_PAGE_COPY = {
       eyebrow: "Privacy",
       title: "隐私政策",
       intro:
-        "Storyforge 只保存账号鉴权、项目运行、生成任务与系统稳定性所必需的最小数据集合。",
+        "Frametale 只保存账号鉴权、项目运行、生成任务与系统稳定性所必需的最小数据集合。",
       sections: [
         {
           title: "我们会收集什么",
@@ -103,7 +103,7 @@ const LEGAL_PAGE_COPY = {
         {
           title: "我们如何共享数据",
           body:
-            "Storyforge 不出售用户数据。只有在完成模型推理、文件托管或基础设施服务确有必要时，才会向相关服务商传递最小必要信息。",
+            "Frametale 不出售用户数据。只有在完成模型推理、文件托管或基础设施服务确有必要时，才会向相关服务商传递最小必要信息。",
         },
       ],
     },
@@ -111,7 +111,7 @@ const LEGAL_PAGE_COPY = {
       eyebrow: "Terms",
       title: "服务条款",
       intro:
-        "请合法使用 Storyforge，尊重知识产权，并在发布或分发生成内容前自行完成审核。",
+        "请合法使用 Frametale，尊重知识产权，并在发布或分发生成内容前自行完成审核。",
       sections: [
         {
           title: "允许的使用范围",
@@ -154,7 +154,7 @@ const LEGAL_PAGE_COPY = {
       ],
       actions: {
         repo: "打开 GitHub Issues",
-        repoHref: "https://github.com/hongsir457/storyforge/issues",
+        repoHref: "https://github.com/hongsir457/frametale/issues",
       },
     },
   },
@@ -183,7 +183,7 @@ function LegalPageFrame({
   const shared = LEGAL_PAGE_COPY[locale];
 
   return (
-    <div className="storyforge-public-shell flex min-h-screen flex-col text-[var(--sf-text)]">
+    <div className="frametale-public-shell flex min-h-screen flex-col text-[var(--sf-text)]">
       <div className="landing-grid pointer-events-none" />
       <div className="landing-orb landing-orb-a" />
       <div className="landing-orb landing-orb-b" />
@@ -194,7 +194,7 @@ function LegalPageFrame({
         </Link>
         <Link
           href="/"
-          className="storyforge-secondary-button inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium transition hover:-translate-y-0.5"
+          className="frametale-secondary-button inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium transition hover:-translate-y-0.5"
         >
           <ArrowLeft className="h-4 w-4" />
           {shared.back}
@@ -202,11 +202,11 @@ function LegalPageFrame({
       </header>
 
       <main className="mx-auto flex w-full max-w-6xl flex-1 px-6 pb-12 pt-2">
-        <section className="storyforge-stage-card relative w-full overflow-hidden rounded-[2.4rem] p-8 sm:p-10 lg:p-12">
+        <section className="frametale-stage-card relative w-full overflow-hidden rounded-[2.4rem] p-8 sm:p-10 lg:p-12">
           <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(24,151,214,0.12),transparent_26%),radial-gradient(circle_at_bottom_left,rgba(216,165,90,0.12),transparent_24%)]" />
 
           <div className="relative">
-            <div className="storyforge-kicker">
+            <div className="frametale-kicker">
               {icon}
               {copy.eyebrow}
             </div>
@@ -270,7 +270,7 @@ export function ContactPage() {
           href={copy.actions.repoHref}
           target="_blank"
           rel="noreferrer"
-          className="storyforge-primary-button inline-flex items-center gap-2 rounded-full px-5 py-3 text-sm font-semibold transition hover:-translate-y-0.5"
+          className="frametale-primary-button inline-flex items-center gap-2 rounded-full px-5 py-3 text-sm font-semibold transition hover:-translate-y-0.5"
         >
           {copy.actions.repo}
           <ExternalLink className="h-4 w-4" />

@@ -149,7 +149,7 @@ describe("SystemConfigPage", () => {
     await waitFor(() => {
       expect(screen.getByText(/The following issues were found|当前配置存在以下问题/)).toBeInTheDocument();
     });
-    expect(screen.getByText(/Storyforge.*API Key/)).toBeInTheDocument();
+    expect(screen.getByText(/Frametale.*API Key/)).toBeInTheDocument();
   });
 
   it("does not show warning banner when config is complete", async () => {

@@ -245,7 +245,7 @@ export function WelcomeCanvas({
             <button
               type="button"
               onClick={startAnalysis}
-            className="storyforge-primary-button w-full rounded-[1rem] px-6 py-3 text-sm font-medium transition hover:-translate-y-0.5"
+            className="frametale-primary-button w-full rounded-[1rem] px-6 py-3 text-sm font-medium transition hover:-translate-y-0.5"
           >
               <Sparkles className="inline-block h-4 w-4 mr-2 -mt-0.5" />
               {t("start_ai_analysis")}

@@ -1,6 +1,6 @@
-# Storyforge 入门指南
+# Frametale 入门指南
 
-这份文档面向第一次部署和第一次使用 `Storyforge / 叙影工场` 的用户，目标是帮你完成：
+这份文档面向第一次部署和第一次使用 `Frametale / 叙影工场` 的用户，目标是帮你完成：
 
 1. 部署服务
 2. 初始化管理员账号
@@ -11,7 +11,7 @@
 ## 首页预览
 
 <p align="center">
-  <img src="assets/hero-screenshot.png" alt="Storyforge 首页与工作台预览" width="960">
+  <img src="assets/hero-screenshot.png" alt="Frametale 首页与工作台预览" width="960">
 </p>
 
 ## 核心能力
@@ -28,8 +28,8 @@
 ### 本地快速启动（SQLite）
 
 ```bash
-git clone https://github.com/hongsir457/storyforge.git
-cd storyforge/deploy
+git clone https://github.com/hongsir457/frametale.git
+cd frametale/deploy
 cp .env.example .env
 docker compose up -d
 ```
@@ -39,7 +39,7 @@ docker compose up -d
 ### 生产部署（PostgreSQL）
 
 ```bash
-cd storyforge/deploy/production
+cd frametale/deploy/production
 cp .env.example .env
 ```
 
@@ -49,7 +49,7 @@ cp .env.example .env
 POSTGRES_PASSWORD=replace-me
 AUTH_USERNAME=admin
 AUTH_PASSWORD=replace-me
-AUTH_EMAIL=admin@storyforge.local
+AUTH_EMAIL=admin@frametale.local
 AUTH_TOKEN_SECRET=replace-me-with-a-long-random-secret
 ```
 
@@ -105,7 +105,7 @@ SMTP_PORT=587
 SMTP_USERNAME=
 SMTP_PASSWORD=
 SMTP_FROM_EMAIL=
-SMTP_FROM_NAME=Storyforge
+SMTP_FROM_NAME=Frametale
 ```
 
 如果暂时不接 SMTP，可先用：
@@ -146,7 +146,7 @@ AUTH_EMAIL_DEBUG=true
 2. drafting
 3. revision
 4. export
-5. import into Storyforge project
+5. import into Frametale project
 
 成功后，结果会自动导入项目。
 

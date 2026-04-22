@@ -11,14 +11,14 @@ This file provides guidance to Codex when working with this repository.
 
 对外产品品牌：
 
-- `Storyforge`
+- `Frametale`
 - `叙影工场`
 
 内部兼容标识：
 
 - `autovideo`
 
-Storyforge 不是通用视频编辑器，而是围绕“小说 -> 分镜 -> 视频”的叙事生产工作台。重点是：
+Frametale 不是通用视频编辑器，而是围绕“小说 -> 分镜 -> 视频”的叙事生产工作台。重点是：
 
 - 长篇小说生成与导回项目
 - 角色、线索、世界观一致性

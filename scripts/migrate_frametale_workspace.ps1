@@ -2,9 +2,9 @@ param(
     [Parameter(Mandatory = $true)]
     [string]$TargetNamespace,
     [string]$SourceNamespace = "ns-vg9l39bk",
-    [string]$DeploymentName = "storyforge",
-    [string]$SecretName = "storyforge-env",
-    [string]$PvcName = "storyforge-data",
+    [string]$DeploymentName = "frametale",
+    [string]$SecretName = "frametale-env",
+    [string]$PvcName = "frametale-data",
     [string]$SourceIngressName = "network-boyqxnosbdrk",
     [string]$IngressHost = "bjmmuazhczom.cloud.sealos.io",
     [switch]$DeleteSourceAfterCutover
@@ -74,7 +74,7 @@ function Apply-ManifestString {
 
 Require-Command kubectl
 
-$workspace = ".tmp-storyforge-migrate-$([guid]::NewGuid().ToString("N"))"
+$workspace = ".tmp-frametale-migrate-$([guid]::NewGuid().ToString("N"))"
 New-Item -ItemType Directory -Path $workspace | Out-Null
 $backupDir = Join-Path $workspace "projects"
 
@@ -90,8 +90,8 @@ try {
     kubectl scale deploy $DeploymentName -n $SourceNamespace --replicas=0 | Out-Null
     kubectl rollout status deploy/$DeploymentName -n $SourceNamespace --timeout=180s | Out-Null
 
-    $sourcePod = "storyforge-migrate-source"
-    $targetPod = "storyforge-migrate-target"
+    $sourcePod = "frametale-migrate-source"
+    $targetPod = "frametale-migrate-target"
 
     Write-Host "Creating temporary source pod..."
     @"
@@ -123,10 +123,10 @@ spec:
     Copy-JsonResource -Kind secret -Name $SecretName -Namespace $SourceNamespace -TargetNamespace $TargetNamespace
 
     Write-Host "Rendering standalone manifest for target namespace..."
-    $manifest = Get-Content (Join-Path $PSScriptRoot "..\\deploy\\sealos\\storyforge.yaml") -Raw
+    $manifest = Get-Content (Join-Path $PSScriptRoot "..\\deploy\\sealos\\frametale.yaml") -Raw
     $manifest = $manifest.Replace("`r`n", "`n")
-    $manifest = $manifest.Replace("kind: Namespace`nmetadata:`n  name: storyforge", "kind: Namespace`nmetadata:`n  name: $TargetNamespace")
-    $manifest = $manifest.Replace("namespace: storyforge", "namespace: $TargetNamespace")
+    $manifest = $manifest.Replace("kind: Namespace`nmetadata:`n  name: frametale", "kind: Namespace`nmetadata:`n  name: $TargetNamespace")
+    $manifest = $manifest.Replace("namespace: frametale", "namespace: $TargetNamespace")
     $manifest = $manifest.Replace("host: bjmmuazhczom.cloud.sealos.io", "host: $IngressHost")
     $nonIngressManifest = (($manifest -split "(?m)^---\s*$") | Where-Object { $_ -and ($_ -notmatch "(?m)^kind:\s*Ingress\s*$") }) -join "`n---`n"
     $nonIngressManifest = $nonIngressManifest.Replace("replicas: 1", "replicas: 0")
@@ -179,8 +179,8 @@ spec:
     kubectl delete pod $sourcePod -n $SourceNamespace --ignore-not-found | Out-Null
 
     if ($DeleteSourceAfterCutover) {
-        Write-Host "Deleting source storyforge resources from shared namespace..."
-        kubectl delete svc storyforge-lomeuvwyfvlj -n $SourceNamespace --ignore-not-found | Out-Null
+        Write-Host "Deleting source frametale resources from shared namespace..."
+        kubectl delete svc frametale-lomeuvwyfvlj -n $SourceNamespace --ignore-not-found | Out-Null
         kubectl delete deploy $DeploymentName -n $SourceNamespace --ignore-not-found | Out-Null
         kubectl delete pvc $PvcName -n $SourceNamespace --ignore-not-found | Out-Null
         kubectl delete secret $SecretName -n $SourceNamespace --ignore-not-found | Out-Null

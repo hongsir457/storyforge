@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from decimal import ROUND_HALF_UP, Decimal, InvalidOperation
 from typing import Annotated, Any
 
 import stripe
@@ -20,43 +20,10 @@ from server.dependencies import get_config_service
 
 router = APIRouter()
 
-
-@dataclass(frozen=True)
-class StripeTopupPackage:
-    id: str
-    currency: str
-    amount: float
-    amount_cents: int
-    label: str
-    description: str
-
-
-STRIPE_TOPUP_PACKAGES: tuple[StripeTopupPackage, ...] = (
-    StripeTopupPackage(
-        id="starter-10",
-        currency="USD",
-        amount=10.0,
-        amount_cents=1000,
-        label="Starter",
-        description="Top up 10 USD prepaid balance",
-    ),
-    StripeTopupPackage(
-        id="creator-25",
-        currency="USD",
-        amount=25.0,
-        amount_cents=2500,
-        label="Creator",
-        description="Top up 25 USD prepaid balance",
-    ),
-    StripeTopupPackage(
-        id="studio-50",
-        currency="USD",
-        amount=50.0,
-        amount_cents=5000,
-        label="Studio",
-        description="Top up 50 USD prepaid balance",
-    ),
-)
+STRIPE_DEFAULT_CURRENCY = "SGD"
+STRIPE_MIN_TOPUP_AMOUNT = Decimal("1.00")
+STRIPE_MAX_TOPUP_AMOUNT = Decimal("10000.00")
+STRIPE_AMOUNT_STEP = Decimal("0.01")
 
 
 class BillingBalanceResponse(BaseModel):
@@ -128,7 +95,7 @@ class BillingAdminTopupRequest(BaseModel):
     note: str | None = Field(default=None, max_length=255)
 
     @model_validator(mode="after")
-    def _validate_target(self) -> "BillingAdminTopupRequest":
+    def _validate_target(self) -> BillingAdminTopupRequest:
         if not any([self.user_id, self.username, self.email]):
             raise ValueError("one of user_id, username, or email is required")
         return self
@@ -139,24 +106,20 @@ class BillingAdminTopupResponse(BaseModel):
     balances: list[BillingBalanceResponse]
 
 
-class BillingCheckoutPackageResponse(BaseModel):
-    id: str
-    currency: str
-    amount: float
-    label: str
-    description: str
-
-
 class BillingCheckoutConfigResponse(BaseModel):
     enabled: bool
     mode: str
     public_app_url: str | None = None
     webhook_endpoint: str | None = None
-    packages: list[BillingCheckoutPackageResponse]
+    currency: str
+    min_amount: float
+    max_amount: float
+    amount_step: float
 
 
 class BillingCheckoutSessionRequest(BaseModel):
-    package_id: str = Field(min_length=1, max_length=64)
+    amount: float = Field(gt=0)
+    currency: str = Field(default=STRIPE_DEFAULT_CURRENCY, min_length=3, max_length=8)
 
 
 class BillingCheckoutSessionResponse(BaseModel):
@@ -199,13 +162,6 @@ def _resolve_public_app_url(request: Request, configured_public_url: str | None)
     if configured_public_url:
         return configured_public_url.rstrip("/")
     return str(request.base_url).rstrip("/")
-
-
-def _find_checkout_package(package_id: str) -> StripeTopupPackage:
-    for package in STRIPE_TOPUP_PACKAGES:
-        if package.id == package_id:
-            return package
-    raise HTTPException(status_code=404, detail="Unknown top-up package")
 
 
 def _stripe_value(obj: Any, key: str) -> Any:
@@ -260,6 +216,51 @@ def _require_stripe_secret(settings: dict[str, str]) -> str:
     return secret_key
 
 
+def _normalize_checkout_currency(currency: str | None) -> str:
+    normalized = (currency or STRIPE_DEFAULT_CURRENCY).strip().upper()
+    if normalized != STRIPE_DEFAULT_CURRENCY:
+        raise HTTPException(status_code=400, detail=f"Unsupported Stripe checkout currency: {normalized}")
+    return normalized
+
+
+def _normalize_checkout_amount(amount: float) -> tuple[float, int]:
+    try:
+        normalized = Decimal(str(amount)).quantize(STRIPE_AMOUNT_STEP, rounding=ROUND_HALF_UP)
+    except (InvalidOperation, ValueError) as exc:
+        raise HTTPException(status_code=400, detail="Invalid top-up amount") from exc
+
+    if normalized < STRIPE_MIN_TOPUP_AMOUNT or normalized > STRIPE_MAX_TOPUP_AMOUNT:
+        raise HTTPException(
+            status_code=400,
+            detail=(
+                f"Top-up amount must be between "
+                f"{STRIPE_MIN_TOPUP_AMOUNT} and {STRIPE_MAX_TOPUP_AMOUNT} {STRIPE_DEFAULT_CURRENCY}"
+            ),
+        )
+
+    return float(normalized), int(normalized * 100)
+
+
+async def _resolve_payment_order(
+    repo: BillingRepository,
+    *,
+    checkout_session_id: str | None,
+    metadata: Any,
+) -> BillingPaymentOrder | None:
+    if checkout_session_id:
+        order = await repo.get_payment_order_by_checkout_session(checkout_session_id)
+        if order is not None:
+            return order
+
+    order_id = _stripe_value(metadata, "order_id")
+    if order_id is None:
+        return None
+    try:
+        return await repo.get_payment_order(int(order_id))
+    except (TypeError, ValueError):
+        return None
+
+
 async def _sync_checkout_order_from_session(
     repo: BillingRepository,
     *,
@@ -272,15 +273,21 @@ async def _sync_checkout_order_from_session(
     except stripe.StripeError as exc:
         raise HTTPException(status_code=502, detail=f"Stripe session retrieval failed: {exc}") from exc
 
-    order = await repo.get_payment_order_by_checkout_session(checkout_session_id)
-    if order is None:
-        metadata = _stripe_value(checkout_session, "metadata") or {}
-        order_id = _stripe_value(metadata, "order_id")
-        if order_id is None:
-            raise HTTPException(status_code=404, detail="Checkout order not found")
-        order = await repo.get_payment_order(int(order_id))
+    metadata = _stripe_value(checkout_session, "metadata") or {}
+    if _stripe_value(metadata, "type") not in {None, "topup"}:
+        raise HTTPException(status_code=400, detail="Unsupported checkout session metadata")
+
+    order = await _resolve_payment_order(
+        repo,
+        checkout_session_id=checkout_session_id,
+        metadata=metadata,
+    )
     if order is None:
         raise HTTPException(status_code=404, detail="Checkout order not found")
+
+    metadata_user_id = _stripe_value(metadata, "user_id")
+    if metadata_user_id and metadata_user_id != order.user_id:
+        raise HTTPException(status_code=409, detail="Checkout session metadata does not match payment order")
 
     payment_status = _stripe_value(checkout_session, "payment_status")
     session_status = _stripe_value(checkout_session, "status")
@@ -340,16 +347,10 @@ async def get_billing_checkout_config(
         "mode": mode,
         "public_app_url": public_app_url,
         "webhook_endpoint": f"{public_app_url}/api/v1/billing/stripe/webhook",
-        "packages": [
-            {
-                "id": package.id,
-                "currency": package.currency,
-                "amount": package.amount,
-                "label": package.label,
-                "description": package.description,
-            }
-            for package in STRIPE_TOPUP_PACKAGES
-        ],
+        "currency": STRIPE_DEFAULT_CURRENCY,
+        "min_amount": float(STRIPE_MIN_TOPUP_AMOUNT),
+        "max_amount": float(STRIPE_MAX_TOPUP_AMOUNT),
+        "amount_step": float(STRIPE_AMOUNT_STEP),
     }
 
 
@@ -365,16 +366,17 @@ async def create_billing_checkout_session(
     if not stripe_settings["webhook_secret"]:
         raise HTTPException(status_code=503, detail="Stripe webhook secret is not configured")
     secret_key = _require_stripe_secret(stripe_settings)
-    package = _find_checkout_package(payload.package_id)
+    currency = _normalize_checkout_currency(payload.currency)
+    amount, amount_cents = _normalize_checkout_amount(payload.amount)
     repo = BillingRepository(session)
 
     public_app_url = _resolve_public_app_url(request, stripe_settings["public_app_url"] or None)
     order = await repo.create_payment_order(
         user_id=current_user.id,
-        amount=package.amount,
-        currency=package.currency,
+        amount=amount,
+        currency=currency,
         provider="stripe",
-        description=f"Stripe top-up {package.amount:.2f} {package.currency}",
+        description=f"Frametale top-up {amount:.2f} {currency}",
     )
 
     success_url = f"{public_app_url}/app/billing/return?session_id={{CHECKOUT_SESSION_ID}}"
@@ -384,24 +386,26 @@ async def create_billing_checkout_session(
     try:
         checkout_session = stripe.checkout.Session.create(
             mode="payment",
-            client_reference_id=str(order.id),
+            client_reference_id=current_user.id,
             customer_email=getattr(current_user, "email", None),
             success_url=success_url,
             cancel_url=cancel_url,
             metadata={
                 "order_id": str(order.id),
                 "user_id": current_user.id,
-                "package_id": package.id,
+                "type": "topup",
+                "amount": f"{amount:.2f}",
+                "currency": currency,
             },
             line_items=[
                 {
                     "price_data": {
-                        "currency": package.currency.lower(),
+                        "currency": currency.lower(),
                         "product_data": {
-                            "name": "Storyforge prepaid balance",
-                            "description": package.description,
+                            "name": "Frametale prepaid balance",
+                            "description": f"Top up {amount:.2f} {currency} prepaid balance",
                         },
-                        "unit_amount": package.amount_cents,
+                        "unit_amount": amount_cents,
                     },
                     "quantity": 1,
                 }
@@ -490,9 +494,21 @@ async def handle_stripe_webhook(
         return {"received": True}
 
     repo = BillingRepository(session)
-    order = await repo.get_payment_order_by_checkout_session(checkout_session_id)
+    metadata = _stripe_value(event_object, "metadata") or {}
+    if _stripe_value(metadata, "type") not in {None, "topup"}:
+        return {"received": True}
+
+    order = await _resolve_payment_order(
+        repo,
+        checkout_session_id=checkout_session_id,
+        metadata=metadata,
+    )
     if order is None:
         return {"received": True}
+
+    metadata_user_id = _stripe_value(metadata, "user_id")
+    if metadata_user_id and metadata_user_id != order.user_id:
+        raise HTTPException(status_code=409, detail="Webhook metadata does not match payment order")
 
     payment_intent = _stripe_value(event_object, "payment_intent")
     payment_intent_id = payment_intent if isinstance(payment_intent, str) else _stripe_value(payment_intent, "id")
@@ -553,7 +569,9 @@ async def create_admin_topup(
 
     balances = await billing_repo.list_user_balances(target_user.id)
     transaction_payload = next(
-        item for item in await billing_repo.list_user_transactions(target_user.id, limit=20) if item["id"] == transaction.id
+        item
+        for item in await billing_repo.list_user_transactions(target_user.id, limit=20)
+        if item["id"] == transaction.id
     )
     return {
         "transaction": transaction_payload,

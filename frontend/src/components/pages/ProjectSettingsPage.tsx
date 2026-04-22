@@ -187,12 +187,12 @@ export function ProjectSettingsPage() {
   }, [videoBackend, imageBackend, audioOverride, textScript, textOverview, textStyle, aspectRatio, generationMode, defaultDuration, projectName, t]);
 
   return (
-    <div className="storyforge-admin-shell fixed inset-0 z-50 overflow-y-auto">
+    <div className="frametale-admin-shell fixed inset-0 z-50 overflow-y-auto">
       {/* Header */}
       <div className="sticky top-0 z-10 mx-4 mt-4 flex items-center gap-3 rounded-[1.8rem] border border-[rgba(117,132,159,0.16)] bg-white/88 px-6 py-4 shadow-[0_18px_46px_rgba(23,38,69,0.08)] backdrop-blur">
         <button
           onClick={() => guardedNavigate(buildProjectWorkspaceRoute(projectName))}
-          className="storyforge-secondary-button inline-flex h-11 w-11 items-center justify-center rounded-full transition hover:-translate-y-0.5"
+          className="frametale-secondary-button inline-flex h-11 w-11 items-center justify-center rounded-full transition hover:-translate-y-0.5"
           aria-label={t("back_to_project")}
         >
           <ArrowLeft className="h-5 w-5" />
@@ -414,13 +414,13 @@ export function ProjectSettingsPage() {
           <button
             onClick={handleSave}
             disabled={saving}
-            className="storyforge-primary-button rounded-[1rem] px-6 py-3 text-sm font-semibold transition hover:-translate-y-0.5 disabled:translate-y-0 disabled:opacity-50"
+            className="frametale-primary-button rounded-[1rem] px-6 py-3 text-sm font-semibold transition hover:-translate-y-0.5 disabled:translate-y-0 disabled:opacity-50"
           >
             {saving ? t("common:saving") : t("common:save")}
           </button>
           <button
             onClick={() => guardedNavigate(buildProjectWorkspaceRoute(projectName))}
-            className="storyforge-secondary-button rounded-[1rem] px-6 py-3 text-sm font-medium transition hover:-translate-y-0.5"
+            className="frametale-secondary-button rounded-[1rem] px-6 py-3 text-sm font-medium transition hover:-translate-y-0.5"
           >
             {t("common:cancel")}
           </button>

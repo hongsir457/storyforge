@@ -62,13 +62,13 @@ export function SystemConfigPage() {
   const sectionFallback = <RouteLoadingState embedded message="Loading admin section" />;
 
   return (
-    <div className="storyforge-admin-shell flex min-h-screen flex-col px-6 py-6 text-[var(--sf-text)]">
+    <div className="frametale-admin-shell flex min-h-screen flex-col px-6 py-6 text-[var(--sf-text)]">
       <div className="mx-auto flex w-full max-w-7xl flex-1 flex-col space-y-6">
-        <header className="storyforge-page-header flex flex-col gap-5 rounded-[2rem] px-6 py-5 lg:flex-row lg:items-center lg:justify-between">
+        <header className="frametale-page-header flex flex-col gap-5 rounded-[2rem] px-6 py-5 lg:flex-row lg:items-center lg:justify-between">
           <div className="flex items-start gap-4">
             <Link
               href="/app/projects"
-              className="storyforge-secondary-button inline-flex h-11 w-11 items-center justify-center rounded-full transition hover:-translate-y-0.5"
+              className="frametale-secondary-button inline-flex h-11 w-11 items-center justify-center rounded-full transition hover:-translate-y-0.5"
               aria-label={t("common:back")}
             >
               <ChevronLeft className="h-5 w-5" />
@@ -83,7 +83,7 @@ export function SystemConfigPage() {
                   系统配置与运营面板
                 </h1>
                 <p className="mt-2 max-w-3xl text-sm leading-7 text-[var(--sf-text-muted)]">
-                  管理员界面保持更密、更明确，但仍然属于同一套 Storyforge 品牌世界。
+                  管理员界面保持更密、更明确，但仍然属于同一套 Frametale 品牌世界。
                 </p>
               </div>
             </div>
@@ -95,7 +95,7 @@ export function SystemConfigPage() {
               const nextLang = i18n.language.startsWith("zh") ? "en" : "zh";
               void i18n.changeLanguage(nextLang);
             }}
-            className="storyforge-secondary-button inline-flex items-center gap-2 rounded-full px-4 py-2.5 text-sm font-medium transition hover:-translate-y-0.5"
+            className="frametale-secondary-button inline-flex items-center gap-2 rounded-full px-4 py-2.5 text-sm font-medium transition hover:-translate-y-0.5"
           >
             <Languages className="h-4 w-4" />
             {t("dashboard:language_setting")}

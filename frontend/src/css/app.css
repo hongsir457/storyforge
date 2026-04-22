@@ -32,7 +32,7 @@
 }
 
 .app-sidebar,
-.storyforge-workspace-rail {
+.frametale-workspace-rail {
     border-right: 1px solid var(--line-soft);
     background: linear-gradient(180deg, rgba(255, 255, 255, 0.86), rgba(246, 249, 253, 0.92));
     backdrop-filter: blur(14px);
@@ -86,8 +86,8 @@
 
 .sf-app-bg,
 .sf-editorial-page,
-.storyforge-admin-shell,
-.storyforge-workspace-shell {
+.frametale-admin-shell,
+.frametale-workspace-shell {
     background:
         radial-gradient(circle at 12% 0%, rgba(24, 151, 214, 0.14), transparent 28%),
         radial-gradient(circle at 96% 6%, rgba(216, 165, 90, 0.16), transparent 24%),
@@ -96,15 +96,15 @@
 }
 
 .sf-top-shell,
-.storyforge-page-header,
-.storyforge-workspace-header {
+.frametale-page-header,
+.frametale-workspace-header {
     border: 1px solid rgba(24, 151, 214, 0.1);
     background: linear-gradient(180deg, rgba(255, 255, 255, 0.88), rgba(247, 250, 253, 0.94));
     box-shadow: var(--sf-shadow-soft);
     backdrop-filter: blur(20px);
 }
 
-.storyforge-public-shell {
+.frametale-public-shell {
     background:
         radial-gradient(circle at 8% 8%, rgba(24, 151, 214, 0.16), transparent 26%),
         radial-gradient(circle at 94% 10%, rgba(216, 165, 90, 0.16), transparent 24%),
@@ -112,20 +112,20 @@
     color: var(--sf-text);
 }
 
-.storyforge-public-shell .storyforge-stage-card {
+.frametale-public-shell .frametale-stage-card {
     border: 1px solid rgba(24, 151, 214, 0.1);
     background: linear-gradient(180deg, rgba(255, 255, 255, 0.9), rgba(246, 249, 253, 0.94));
     box-shadow: 0 28px 72px rgba(23, 38, 69, 0.1);
 }
 
-.storyforge-public-shell .storyforge-form-card {
+.frametale-public-shell .frametale-form-card {
     border: 1px solid rgba(117, 132, 159, 0.18);
     background: linear-gradient(180deg, rgba(255, 255, 255, 0.94), rgba(249, 251, 254, 0.98));
     box-shadow: 0 24px 60px rgba(23, 38, 69, 0.08);
 }
 
-.storyforge-public-shell .storyforge-kicker,
-.storyforge-kicker {
+.frametale-public-shell .frametale-kicker,
+.frametale-kicker {
     display: inline-flex;
     align-items: center;
     gap: 0.5rem;
@@ -140,55 +140,55 @@
     color: #0e7db8;
 }
 
-.storyforge-primary-button {
+.frametale-primary-button {
     background: linear-gradient(135deg, #1897d6 0%, #26abe8 100%);
     color: #ffffff;
     box-shadow: 0 18px 38px rgba(24, 151, 214, 0.22);
 }
 
-.storyforge-secondary-button {
+.frametale-secondary-button {
     border: 1px solid rgba(117, 132, 159, 0.18);
     background: rgba(255, 255, 255, 0.82);
     color: var(--sf-text);
 }
 
-.storyforge-input {
+.frametale-input {
     border: 1px solid rgba(117, 132, 159, 0.18);
     background: rgba(248, 250, 253, 0.92);
     color: var(--sf-text);
     box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.58);
 }
 
-.storyforge-input::placeholder {
+.frametale-input::placeholder {
     color: var(--sf-text-soft);
 }
 
-.storyforge-input:focus {
+.frametale-input:focus {
     border-color: rgba(24, 151, 214, 0.42);
     background: rgba(255, 255, 255, 0.98);
 }
 
-.storyforge-workspace-shell {
+.frametale-workspace-shell {
     color: var(--sf-text);
 }
 
-.storyforge-workspace-shell .storyforge-shell-main {
+.frametale-workspace-shell .frametale-shell-main {
     background: rgba(255, 255, 255, 0.18);
 }
 
-.storyforge-workspace-shell .storyforge-assistant-rail {
+.frametale-workspace-shell .frametale-assistant-rail {
     border-left: 1px solid rgba(117, 132, 159, 0.16);
     background: linear-gradient(180deg, rgba(250, 251, 254, 0.92), rgba(244, 248, 252, 0.96));
     box-shadow: -18px 0 42px rgba(23, 38, 69, 0.04);
 }
 
-.storyforge-workspace-shell .storyforge-rail-button {
+.frametale-workspace-shell .frametale-rail-button {
     border: 1px solid rgba(117, 132, 159, 0.16);
     background: rgba(255, 255, 255, 0.9);
     color: var(--sf-text-muted);
 }
 
-.storyforge-workspace-shell .storyforge-rail-button:hover {
+.frametale-workspace-shell .frametale-rail-button:hover {
     background: rgba(255, 255, 255, 0.98);
     color: var(--sf-text);
 }
@@ -310,49 +310,49 @@
 
 .sf-editorial-page [class*="bg-gray-950"],
 .sf-editorial-page [class*="bg-slate-950"],
-.storyforge-admin-shell [class*="bg-gray-950"],
-.storyforge-admin-shell [class*="bg-slate-950"],
-.storyforge-workspace-shell [class*="bg-gray-950"],
-.storyforge-workspace-shell [class*="bg-slate-950"] {
+.frametale-admin-shell [class*="bg-gray-950"],
+.frametale-admin-shell [class*="bg-slate-950"],
+.frametale-workspace-shell [class*="bg-gray-950"],
+.frametale-workspace-shell [class*="bg-slate-950"] {
     background-color: rgba(244, 248, 252, 0.96) !important;
 }
 
 .sf-editorial-page [class*="bg-gray-900"],
 .sf-editorial-page [class*="bg-slate-900"],
-.storyforge-admin-shell [class*="bg-gray-900"],
-.storyforge-admin-shell [class*="bg-slate-900"],
-.storyforge-workspace-shell [class*="bg-gray-900"],
-.storyforge-workspace-shell [class*="bg-slate-900"] {
+.frametale-admin-shell [class*="bg-gray-900"],
+.frametale-admin-shell [class*="bg-slate-900"],
+.frametale-workspace-shell [class*="bg-gray-900"],
+.frametale-workspace-shell [class*="bg-slate-900"] {
     background-color: rgba(247, 250, 253, 0.94) !important;
 }
 
 .sf-editorial-page [class*="bg-gray-800"],
 .sf-editorial-page [class*="bg-slate-800"],
-.storyforge-admin-shell [class*="bg-gray-800"],
-.storyforge-admin-shell [class*="bg-slate-800"],
-.storyforge-workspace-shell [class*="bg-gray-800"],
-.storyforge-workspace-shell [class*="bg-slate-800"] {
+.frametale-admin-shell [class*="bg-gray-800"],
+.frametale-admin-shell [class*="bg-slate-800"],
+.frametale-workspace-shell [class*="bg-gray-800"],
+.frametale-workspace-shell [class*="bg-slate-800"] {
     background-color: rgba(240, 245, 250, 0.94) !important;
 }
 
 .sf-editorial-page [class*="bg-black/20"],
-.storyforge-admin-shell [class*="bg-black/20"],
-.storyforge-workspace-shell [class*="bg-black/20"],
+.frametale-admin-shell [class*="bg-black/20"],
+.frametale-workspace-shell [class*="bg-black/20"],
 .sf-editorial-page [class*="bg-white/[0.04]"],
-.storyforge-admin-shell [class*="bg-white/[0.04]"],
-.storyforge-workspace-shell [class*="bg-white/[0.04]"] {
+.frametale-admin-shell [class*="bg-white/[0.04]"],
+.frametale-workspace-shell [class*="bg-white/[0.04]"] {
     background-color: rgba(248, 250, 253, 0.92) !important;
 }
 
 .sf-editorial-page [class*="border-gray-"],
 .sf-editorial-page [class*="border-slate-"],
 .sf-editorial-page [class*="border-white/10"],
-.storyforge-admin-shell [class*="border-gray-"],
-.storyforge-admin-shell [class*="border-slate-"],
-.storyforge-admin-shell [class*="border-white/10"],
-.storyforge-workspace-shell [class*="border-gray-"],
-.storyforge-workspace-shell [class*="border-slate-"],
-.storyforge-workspace-shell [class*="border-white/10"] {
+.frametale-admin-shell [class*="border-gray-"],
+.frametale-admin-shell [class*="border-slate-"],
+.frametale-admin-shell [class*="border-white/10"],
+.frametale-workspace-shell [class*="border-gray-"],
+.frametale-workspace-shell [class*="border-slate-"],
+.frametale-workspace-shell [class*="border-white/10"] {
     border-color: rgba(117, 132, 159, 0.18) !important;
 }
 
@@ -360,14 +360,14 @@
 .sf-editorial-page [class*="text-slate-100"],
 .sf-editorial-page [class*="text-gray-200"],
 .sf-editorial-page [class*="text-slate-200"],
-.storyforge-admin-shell [class*="text-gray-100"],
-.storyforge-admin-shell [class*="text-slate-100"],
-.storyforge-admin-shell [class*="text-gray-200"],
-.storyforge-admin-shell [class*="text-slate-200"],
-.storyforge-workspace-shell [class*="text-gray-100"],
-.storyforge-workspace-shell [class*="text-slate-100"],
-.storyforge-workspace-shell [class*="text-gray-200"],
-.storyforge-workspace-shell [class*="text-slate-200"] {
+.frametale-admin-shell [class*="text-gray-100"],
+.frametale-admin-shell [class*="text-slate-100"],
+.frametale-admin-shell [class*="text-gray-200"],
+.frametale-admin-shell [class*="text-slate-200"],
+.frametale-workspace-shell [class*="text-gray-100"],
+.frametale-workspace-shell [class*="text-slate-100"],
+.frametale-workspace-shell [class*="text-gray-200"],
+.frametale-workspace-shell [class*="text-slate-200"] {
     color: var(--sf-text) !important;
 }
 
@@ -377,33 +377,33 @@
 .sf-editorial-page [class*="text-slate-400"],
 .sf-editorial-page [class*="text-gray-500"],
 .sf-editorial-page [class*="text-slate-500"],
-.storyforge-admin-shell [class*="text-gray-300"],
-.storyforge-admin-shell [class*="text-slate-300"],
-.storyforge-admin-shell [class*="text-gray-400"],
-.storyforge-admin-shell [class*="text-slate-400"],
-.storyforge-admin-shell [class*="text-gray-500"],
-.storyforge-admin-shell [class*="text-slate-500"],
-.storyforge-workspace-shell [class*="text-gray-300"],
-.storyforge-workspace-shell [class*="text-slate-300"],
-.storyforge-workspace-shell [class*="text-gray-400"],
-.storyforge-workspace-shell [class*="text-slate-400"],
-.storyforge-workspace-shell [class*="text-gray-500"],
-.storyforge-workspace-shell [class*="text-slate-500"] {
+.frametale-admin-shell [class*="text-gray-300"],
+.frametale-admin-shell [class*="text-slate-300"],
+.frametale-admin-shell [class*="text-gray-400"],
+.frametale-admin-shell [class*="text-slate-400"],
+.frametale-admin-shell [class*="text-gray-500"],
+.frametale-admin-shell [class*="text-slate-500"],
+.frametale-workspace-shell [class*="text-gray-300"],
+.frametale-workspace-shell [class*="text-slate-300"],
+.frametale-workspace-shell [class*="text-gray-400"],
+.frametale-workspace-shell [class*="text-slate-400"],
+.frametale-workspace-shell [class*="text-gray-500"],
+.frametale-workspace-shell [class*="text-slate-500"] {
     color: var(--sf-text-muted) !important;
 }
 
 .sf-editorial-page [class*="shadow-black"],
 .sf-editorial-page [class*="shadow-2xl"],
-.storyforge-admin-shell [class*="shadow-black"],
-.storyforge-admin-shell [class*="shadow-2xl"],
-.storyforge-workspace-shell [class*="shadow-black"],
-.storyforge-workspace-shell [class*="shadow-2xl"] {
+.frametale-admin-shell [class*="shadow-black"],
+.frametale-admin-shell [class*="shadow-2xl"],
+.frametale-workspace-shell [class*="shadow-black"],
+.frametale-workspace-shell [class*="shadow-2xl"] {
     box-shadow: 0 22px 54px rgba(23, 38, 69, 0.1) !important;
 }
 
 .sf-editorial-page pre,
-.storyforge-admin-shell pre,
-.storyforge-workspace-shell pre {
+.frametale-admin-shell pre,
+.frametale-workspace-shell pre {
     border: 1px solid rgba(117, 132, 159, 0.18);
     background: rgba(240, 245, 250, 0.92);
     color: var(--sf-text);

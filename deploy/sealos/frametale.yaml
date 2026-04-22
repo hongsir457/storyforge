@@ -1,7 +1,7 @@
 ﻿apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: storyforge-projects-data
+  name: frametale-projects-data
   namespace: ns-qkcc8vj1
 spec:
   accessModes:
@@ -13,7 +13,7 @@ spec:
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: storyforge-redis-data
+  name: frametale-redis-data
   namespace: ns-qkcc8vj1
 spec:
   accessModes:
@@ -25,13 +25,13 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: storyforge-postgres
+  name: frametale-postgres
   namespace: ns-qkcc8vj1
   labels:
-    app.kubernetes.io/name: storyforge-postgres
+    app.kubernetes.io/name: frametale-postgres
 spec:
   selector:
-    app: storyforge-postgres
+    app: frametale-postgres
   ports:
     - name: postgres
       port: 5432
@@ -40,22 +40,22 @@ spec:
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
-  name: storyforge-postgres
+  name: frametale-postgres
   namespace: ns-qkcc8vj1
   labels:
-    app: storyforge-postgres
-    app.kubernetes.io/name: storyforge-postgres
+    app: frametale-postgres
+    app.kubernetes.io/name: frametale-postgres
 spec:
-  serviceName: storyforge-postgres
+  serviceName: frametale-postgres
   replicas: 1
   selector:
     matchLabels:
-      app: storyforge-postgres
+      app: frametale-postgres
   template:
     metadata:
       labels:
-        app: storyforge-postgres
-        app.kubernetes.io/name: storyforge-postgres
+        app: frametale-postgres
+        app.kubernetes.io/name: frametale-postgres
     spec:
       automountServiceAccountToken: false
       securityContext:
@@ -70,24 +70,24 @@ spec:
               containerPort: 5432
           env:
             - name: POSTGRES_USER
-              value: storyforge
+              value: frametale
             - name: POSTGRES_DB
-              value: storyforge
+              value: frametale
             - name: PGDATA
               value: /var/lib/postgresql/data/pgdata
             - name: POSTGRES_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: storyforge-env
+                  name: frametale-env
                   key: POSTGRES_PASSWORD
           readinessProbe:
             exec:
-              command: ["sh", "-c", "pg_isready -U storyforge -d storyforge"]
+              command: ["sh", "-c", "pg_isready -U frametale -d frametale"]
             initialDelaySeconds: 10
             periodSeconds: 10
           livenessProbe:
             exec:
-              command: ["sh", "-c", "pg_isready -U storyforge -d storyforge"]
+              command: ["sh", "-c", "pg_isready -U frametale -d frametale"]
             initialDelaySeconds: 30
             periodSeconds: 20
           resources:
@@ -115,13 +115,13 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: storyforge-redis
+  name: frametale-redis
   namespace: ns-qkcc8vj1
   labels:
-    app.kubernetes.io/name: storyforge-redis
+    app.kubernetes.io/name: frametale-redis
 spec:
   selector:
-    app: storyforge-redis
+    app: frametale-redis
   ports:
     - name: redis
       port: 6379
@@ -130,21 +130,21 @@ spec:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: storyforge-redis
+  name: frametale-redis
   namespace: ns-qkcc8vj1
   labels:
-    app: storyforge-redis
-    app.kubernetes.io/name: storyforge-redis
+    app: frametale-redis
+    app.kubernetes.io/name: frametale-redis
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: storyforge-redis
+      app: frametale-redis
   template:
     metadata:
       labels:
-        app: storyforge-redis
-        app.kubernetes.io/name: storyforge-redis
+        app: frametale-redis
+        app.kubernetes.io/name: frametale-redis
     spec:
       automountServiceAccountToken: false
       securityContext:
@@ -185,18 +185,18 @@ spec:
       volumes:
         - name: redis-data
           persistentVolumeClaim:
-            claimName: storyforge-redis-data
+            claimName: frametale-redis-data
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: storyforge-backend
+  name: frametale-backend
   namespace: ns-qkcc8vj1
   labels:
-    app.kubernetes.io/name: storyforge-backend
+    app.kubernetes.io/name: frametale-backend
 spec:
   selector:
-    app: storyforge-backend
+    app: frametale-backend
   ports:
     - name: http
       port: 1241
@@ -205,22 +205,22 @@ spec:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: storyforge-backend
+  name: frametale-backend
   namespace: ns-qkcc8vj1
   labels:
-    app: storyforge-backend
-    app.kubernetes.io/name: storyforge-backend
+    app: frametale-backend
+    app.kubernetes.io/name: frametale-backend
 spec:
   replicas: 1
   revisionHistoryLimit: 2
   selector:
     matchLabels:
-      app: storyforge-backend
+      app: frametale-backend
   template:
     metadata:
       labels:
-        app: storyforge-backend
-        app.kubernetes.io/name: storyforge-backend
+        app: frametale-backend
+        app.kubernetes.io/name: frametale-backend
     spec:
       automountServiceAccountToken: false
       securityContext:
@@ -228,24 +228,24 @@ spec:
           type: RuntimeDefault
       containers:
         - name: backend
-          image: ghcr.io/hongsir457/storyforge-backend:main
+          image: ghcr.io/hongsir457/frametale-backend:main
           imagePullPolicy: Always
           ports:
             - name: http
               containerPort: 1241
           envFrom:
             - secretRef:
-                name: storyforge-env
+                name: frametale-env
           env:
             - name: POSTGRES_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: storyforge-env
+                  name: frametale-env
                   key: POSTGRES_PASSWORD
             - name: DATABASE_URL
-              value: postgresql+asyncpg://storyforge:$(POSTGRES_PASSWORD)@storyforge-postgres:5432/storyforge?ssl=disable
+              value: postgresql+asyncpg://frametale:$(POSTGRES_PASSWORD)@frametale-postgres:5432/frametale?ssl=disable
             - name: REDIS_URL
-              value: redis://storyforge-redis:6379/0
+              value: redis://frametale-redis:6379/0
           command: ["sh", "-c"]
           args:
             - >
@@ -274,30 +274,30 @@ spec:
             capabilities:
               drop: ["ALL"]
           volumeMounts:
-            - name: storyforge-projects-data
+            - name: frametale-projects-data
               mountPath: /app/projects
               subPath: projects
-            - name: storyforge-projects-data
+            - name: frametale-projects-data
               mountPath: /app/vertex_keys
               subPath: vertex_keys
-            - name: storyforge-projects-data
+            - name: frametale-projects-data
               mountPath: /root/.claude
               subPath: claude_data
       volumes:
-        - name: storyforge-projects-data
+        - name: frametale-projects-data
           persistentVolumeClaim:
-            claimName: storyforge-projects-data
+            claimName: frametale-projects-data
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: storyforge-frontend
+  name: frametale-frontend
   namespace: ns-qkcc8vj1
   labels:
-    app.kubernetes.io/name: storyforge-frontend
+    app.kubernetes.io/name: frametale-frontend
 spec:
   selector:
-    app: storyforge-frontend
+    app: frametale-frontend
   ports:
     - name: http
       port: 80
@@ -306,22 +306,22 @@ spec:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: storyforge-frontend
+  name: frametale-frontend
   namespace: ns-qkcc8vj1
   labels:
-    app: storyforge-frontend
-    app.kubernetes.io/name: storyforge-frontend
+    app: frametale-frontend
+    app.kubernetes.io/name: frametale-frontend
 spec:
   replicas: 1
   revisionHistoryLimit: 2
   selector:
     matchLabels:
-      app: storyforge-frontend
+      app: frametale-frontend
   template:
     metadata:
       labels:
-        app: storyforge-frontend
-        app.kubernetes.io/name: storyforge-frontend
+        app: frametale-frontend
+        app.kubernetes.io/name: frametale-frontend
     spec:
       automountServiceAccountToken: false
       securityContext:
@@ -329,7 +329,7 @@ spec:
           type: RuntimeDefault
       containers:
         - name: frontend
-          image: ghcr.io/hongsir457/storyforge-frontend:main
+          image: ghcr.io/hongsir457/frametale-frontend:main
           imagePullPolicy: Always
           ports:
             - name: http
@@ -361,13 +361,13 @@ spec:
 apiVersion: app.sealos.io/v1
 kind: App
 metadata:
-  name: storyforge-app
+  name: frametale-app
   namespace: ns-qkcc8vj1
 spec:
   data:
-    url: storyforge-frontend:80
+    url: frametale-frontend:80
   displayType: normal
-  name: Storyforge
+  name: Frametale
   type: normal
 ---
 apiVersion: networking.k8s.io/v1
@@ -376,8 +376,8 @@ metadata:
   name: network-boyqxnosbdrk
   namespace: ns-qkcc8vj1
   labels:
-    app.kubernetes.io/name: storyforge
-    cloud.sealos.io/app-deploy-manager: storyforge
+    app.kubernetes.io/name: frametale
+    cloud.sealos.io/app-deploy-manager: frametale
     cloud.sealos.io/app-deploy-manager-domain: bjmmuazhczom
   annotations:
     kubernetes.io/ingress.class: nginx
@@ -401,7 +401,7 @@ spec:
             pathType: Prefix
             backend:
               service:
-                name: storyforge-frontend
+                name: frametale-frontend
                 port:
                   number: 80
   tls:

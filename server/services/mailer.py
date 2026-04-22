@@ -37,7 +37,7 @@ def get_mailer_config() -> MailerConfig:
         username=os.environ.get("SMTP_USERNAME", "").strip(),
         password=os.environ.get("SMTP_PASSWORD", "").strip(),
         from_email=os.environ.get("SMTP_FROM_EMAIL", "").strip(),
-        from_name=os.environ.get("SMTP_FROM_NAME", "Storyforge").strip() or "Storyforge",
+        from_name=os.environ.get("SMTP_FROM_NAME", "Frametale").strip() or "Frametale",
         use_tls=os.environ.get("SMTP_USE_TLS", "true").strip().lower() not in {"0", "false", "no"},
         debug_log_only=os.environ.get("AUTH_EMAIL_DEBUG", "false").strip().lower() in {"1", "true", "yes"},
     )

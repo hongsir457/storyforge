@@ -3,14 +3,14 @@ import { Link } from "wouter";
 
 const LEGAL_FOOTER_COPY = {
   en: {
-    brand: "Storyforge.",
-    rights: "© 2026 Storyforge. All rights reserved.",
+    brand: "Frametale.",
+    rights: "© 2026 Frametale. All rights reserved.",
     privacy: "Privacy Policy",
     terms: "Terms of Service",
     contact: "Contact Us",
   },
   zh: {
-    brand: "Storyforge.",
+    brand: "Frametale.",
     rights: "© 2026 叙影工厂，保留所有权利。",
     privacy: "隐私政策",
     terms: "服务条款",

@@ -310,7 +310,7 @@ export function BillingSection() {
         <button
           type="button"
           onClick={() => void loadData()}
-          className="storyforge-secondary-button inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium transition hover:-translate-y-0.5"
+          className="frametale-secondary-button inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium transition hover:-translate-y-0.5"
         >
           <RefreshCw className="h-4 w-4" />
           {copy.refresh}
@@ -372,7 +372,7 @@ export function BillingSection() {
                   value={stripeDraft.secretKey}
                   onChange={(event) => setStripeDraft((prev) => ({ ...prev, secretKey: event.target.value }))}
                   placeholder="sk_live_... / sk_test_..."
-                  className="storyforge-input w-full rounded-[1rem] px-4 py-3.5 text-[15px] outline-none transition"
+                  className="frametale-input w-full rounded-[1rem] px-4 py-3.5 text-[15px] outline-none transition"
                 />
               </label>
 
@@ -398,7 +398,7 @@ export function BillingSection() {
                   value={stripeDraft.webhookSecret}
                   onChange={(event) => setStripeDraft((prev) => ({ ...prev, webhookSecret: event.target.value }))}
                   placeholder="whsec_..."
-                  className="storyforge-input w-full rounded-[1rem] px-4 py-3.5 text-[15px] outline-none transition"
+                  className="frametale-input w-full rounded-[1rem] px-4 py-3.5 text-[15px] outline-none transition"
                 />
               </label>
 
@@ -410,8 +410,8 @@ export function BillingSection() {
                   type="url"
                   value={stripeDraft.publicAppUrl}
                   onChange={(event) => setStripeDraft((prev) => ({ ...prev, publicAppUrl: event.target.value }))}
-                  placeholder="https://storyforge.example.com"
-                  className="storyforge-input w-full rounded-[1rem] px-4 py-3.5 text-[15px] outline-none transition"
+                  placeholder="https://frametale.example.com"
+                  className="frametale-input w-full rounded-[1rem] px-4 py-3.5 text-[15px] outline-none transition"
                 />
                 <p className="mt-2 text-xs leading-6 text-[var(--sf-text-muted)]">{copy.publicUrlHint}</p>
               </label>
@@ -419,7 +419,7 @@ export function BillingSection() {
               <button
                 type="submit"
                 disabled={savingStripe || !stripeDirty}
-                className="storyforge-primary-button rounded-[1rem] px-5 py-3 text-sm font-semibold transition hover:-translate-y-0.5 disabled:translate-y-0 disabled:opacity-60"
+                className="frametale-primary-button rounded-[1rem] px-5 py-3 text-sm font-semibold transition hover:-translate-y-0.5 disabled:translate-y-0 disabled:opacity-60"
               >
                 {savingStripe ? copy.savingStripe : copy.saveStripe}
               </button>
@@ -445,7 +445,7 @@ export function BillingSection() {
                 <select
                   value={selectedUserId}
                   onChange={(event) => setSelectedUserId(event.target.value)}
-                  className="storyforge-input w-full rounded-[1rem] px-4 py-3.5 text-[15px] outline-none transition"
+                  className="frametale-input w-full rounded-[1rem] px-4 py-3.5 text-[15px] outline-none transition"
                   required
                 >
                   {(overview?.users ?? []).map((user) => (
@@ -464,7 +464,7 @@ export function BillingSection() {
                   <select
                     value={currency}
                     onChange={(event) => setCurrency(event.target.value.toUpperCase())}
-                    className="storyforge-input w-full rounded-[1rem] px-4 py-3.5 text-[15px] outline-none transition"
+                    className="frametale-input w-full rounded-[1rem] px-4 py-3.5 text-[15px] outline-none transition"
                   >
                     <option value="USD">USD</option>
                     <option value="CNY">CNY</option>
@@ -481,7 +481,7 @@ export function BillingSection() {
                     step="0.0001"
                     value={amount}
                     onChange={(event) => setAmount(event.target.value)}
-                    className="storyforge-input w-full rounded-[1rem] px-4 py-3.5 text-[15px] outline-none transition"
+                    className="frametale-input w-full rounded-[1rem] px-4 py-3.5 text-[15px] outline-none transition"
                     required
                   />
                 </label>
@@ -496,7 +496,7 @@ export function BillingSection() {
                   value={note}
                   onChange={(event) => setNote(event.target.value)}
                   placeholder={copy.notePlaceholder}
-                  className="storyforge-input w-full rounded-[1rem] px-4 py-3.5 text-[15px] outline-none transition"
+                  className="frametale-input w-full rounded-[1rem] px-4 py-3.5 text-[15px] outline-none transition"
                 />
               </label>
 
@@ -509,7 +509,7 @@ export function BillingSection() {
               <button
                 type="submit"
                 disabled={submitting || !selectedUserId}
-                className="storyforge-primary-button rounded-[1rem] px-5 py-3 text-sm font-semibold transition hover:-translate-y-0.5 disabled:translate-y-0 disabled:opacity-60"
+                className="frametale-primary-button rounded-[1rem] px-5 py-3 text-sm font-semibold transition hover:-translate-y-0.5 disabled:translate-y-0 disabled:opacity-60"
               >
                 {submitting ? copy.submitting : copy.submit}
               </button>

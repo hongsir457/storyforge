@@ -87,12 +87,12 @@ export function BillingReturnPage() {
   const body = (() => {
     if (status === "cancelled" && !sessionId) {
       return isZh
-        ? "你已经离开 Stripe Checkout，本次充值不会入账。"
+        ? "你已离开 Stripe Checkout，本次充值不会入账。"
         : "You left Stripe Checkout before payment completion, so no balance was added.";
     }
     if (checkoutStatus?.order.status === "paid") {
       return isZh
-        ? `${amountLabel} 已通过 Stripe 成功充值到你的预付余额。`
+        ? `${amountLabel} 已通过 Stripe 成功充值到你的预付费余额。`
         : `${amountLabel} has been credited to your prepaid balance through Stripe.`;
     }
     if (checkoutStatus?.order.status === "failed") {
@@ -106,7 +106,7 @@ export function BillingReturnPage() {
         : "This checkout session has expired. Create a new top-up order to continue.";
     }
     return isZh
-      ? "系统正在等待 Stripe 回调或同步确认，这通常只需要几秒。"
+      ? "系统正在等待 Stripe webhook 或同步确认，这通常只需要几秒。"
       : "The system is waiting for the Stripe webhook or sync confirmation, which usually takes a few seconds.";
   })();
 
@@ -114,7 +114,7 @@ export function BillingReturnPage() {
     <div className="sf-editorial-page flex min-h-screen flex-col px-6 py-8 text-[var(--sf-text)]">
       <div className="mx-auto flex w-full max-w-3xl flex-1 flex-col justify-center">
         <section className="sf-panel-strong rounded-[2rem] p-8 text-center">
-          <BrandLogo alt="Storyforge" className="mx-auto h-14 w-auto max-w-[17rem]" />
+          <BrandLogo alt="Frametale" className="mx-auto h-14 w-auto max-w-[17rem]" />
 
           <div className="mt-8 flex justify-center">
             {loading ? (
@@ -148,19 +148,11 @@ export function BillingReturnPage() {
                 {isZh ? "订单状态" : "Order status"}
               </div>
               <div className="mt-3 space-y-2 text-sm text-[var(--sf-text-muted)]">
-                <div>
-                  {isZh ? "订单号" : "Order"}: #{checkoutStatus.order.id}
-                </div>
-                <div>
-                  {isZh ? "金额" : "Amount"}: {amountLabel}
-                </div>
-                <div>
-                  {isZh ? "状态" : "Status"}: {checkoutStatus.order.status}
-                </div>
+                <div>{isZh ? "订单号" : "Order"}: #{checkoutStatus.order.id}</div>
+                <div>{isZh ? "金额" : "Amount"}: {amountLabel}</div>
+                <div>{isZh ? "状态" : "Status"}: {checkoutStatus.order.status}</div>
                 {checkoutStatus.order.checkout_session_id && (
-                  <div className="break-all">
-                    Stripe Session: {checkoutStatus.order.checkout_session_id}
-                  </div>
+                  <div className="break-all">Stripe Session: {checkoutStatus.order.checkout_session_id}</div>
                 )}
               </div>
             </div>
@@ -170,7 +162,7 @@ export function BillingReturnPage() {
             <button
               type="button"
               onClick={() => setLocation("/app/account")}
-              className="storyforge-primary-button inline-flex items-center gap-2 rounded-full px-5 py-3 text-sm font-semibold transition hover:-translate-y-0.5"
+              className="frametale-primary-button inline-flex items-center gap-2 rounded-full px-5 py-3 text-sm font-semibold transition hover:-translate-y-0.5"
             >
               <ArrowLeft className="h-4 w-4" />
               {isZh ? "返回账户中心" : "Back to account"}
@@ -178,7 +170,7 @@ export function BillingReturnPage() {
             <button
               type="button"
               onClick={() => setLocation("/app/projects")}
-              className="storyforge-secondary-button rounded-full px-5 py-3 text-sm font-medium transition hover:-translate-y-0.5"
+              className="frametale-secondary-button rounded-full px-5 py-3 text-sm font-medium transition hover:-translate-y-0.5"
             >
               {isZh ? "返回工作台" : "Back to studio"}
             </button>

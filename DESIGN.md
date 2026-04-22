@@ -1,7 +1,7 @@
-# Design System - Storyforge
+# Design System - Frametale
 
 ## Product Context
-- **What this is:** Storyforge is a story-to-visual-IP production studio. It turns a novel seed into a reusable world, then into characters, clues, storyboards, assets, and short-form video output.
+- **What this is:** Frametale is a story-to-visual-IP production studio. It turns a novel seed into a reusable world, then into characters, clues, storyboards, assets, and short-form video output.
 - **Who it is for:** There are two primary users. Creators move a story from idea to production. Operators manage providers, models, accounts, costs, and system health.
 - **Space / industry:** AI-assisted narrative production, novel-to-video tooling, creator workflow software.
 - **Project type:** Light-first editorial web app with public landing/auth surfaces, creator workspaces, and an admin console.
@@ -14,8 +14,8 @@
 ## Aesthetic Direction
 - **Direction:** Narrative Studio / Editorial Light Utility
 - **Decoration level:** intentional
-- **Mood:** calm, credible, airy, and slightly editorial. Public pages should feel like a brand booklet with production intent. Creator pages should feel like a studio desk under daylight. Admin pages should feel operational, but still belong to the same lighter Storyforge world.
-- **Reference basis:** This pass is based on the current codebase, existing Storyforge product framing, and current screenshots. No external competitive research was used in this iteration.
+- **Mood:** calm, credible, airy, and slightly editorial. Public pages should feel like a brand booklet with production intent. Creator pages should feel like a studio desk under daylight. Admin pages should feel operational, but still belong to the same lighter Frametale world.
+- **Reference basis:** This pass is based on the current codebase, existing Frametale product framing, and current screenshots. No external competitive research was used in this iteration.
 
 ### Safe Choices
 - **Light editorial shell:** The brand reads more distinctive and more trustworthy on pale paper-like surfaces than on a generic dark SaaS shell.
@@ -92,7 +92,7 @@
 - `rgba(24,151,214,0.22)` line-strong
 
 ### Color Rules
-- Public CTA defaults to Storyforge blue. Secondary emphasis may move slightly brighter blue, but not into purple.
+- Public CTA defaults to Frametale blue. Secondary emphasis may move slightly brighter blue, but not into purple.
 - Amber is for diagnostics, guided warnings, and warmth. It is not the default main button color.
 - Rose is only for blocked or destructive states.
 - Large backgrounds should feel like paper, fogged glass, and subtle editorial lighting. Avoid dark AI-cloud gradients.
@@ -182,7 +182,7 @@
 ### Buttons
 - Each region gets one obvious primary action.
 - Primary: filled. Secondary: tinted or outlined. Danger: rose only.
-- Public pages and creator entry flows use Storyforge blue for primary. Do not reintroduce indigo as a co-primary without a product reason.
+- Public pages and creator entry flows use Frametale blue for primary. Do not reintroduce indigo as a co-primary without a product reason.
 
 ### Cards
 - Every card needs one dominant signal: phase, asset coverage, next step, status, or hero media.
@@ -214,7 +214,7 @@
 - No vague `AI-powered` or `all-in-one solution` marketing copy
 
 ## Immediate Design Priorities
-1. Keep the new Storyforge spark logo and wordmark consistent across public, creator, and admin surfaces.
+1. Keep the new Frametale spark logo and wordmark consistent across public, creator, and admin surfaces.
 2. Make every entry surface feel lighter, more editorial, and less like a generic dark AI console.
 3. Keep `/app/projects` as the creator home and `/app/novel-workbench` as the focused narrative intake surface.
 4. Use one visual system for admin, account, project settings, and workspace internals instead of treating them as separate mini-products.
@@ -223,6 +223,6 @@
 ## Decisions Log
 | Date | Decision | Rationale |
 |------|----------|-----------|
-| 2026-04-21 | Rebuilt Storyforge design-system baseline | Replaced the older concept-only document with implementation-ready typography, color, layout, and motion guidance |
+| 2026-04-21 | Rebuilt Frametale design-system baseline | Replaced the older concept-only document with implementation-ready typography, color, layout, and motion guidance |
 | 2026-04-21 | Kept the dark-first studio direction | The product has to hold media, long text, logs, timelines, and creator state at the same time |
 | 2026-04-21 | Strengthened the creator/admin split | Creation and system configuration are different mental models and should diverge in IA and visual density |

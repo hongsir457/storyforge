@@ -71,7 +71,7 @@ export function VerifyEmailPage() {
       description={t("verification_hint", { email: email || "your email" })}
     >
       <div className="mb-7">
-        <div className="storyforge-kicker">Trust Surface</div>
+        <div className="frametale-kicker">Trust Surface</div>
         <h2
           className="mt-4 text-[2rem] font-semibold tracking-[-0.04em] text-[var(--sf-text)]"
           style={{ fontFamily: "var(--font-display)" }}
@@ -90,7 +90,7 @@ export function VerifyEmailPage() {
         <button
           type="submit"
           disabled={loading}
-          className="storyforge-primary-button w-full rounded-[1rem] px-4 py-3 text-sm font-semibold transition hover:-translate-y-0.5 disabled:translate-y-0 disabled:opacity-60"
+          className="frametale-primary-button w-full rounded-[1rem] px-4 py-3 text-sm font-semibold transition hover:-translate-y-0.5 disabled:translate-y-0 disabled:opacity-60"
         >
           {loading ? t("verifying_email") : t("verify_email")}
         </button>
@@ -100,7 +100,7 @@ export function VerifyEmailPage() {
         type="button"
         onClick={() => void handleResend()}
         disabled={resending}
-        className="storyforge-secondary-button mt-4 w-full rounded-[1rem] px-4 py-3 text-sm font-medium transition hover:-translate-y-0.5 disabled:translate-y-0 disabled:opacity-60"
+        className="frametale-secondary-button mt-4 w-full rounded-[1rem] px-4 py-3 text-sm font-medium transition hover:-translate-y-0.5 disabled:translate-y-0 disabled:opacity-60"
       >
         {resending ? t("sending_code") : t("resend_code")}
       </button>
@@ -132,7 +132,7 @@ function Field({
         type="text"
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="storyforge-input w-full rounded-[1rem] px-4 py-3.5 text-[15px] outline-none transition"
+        className="frametale-input w-full rounded-[1rem] px-4 py-3.5 text-[15px] outline-none transition"
         required
       />
     </label>

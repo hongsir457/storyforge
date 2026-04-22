@@ -1,12 +1,12 @@
 <h1 align="center">
   <br>
   <picture>
-    <source media="(prefers-color-scheme: light)" srcset="frontend/public/storyforge-logo.png">
-    <source media="(prefers-color-scheme: dark)" srcset="frontend/public/storyforge-logo.png">
-    <img src="frontend/public/storyforge-logo.png" alt="Storyforge Logo" width="168" style="border-radius: 16px;">
+    <source media="(prefers-color-scheme: light)" srcset="frontend/public/frametale-logo.png">
+    <source media="(prefers-color-scheme: dark)" srcset="frontend/public/frametale-logo.png">
+    <img src="frontend/public/frametale-logo.png" alt="Frametale Logo" width="168" style="border-radius: 16px;">
   </picture>
   <br>
-  Storyforge
+  Frametale
   <br>
 </h1>
 
@@ -18,22 +18,22 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/hongsir457/storyforge/actions/workflows/docker.yml"><img src="https://img.shields.io/github/actions/workflow/status/hongsir457/storyforge/docker.yml?style=for-the-badge&label=Docker" alt="Docker"></a>
-  <a href="https://github.com/hongsir457/storyforge"><img src="https://img.shields.io/github/stars/hongsir457/storyforge?style=for-the-badge" alt="Stars"></a>
-  <a href="https://github.com/hongsir457/storyforge/blob/main/LICENSE"><img src="https://img.shields.io/badge/License-AGPL--3.0-green?style=for-the-badge" alt="License"></a>
+  <a href="https://github.com/hongsir457/frametale/actions/workflows/docker.yml"><img src="https://img.shields.io/github/actions/workflow/status/hongsir457/frametale/docker.yml?style=for-the-badge&label=Docker" alt="Docker"></a>
+  <a href="https://github.com/hongsir457/frametale"><img src="https://img.shields.io/github/stars/hongsir457/frametale?style=for-the-badge" alt="Stars"></a>
+  <a href="https://github.com/hongsir457/frametale/blob/main/LICENSE"><img src="https://img.shields.io/badge/License-AGPL--3.0-green?style=for-the-badge" alt="License"></a>
 </p>
 
 ## 在线地址
 
 - 公网地址：`https://bjmmuazhczom.cloud.sealos.io`
 - 当前独立命名空间：`ns-qkcc8vj1`
-- 对外品牌：`Storyforge / 叙影工场`
+- 对外品牌：`Frametale / 叙影工场`
 - 仓库内部兼容标识：`autovideo`
 
 ## 首页预览
 
 <p align="center">
-  <img src="docs/assets/hero-screenshot.png" alt="Storyforge 首页与工作台预览" width="960">
+  <img src="docs/assets/hero-screenshot.png" alt="Frametale 首页与工作台预览" width="960">
 </p>
 
 ## 核心能力
@@ -66,8 +66,8 @@
 ### 默认部署（SQLite）
 
 ```bash
-git clone https://github.com/hongsir457/storyforge.git
-cd storyforge/deploy
+git clone https://github.com/hongsir457/frametale.git
+cd frametale/deploy
 cp .env.example .env
 docker compose up -d
 ```
@@ -77,7 +77,7 @@ docker compose up -d
 ### 生产部署（PostgreSQL）
 
 ```bash
-cd storyforge/deploy/production
+cd frametale/deploy/production
 cp .env.example .env
 ```
 
@@ -87,7 +87,7 @@ cp .env.example .env
 POSTGRES_PASSWORD=replace-me
 AUTH_USERNAME=admin
 AUTH_PASSWORD=replace-me
-AUTH_EMAIL=admin@storyforge.local
+AUTH_EMAIL=admin@frametale.local
 AUTH_TOKEN_SECRET=replace-me-with-a-long-random-secret
 ```
 
@@ -105,7 +105,7 @@ SMTP_PORT=587
 SMTP_USERNAME=
 SMTP_PASSWORD=
 SMTP_FROM_EMAIL=
-SMTP_FROM_NAME=Storyforge
+SMTP_FROM_NAME=Frametale
 ```
 
 如果暂时不接 SMTP，可以先用：

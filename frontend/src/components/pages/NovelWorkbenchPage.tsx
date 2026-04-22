@@ -38,7 +38,7 @@ const WORKBENCH_COPY = {
     eyebrow: "Novel studio",
     title: "Novel Workbench",
     subtitle:
-      "Grow a seed into a long-form manuscript here, then hand the result back to Storyforge for storyboard and video production.",
+      "Grow a seed into a long-form manuscript here, then hand the result back to Frametale for storyboard and video production.",
     refresh: "Refresh",
     loading: "Loading novel workbench...",
     heroEyebrow: "Novel starter",
@@ -63,13 +63,13 @@ const WORKBENCH_COPY = {
       "Capture the title and seed so the narrative starting point is explicit.",
       "Generate worldbuilding, character systems, chapter structure, and a stable long-form direction.",
       "Iterate until the workbench produces a finished manuscript and export package.",
-      "Import the result back into Storyforge so storyboard and video production can continue.",
+      "Import the result back into Frametale so storyboard and video production can continue.",
     ],
     readyEyebrow: "Run readiness",
     readyTitle: "Ready to create a new novel run",
     blockedTitle: "The pipeline is not ready yet",
     readyBody:
-      "Core dependencies are available. After creation, the workbench will generate the narrative structure and an importable Storyforge project.",
+      "Core dependencies are available. After creation, the workbench will generate the narrative structure and an importable Frametale project.",
     blockedBody: "Complete the missing required dependencies before starting a new novel run.",
     optionalBody: "Optional capabilities are still missing. They do not block the run, but they may limit later extensions.",
     latestEyebrow: "Latest completed run",
@@ -159,7 +159,7 @@ const WORKBENCH_COPY = {
     back: "返回项目",
     eyebrow: "Novel studio",
     title: "小说工坊",
-    subtitle: "在这里把 seed 扩写成长篇小说，再把结果交回 Storyforge 继续做分镜与视频制作。",
+    subtitle: "在这里把 seed 扩写成长篇小说，再把结果交回 Frametale 继续做分镜与视频制作。",
     refresh: "刷新",
     loading: "正在加载小说工坊...",
     heroEyebrow: "Novel starter",
@@ -183,12 +183,12 @@ const WORKBENCH_COPY = {
       "记录标题和 seed，让故事起点足够明确。",
       "自动生成世界观、人物体系、章节结构与稳定的长篇方向。",
       "持续迭代直到产出完整小说与可导入包。",
-      "把结果导回 Storyforge，继续推进分镜与视频制作。",
+      "把结果导回 Frametale，继续推进分镜与视频制作。",
     ],
     readyEyebrow: "运行准备度",
     readyTitle: "可以启动新的小说任务",
     blockedTitle: "当前还不能启动小说流水线",
-    readyBody: "主流程依赖已经齐备。创建完成后，系统会自动生成叙事结构，并准备可导入的 Storyforge 项目。",
+    readyBody: "主流程依赖已经齐备。创建完成后，系统会自动生成叙事结构，并准备可导入的 Frametale 项目。",
     blockedBody: "先补齐缺失的必要依赖，再启动新的小说任务。",
     optionalBody: "可选能力尚未齐备。它们不会阻止运行，但可能影响后续扩展环节。",
     latestEyebrow: "最近完成",
@@ -664,12 +664,12 @@ export function NovelWorkbenchPage() {
   return (
     <div className="sf-editorial-page flex min-h-screen flex-col text-[var(--sf-text)]">
       <header className="px-6 pt-6">
-        <div className="storyforge-page-header mx-auto flex max-w-7xl flex-col gap-4 rounded-[2rem] px-5 py-4 lg:flex-row lg:items-center lg:justify-between">
+        <div className="frametale-page-header mx-auto flex max-w-7xl flex-col gap-4 rounded-[2rem] px-5 py-4 lg:flex-row lg:items-center lg:justify-between">
           <div className="flex min-w-0 items-center gap-3">
             <button
               type="button"
               onClick={() => navigate("/app/projects")}
-              className="storyforge-secondary-button inline-flex items-center gap-1 rounded-full px-3 py-2 text-sm font-medium transition hover:-translate-y-0.5"
+              className="frametale-secondary-button inline-flex items-center gap-1 rounded-full px-3 py-2 text-sm font-medium transition hover:-translate-y-0.5"
             >
               <ChevronLeft className="h-4 w-4" />
               {copy.back}
@@ -690,7 +690,7 @@ export function NovelWorkbenchPage() {
               <button
                 type="button"
                 onClick={() => navigate("/app/admin")}
-                className="storyforge-secondary-button inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-sm font-medium transition hover:-translate-y-0.5"
+                className="frametale-secondary-button inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-sm font-medium transition hover:-translate-y-0.5"
                 title={locale === "zh" ? "全局配置" : "Global Config"}
                 aria-label={locale === "zh" ? "全局配置" : "Global Config"}
               >
@@ -702,7 +702,7 @@ export function NovelWorkbenchPage() {
             <button
               type="button"
               onClick={() => void fetchAll(true)}
-              className="storyforge-secondary-button inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-sm font-medium transition hover:-translate-y-0.5"
+              className="frametale-secondary-button inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-sm font-medium transition hover:-translate-y-0.5"
             >
               {refreshing ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
               {copy.refresh}
@@ -745,7 +745,7 @@ export function NovelWorkbenchPage() {
                           value={title}
                           onChange={(event) => setTitle(event.target.value)}
                           placeholder={copy.titlePlaceholder}
-                          className="storyforge-input w-full rounded-2xl px-4 py-3.5 text-sm outline-none transition"
+                          className="frametale-input w-full rounded-2xl px-4 py-3.5 text-sm outline-none transition"
                         />
                       </label>
 
@@ -757,7 +757,7 @@ export function NovelWorkbenchPage() {
                           value={projectName}
                           onChange={(event) => setProjectName(event.target.value)}
                           placeholder={copy.projectNamePlaceholder}
-                          className="storyforge-input w-full rounded-2xl px-4 py-3.5 text-sm outline-none transition"
+                          className="frametale-input w-full rounded-2xl px-4 py-3.5 text-sm outline-none transition"
                         />
                       </label>
 
@@ -767,7 +767,7 @@ export function NovelWorkbenchPage() {
                           id="writing-language"
                           value={writingLanguage}
                           onChange={(event) => setWritingLanguage(event.target.value)}
-                          className="storyforge-input w-full rounded-2xl px-4 py-3.5 text-sm outline-none transition"
+                          className="frametale-input w-full rounded-2xl px-4 py-3.5 text-sm outline-none transition"
                         >
                           <option value="简体中文">{copy.writingLanguageZh}</option>
                           <option value="English">English</option>
@@ -782,7 +782,7 @@ export function NovelWorkbenchPage() {
                           onChange={(event) => setSeedText(event.target.value)}
                           rows={12}
                           placeholder={copy.seedPlaceholder}
-                          className="storyforge-input w-full rounded-2xl px-4 py-3.5 text-sm outline-none transition"
+                          className="frametale-input w-full rounded-2xl px-4 py-3.5 text-sm outline-none transition"
                         />
                       </label>
 
@@ -791,7 +791,7 @@ export function NovelWorkbenchPage() {
                       <button
                         type="submit"
                         disabled={!canSubmit}
-                        className="storyforge-primary-button inline-flex w-full items-center justify-center gap-2 rounded-2xl px-4 py-3 text-sm font-semibold transition hover:-translate-y-0.5 disabled:translate-y-0 disabled:cursor-not-allowed disabled:opacity-60"
+                        className="frametale-primary-button inline-flex w-full items-center justify-center gap-2 rounded-2xl px-4 py-3 text-sm font-semibold transition hover:-translate-y-0.5 disabled:translate-y-0 disabled:cursor-not-allowed disabled:opacity-60"
                       >
                         {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <BookOpen className="h-4 w-4" />}
                         {submitting ? copy.submitting : copy.submit}

@@ -11,14 +11,14 @@ This file provides guidance to Claude Code when working with this repository.
 
 对外产品品牌：
 
-- `Storyforge`
+- `Frametale`
 - `叙影工场`
 
 仓库内部兼容标识：
 
 - `autovideo`
 
-Storyforge 是一个面向“小说 -> 分镜 -> 视频”的 AI 工作台。当前主干能力包括：
+Frametale 是一个面向“小说 -> 分镜 -> 视频”的 AI 工作台。当前主干能力包括：
 
 - 小说工坊与 `autonovel` 自动写小说流程
 - 项目、角色、线索、分镜、宫格图、视频片段生成
@@ -89,7 +89,7 @@ cd frontend && pnpm check
 
 ### 文本模型
 
-`Storyforge Agent` 当前支持：
+`Frametale Agent` 当前支持：
 
 - Anthropic 官方 API
 - OpenRouter 的 Anthropic-compatible 路径
@@ -138,7 +138,7 @@ ORM 和仓储位于：
 
 - 更新用户可见文案时，同时检查 `README.md`、`README.en.md`、`docs/getting-started.md`
 - 更新部署能力时，同时检查 `deploy/sealos/README.md` 和生产部署说明
-- 变更品牌时，区分清楚“对外品牌 Storyforge / 叙影工场”和“内部兼容标识 autovideo”
+- 变更品牌时，区分清楚“对外品牌 Frametale / 叙影工场”和“内部兼容标识 autovideo”
 
 ## 质量要求
 

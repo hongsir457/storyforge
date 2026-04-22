@@ -1,6 +1,6 @@
 
 export default {
-  'app_title': 'Storyforge',
+  'app_title': 'Frametale',
   'app_subtitle': 'AI novel&video studio',
   'projects': 'Projects',
   'create_project': 'Create Project',
@@ -77,7 +77,7 @@ export default {
   'system_config_title': 'System configuration and API access management',
   'config_issues': 'Configuration Issues',
   'config_issues_hint': 'The following issues were found in the current configuration and may affect functionality:',
-  'autovideo_agent': 'Storyforge Agent',
+  'autovideo_agent': 'Frametale Agent',
   'agent_sdk_desc': 'Powered by Claude Agent SDK, driving conversational AI assistants and automated workflows',
   'claude_code_compat_hint': 'Configuration is compatible with Claude Code environment variables and Coding Plan APIs.',
   'api_access': 'API Access',
@@ -111,10 +111,10 @@ export default {
   'cleanup_delay_desc': 'Seconds of inactivity before auto-cleanup (default 300)',
   'max_concurrent_sessions': 'Max Concurrent Sessions',
   'max_sessions_desc': 'Max number of agents allowed to run simultaneously',
-  'agent_config_saved': 'Storyforge Agent configuration saved',
+  'agent_config_saved': 'Frametale Agent configuration saved',
   'field_cleared': 'cleared',
   'api_key_mgmt': 'API Key Management',
-  'api_key_usage_desc': 'Used to access Storyforge projects from external tools (e.g. OpenClaw 🦞).',
+  'api_key_usage_desc': 'Used to access Frametale projects from external tools (e.g. OpenClaw 🦞).',
   'create_api_key': 'Create API Key',
   'name': 'Name',
   'key_prefix': 'Prefix',
@@ -449,7 +449,7 @@ export default {
   'blocking_issues': 'Blocking Issues',
   'auto_fixed_issues': 'Auto-fixed Issues',
   // config-status-store
-  'agent_api_key_not_configured': 'Storyforge Agent auth is not configured (Anthropic API key or OpenRouter token required)',
+  'agent_api_key_not_configured': 'Frametale Agent auth is not configured (Anthropic API key or OpenRouter token required)',
   'video_provider_not_configured': 'No provider configured for video generation',
   'image_provider_not_configured': 'No provider configured for image generation',
   'text_provider_not_configured': 'No provider configured for text generation',

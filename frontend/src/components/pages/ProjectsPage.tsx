@@ -72,7 +72,7 @@ const PROJECTS_COPY = {
     emptyEyebrow: "Creator Starter Flow",
     emptyTitle: "Start from a novel seed, or create a video project first.",
     emptyBody:
-      "Storyforge works best as novel to storyboard to video. If you are still shaping the story, start in the novel workbench; if the IP already exists, create a project directly and continue with visual assets.",
+      "Frametale works best as novel to storyboard to video. If you are still shaping the story, start in the novel workbench; if the IP already exists, create a project directly and continue with visual assets.",
     startFromNovel: "Start from Novel",
     startNovelTitle: "Open the novel workbench",
     startNovelBody:
@@ -430,7 +430,7 @@ function EmptyProjectsState({
         <button
           type="button"
           onClick={onImportZip}
-          className="storyforge-secondary-button inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-sm font-medium transition hover:-translate-y-0.5"
+          className="frametale-secondary-button inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-sm font-medium transition hover:-translate-y-0.5"
         >
           <Upload className="h-4 w-4" />
           {copy.importAction}
@@ -564,7 +564,7 @@ export function ProjectsPage() {
   return (
     <div className="sf-editorial-page flex min-h-screen flex-col text-[var(--sf-text)]">
       <header className="px-6 pt-6">
-        <div className="storyforge-page-header mx-auto flex max-w-7xl flex-col gap-4 rounded-[2rem] px-5 py-4 xl:flex-row xl:items-center xl:justify-between">
+        <div className="frametale-page-header mx-auto flex max-w-7xl flex-col gap-4 rounded-[2rem] px-5 py-4 xl:flex-row xl:items-center xl:justify-between">
           <div className="flex items-center gap-4">
             <BrandLogo
               alt={t("dashboard:app_title")}
@@ -586,7 +586,7 @@ export function ProjectsPage() {
             <button
               type="button"
               onClick={() => navigate("/app/account")}
-              className="storyforge-secondary-button rounded-full px-4 py-2 text-sm font-medium transition hover:-translate-y-0.5"
+              className="frametale-secondary-button rounded-full px-4 py-2 text-sm font-medium transition hover:-translate-y-0.5"
               title={user?.display_name || user?.username || t("auth:account_settings")}
             >
               {user?.display_name || user?.username || t("auth:account_settings")}
@@ -595,7 +595,7 @@ export function ProjectsPage() {
             <button
               type="button"
               onClick={() => setShowOpenClaw(true)}
-              className="storyforge-secondary-button inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium transition hover:-translate-y-0.5"
+              className="frametale-secondary-button inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium transition hover:-translate-y-0.5"
               title="OpenClaw"
               aria-label="OpenClaw"
             >
@@ -607,7 +607,7 @@ export function ProjectsPage() {
               <button
                 type="button"
                 onClick={() => navigate("/app/admin")}
-                className="storyforge-secondary-button relative inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium transition hover:-translate-y-0.5"
+                className="frametale-secondary-button relative inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium transition hover:-translate-y-0.5"
                 title={locale === "zh" ? "全局配置" : "Global Config"}
                 aria-label={locale === "zh" ? "全局配置" : "Global Config"}
               >
@@ -676,7 +676,7 @@ export function ProjectsPage() {
                     <button
                       type="button"
                       onClick={() => navigate("/app/novel-workbench")}
-                      className="storyforge-primary-button inline-flex items-center justify-center gap-2 rounded-2xl px-4 py-3 text-sm font-semibold transition hover:-translate-y-0.5"
+                      className="frametale-primary-button inline-flex items-center justify-center gap-2 rounded-2xl px-4 py-3 text-sm font-semibold transition hover:-translate-y-0.5"
                     >
                       <BookOpen className="h-4 w-4" />
                       {copy.primaryAction}
@@ -684,7 +684,7 @@ export function ProjectsPage() {
                     <button
                       type="button"
                       onClick={() => setShowCreateModal(true)}
-                      className="storyforge-secondary-button inline-flex items-center justify-center gap-2 rounded-2xl px-4 py-3 text-sm font-medium transition hover:-translate-y-0.5"
+                      className="frametale-secondary-button inline-flex items-center justify-center gap-2 rounded-2xl px-4 py-3 text-sm font-medium transition hover:-translate-y-0.5"
                     >
                       <Plus className="h-4 w-4" />
                       {copy.secondaryAction}
@@ -693,7 +693,7 @@ export function ProjectsPage() {
                       type="button"
                       onClick={() => importInputRef.current?.click()}
                       disabled={importingProject}
-                      className="storyforge-secondary-button inline-flex items-center justify-center gap-2 rounded-2xl px-4 py-3 text-sm font-medium transition hover:-translate-y-0.5 disabled:translate-y-0 disabled:cursor-not-allowed disabled:opacity-60"
+                      className="frametale-secondary-button inline-flex items-center justify-center gap-2 rounded-2xl px-4 py-3 text-sm font-medium transition hover:-translate-y-0.5 disabled:translate-y-0 disabled:cursor-not-allowed disabled:opacity-60"
                     >
                       {importingProject ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
                       {importingProject ? t("dashboard:importing") : copy.tertiaryAction}
@@ -863,7 +863,7 @@ export function ProjectsPage() {
                 type="button"
                 onClick={() => setDeletingProject(null)}
                 disabled={deleteLoading}
-                className="storyforge-secondary-button rounded-xl px-4 py-2 text-sm transition hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-60"
+                className="frametale-secondary-button rounded-xl px-4 py-2 text-sm transition hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-60"
               >
                 {t("common:cancel")}
               </button>
@@ -949,7 +949,7 @@ function ConflictDialog({
             type="button"
             onClick={onCancel}
             disabled={importing}
-            className="storyforge-secondary-button rounded-xl px-4 py-2 text-sm transition hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-60"
+            className="frametale-secondary-button rounded-xl px-4 py-2 text-sm transition hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-60"
           >
             {t("common:cancel")}
           </button>

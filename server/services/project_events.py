@@ -95,7 +95,9 @@ class ProjectEventService:
         self._channels.clear()
         self._loop = None
 
-    async def subscribe(self, project_name: str, request_user: Any | None = None) -> tuple[asyncio.Queue, dict[str, Any]]:
+    async def subscribe(
+        self, project_name: str, request_user: Any | None = None
+    ) -> tuple[asyncio.Queue, dict[str, Any]]:
         await asyncio.to_thread(
             self.pm.claim_ownerless_project,
             project_name,

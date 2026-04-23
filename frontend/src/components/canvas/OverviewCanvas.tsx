@@ -238,7 +238,9 @@ export function OverviewCanvas({ projectName, projectData }: OverviewCanvasProps
             ref={styleInputRef}
             type="file"
             accept=".png,.jpg,.jpeg,.webp"
-            onChange={handleStyleImageChange}
+            onChange={(event) => {
+              void handleStyleImageChange(event);
+            }}
             className="hidden"
             aria-label={t("upload_style_ref_aria")}
           />

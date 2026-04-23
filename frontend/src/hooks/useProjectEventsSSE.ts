@@ -165,6 +165,7 @@ export function useProjectEventsSSE(projectName?: string | null): void {
     }
 
     refreshingRef.current = true;
+    let shouldRefreshAgain = false;
     try {
       const res = await API.getProject(projectName);
       setCurrentProject(projectName, res.project, res.scripts ?? {}, res.asset_fingerprints);
@@ -172,13 +173,14 @@ export function useProjectEventsSSE(projectName?: string | null): void {
       pushToast(`同步项目变更失败: ${(err as Error).message}`, "warning");
     } finally {
       refreshingRef.current = false;
-      if (needsRefreshRef.current) {
-        needsRefreshRef.current = false;
-        void refreshProject();
-        return;
-      }
-      flushQueuedFocus();
+      shouldRefreshAgain = needsRefreshRef.current;
+      needsRefreshRef.current = false;
     }
+    if (shouldRefreshAgain) {
+      void refreshProject();
+      return;
+    }
+    flushQueuedFocus();
   }, [flushQueuedFocus, projectName, pushToast, setCurrentProject]);
 
   useEffect(() => {
@@ -353,6 +355,7 @@ export function useProjectEventsSSE(projectName?: string | null): void {
     pushToast,
     setAssistantToolActivitySuppressed,
     setProjectSyncConnected,
+    setLocation,
     recordProjectSyncBatch,
     resetProjectSync,
   ]);

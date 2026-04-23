@@ -304,7 +304,7 @@ const WORKBENCH_SHARE_COPY = {
       "On mobile browsers this opens the system share sheet so you can send it to WeChat. On desktop, copy the link and forward it in WeChat.",
     shareSheetError: "Couldn't open the system share sheet.",
     twitterShareText: (artifactLabel: string, title: string) =>
-      `Reading \"${artifactLabel}\" from ${title} on Frametale.`,
+      `Reading "${artifactLabel}" from ${title} on Frametale.`,
   },
   zh: {
     shareArtifact: "分享这个文件",

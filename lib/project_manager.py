@@ -367,7 +367,10 @@ class ProjectManager:
         if isinstance(effective_user, dict):
             user_id = str(effective_user.get("owner_user_id") or effective_user.get("id") or "").strip()
             username = str(
-                effective_user.get("owner_username") or effective_user.get("username") or effective_user.get("sub") or ""
+                effective_user.get("owner_username")
+                or effective_user.get("username")
+                or effective_user.get("sub")
+                or ""
             ).strip()
             role = str(effective_user.get("role") or "user").strip() or "user"
             if not user_id and not username:

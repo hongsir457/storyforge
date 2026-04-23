@@ -4,7 +4,7 @@ import { useTranslation } from "react-i18next";
 import { API } from "@/api";
 import { useAppStore } from "@/stores/app-store";
 import { useTasksStore } from "@/stores/tasks-store";
-import type { ProjectData, StoryboardSyncSettings, ToneConsoleSettings, VisualCaptureSettings } from "@/types";
+import type { ProjectData, ToneConsoleSettings, VisualCaptureSettings } from "@/types";
 import {
   getProjectStoryboardSync,
   getProjectToneConsole,

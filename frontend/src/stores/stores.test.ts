@@ -6,7 +6,7 @@ import {
   useTasksStore,
   useUsageStore,
 } from "@/stores";
-import type { TaskItem } from "@/types";
+import type { ProjectData, TaskItem } from "@/types";
 
 function resetAllStores(): void {
   useAppStore.setState(useAppStore.getInitialState(), true);
@@ -34,6 +34,18 @@ function makeTask(overrides: Partial<TaskItem> = {}): TaskItem {
     started_at: null,
     finished_at: null,
     updated_at: "2026-02-01T00:00:00Z",
+    ...overrides,
+  };
+}
+
+function makeProjectData(overrides: Partial<ProjectData> = {}): ProjectData {
+  return {
+    title: "Demo",
+    content_mode: "narration",
+    style: "Anime",
+    episodes: [],
+    characters: {},
+    clues: {},
     ...overrides,
   };
 }
@@ -267,7 +279,9 @@ describe("stores", () => {
     });
 
     it("should set fingerprints from project API response", () => {
-      useProjectsStore.getState().setCurrentProject("demo", {} as any, {}, { "storyboards/x.png": 999 });
+      useProjectsStore
+        .getState()
+        .setCurrentProject("demo", makeProjectData(), {}, { "storyboards/x.png": 999 });
       expect(useProjectsStore.getState().getAssetFingerprint("storyboards/x.png")).toBe(999);
     });
   });

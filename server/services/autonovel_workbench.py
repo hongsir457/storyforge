@@ -252,9 +252,7 @@ class NovelWorkbenchService:
                 "started_at": None,
                 "finished_at": None,
                 "owner_user_id": str(getattr(request_user, "id", "")).strip() or None,
-                "owner_username": str(
-                    getattr(request_user, "username", "") or getattr(request_user, "sub", "")
-                ).strip()
+                "owner_username": str(getattr(request_user, "username", "") or getattr(request_user, "sub", "")).strip()
                 or None,
             }
             self._jobs[job_id] = job

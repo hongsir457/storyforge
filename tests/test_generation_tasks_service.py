@@ -233,9 +233,8 @@ class TestGenerationTasks:
         assert video_result["resource_type"] == "videos"
         assert video_result["video_uri"] == "uri"
         assert "Visual_Direction" in fake_generator.video_calls[0]["prompt"]
-        assert (
-            yaml.safe_load(fake_generator.video_calls[0]["prompt"])["Visual_Direction"]
-            .endswith("Preserve the storyboard cadence through the cut.")
+        assert yaml.safe_load(fake_generator.video_calls[0]["prompt"])["Visual_Direction"].endswith(
+            "Preserve the storyboard cadence through the cut."
         )
 
         character_result = await generation_tasks.execute_character_task(

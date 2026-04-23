@@ -13,7 +13,7 @@ import shutil
 import tempfile
 from collections.abc import Callable
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Annotated
+from typing import TYPE_CHECKING, Annotated, Any
 
 if TYPE_CHECKING:
     from server.services.jianying_draft_service import JianyingDraftService
@@ -23,8 +23,6 @@ from fastapi import Path as FastAPIPath
 from fastapi.responses import FileResponse, JSONResponse
 from pydantic import BaseModel
 from starlette.background import BackgroundTask
-
-logger = logging.getLogger(__name__)
 
 from lib import PROJECT_ROOT
 from lib.asset_fingerprints import compute_asset_fingerprints
@@ -44,6 +42,8 @@ from server.services.project_archive import (
     ProjectArchiveService,
     ProjectArchiveValidationError,
 )
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter()
 

@@ -30,11 +30,9 @@
 - 对外品牌：`Frametale / 叙影工场`
 - 仓库内部兼容标识：`autovideo`
 
-## 首页预览
+## 产品说明
 
-<p align="center">
-  <img src="docs/assets/hero-screenshot.png" alt="Frametale 首页与工作台预览" width="960">
-</p>
+当前公开首页与工作台界面仍在持续迭代，仓库不再内嵌静态截图，实际展示请以当前部署版本为准。
 
 ## 核心能力
 

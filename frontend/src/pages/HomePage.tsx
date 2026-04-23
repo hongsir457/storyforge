@@ -377,26 +377,30 @@ export function HomePage() {
 
         <section
           id="autonovel"
-          className="mx-auto max-w-[1400px] rounded-[2rem] bg-[rgba(246,249,253,0.68)] px-0 py-24"
+          className="mx-auto max-w-[1400px] rounded-[2rem] bg-[rgba(246,249,253,0.68)] px-6 py-20 sm:px-8 lg:px-10"
         >
-          <div className="grid gap-14 lg:grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)] lg:items-center">
-            <div className="px-0 lg:px-6">
-              <div className="relative aspect-[4/5] overflow-hidden rounded-[2rem] border border-[rgba(117,132,159,0.16)] bg-[linear-gradient(180deg,rgba(235,246,253,0.92),rgba(230,235,244,0.92))] shadow-[0_20px_40px_rgba(23,27,42,0.04)]">
-                <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(24,151,214,0.22),transparent_40%),linear-gradient(180deg,transparent_18%,rgba(24,151,214,0.52)_100%)]" />
-                <div className="absolute left-8 top-8 rounded-full border border-white/45 bg-white/66 px-4 py-2 text-xs font-semibold uppercase tracking-[0.24em] text-[var(--sf-blue-strong)]">
-                  {copy.novel.panelTitle}
+          <div className="grid gap-12 lg:grid-cols-[minmax(20rem,26rem)_minmax(0,1fr)] lg:items-center">
+            <div className="mx-auto w-full max-w-[26rem]">
+              <div className="relative aspect-[4/5] overflow-hidden rounded-[2rem] border border-[rgba(117,132,159,0.16)] bg-[linear-gradient(180deg,rgba(238,248,255,0.96),rgba(138,203,240,0.78))] shadow-[0_20px_40px_rgba(23,27,42,0.04)]">
+                <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.86),transparent_44%),linear-gradient(180deg,rgba(255,255,255,0.28),rgba(24,151,214,0.1)_100%)]" />
+                <div className="absolute inset-x-0 top-[20%] flex flex-col items-center justify-center text-center">
+                  <div className="text-[5.5rem] font-black leading-none tracking-[-0.08em] text-[rgba(14,125,184,0.86)]">
+                    ↗✓
+                  </div>
+                  <div className="mt-3 text-[2rem] font-black uppercase tracking-[0.08em] text-[rgba(14,125,184,0.86)]">
+                    SAFE WORK
+                  </div>
                 </div>
-                <div className="absolute bottom-8 left-8 right-8 rounded-[1.3rem] border border-white/40 bg-white/68 p-6 backdrop-blur-md">
+                <div className="absolute bottom-6 left-6 right-6 rounded-[1.3rem] border border-white/45 bg-white/72 p-5 backdrop-blur-md">
                   <p className="text-sm italic text-[var(--sf-text)]">{copy.novel.quote}</p>
                   <div className="mt-3 text-xs font-bold uppercase tracking-[0.22em] text-[var(--sf-blue-strong)]">
                     {copy.novel.engine}
                   </div>
-                  <p className="mt-4 text-sm leading-7 text-[var(--sf-text-muted)]">{copy.novel.panelBody}</p>
                 </div>
               </div>
             </div>
 
-            <div className="px-0 lg:px-6">
+            <div className="px-0 lg:px-4">
               <h2
                 className="text-5xl font-extrabold leading-[1.02] tracking-[-0.05em] text-[var(--sf-text)]"
                 style={{ fontFamily: "var(--font-display)" }}
@@ -430,7 +434,7 @@ export function HomePage() {
         </section>
 
         <section id="autovideo" className="mx-auto max-w-[1400px] py-24">
-          <div className="mx-auto mb-16 max-w-3xl text-center">
+          <div className="mx-auto mb-14 max-w-3xl text-center">
             <h2
               className="text-5xl font-extrabold tracking-[-0.05em] text-[var(--sf-text)]"
               style={{ fontFamily: "var(--font-display)" }}
@@ -440,54 +444,67 @@ export function HomePage() {
             <p className="mt-6 text-lg leading-9 text-[var(--sf-text-muted)]">{copy.video.body}</p>
           </div>
 
-          <div className="grid grid-cols-1 gap-6 md:grid-cols-12 md:auto-rows-[minmax(180px,1fr)] md:[grid-template-areas:'main_main_main_main_main_main_main_main_sync_sync_sync_sync''main_main_main_main_main_main_main_main_color_color_infra_infra''main_main_main_main_main_main_main_main_infra_infra_infra_infra']">
-            <BentoCard className="min-h-[23rem] overflow-hidden md:[grid-area:main]">
-              <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(24,151,214,0.2),transparent_32%),linear-gradient(180deg,rgba(15,27,55,0.06),rgba(15,27,55,0.18))]" />
-              <div className="absolute left-8 top-8 rounded-full bg-[var(--sf-blue)] px-4 py-1 text-[10px] font-bold uppercase tracking-[0.22em] text-white">
-                {copy.video.mainLabel}
-              </div>
-              <div className="absolute bottom-0 left-0 w-full border-t border-white/35 bg-white/64 p-8 backdrop-blur-md">
-                <h3 className="text-3xl font-black tracking-[-0.04em] text-[var(--sf-text)]">{copy.video.mainTitle}</h3>
-                <p className="mt-3 max-w-xl text-sm leading-7 text-[var(--sf-text-muted)]">{copy.video.mainBody}</p>
-              </div>
-            </BentoCard>
+          <div className="grid grid-cols-1 gap-5 lg:grid-cols-[minmax(0,1.18fr)_minmax(0,0.82fr)]">
+            <div className="grid gap-5">
+              <BentoCard className="min-h-[16rem] overflow-hidden">
+                <div className="absolute inset-0 bg-[linear-gradient(180deg,#111927_0%,#161f31_58%,#273140_58%,#273140_100%)]" />
+                <div className="absolute left-6 top-5 rounded-full bg-[rgba(24,151,214,0.18)] px-3 py-1 text-[10px] font-bold uppercase tracking-[0.22em] text-[var(--sf-blue)]">
+                  {copy.video.mainLabel}
+                </div>
+                <div className="absolute right-5 top-4 opacity-10">
+                  <Clapperboard className="h-16 w-16 text-white" />
+                </div>
+                <div className="absolute bottom-0 left-0 w-full border-t border-white/12 bg-white/80 px-6 py-5 backdrop-blur-md">
+                  <h3 className="text-2xl font-black tracking-[-0.04em] text-[var(--sf-text)]">{copy.video.mainTitle}</h3>
+                  <p className="mt-3 max-w-xl text-sm leading-7 text-[var(--sf-text-muted)]">{copy.video.mainBody}</p>
+                </div>
+              </BentoCard>
 
-            <BentoCard className="min-h-[20rem] bg-[linear-gradient(160deg,#0ea5e9_0%,#006591_100%)] text-white md:[grid-area:sync]">
+              <div className="grid gap-5 md:grid-cols-[minmax(0,0.72fr)_minmax(0,1.28fr)]">
+                <BentoCard className="min-h-[13rem]">
+                  <div className="flex h-full flex-col justify-between">
+                    <div className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-[rgba(201,230,255,0.78)] text-[var(--sf-blue)]">
+                      <SwatchBook className="h-4.5 w-4.5" />
+                    </div>
+                    <div>
+                      <h4 className="text-lg font-bold tracking-[-0.03em] text-[var(--sf-text)]">{copy.video.colorTitle}</h4>
+                      <p className="mt-3 text-sm leading-7 text-[var(--sf-text-muted)]">{copy.video.colorBody}</p>
+                    </div>
+                  </div>
+                </BentoCard>
+
+                <BentoCard className="min-h-[18rem] overflow-hidden bg-[linear-gradient(180deg,#12151d_0%,#20252f_100%)]">
+                  <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.1),transparent_28%),linear-gradient(180deg,rgba(255,255,255,0.04),transparent_40%)]" />
+                  <div className="absolute inset-0 opacity-20">
+                    <div className="absolute left-1/2 top-1/2 h-[17rem] w-[17rem] -translate-x-1/2 -translate-y-1/2 rounded-full border border-white/20" />
+                    <div className="absolute left-1/2 top-1/2 h-[13rem] w-[13rem] -translate-x-1/2 -translate-y-1/2 rounded-full border border-white/12" />
+                  </div>
+                  <div className="relative flex h-full items-center justify-center p-6">
+                    <div className="w-full max-w-xs rounded-[1.4rem] border border-white/20 bg-white/80 p-6 text-center shadow-[0_18px_40px_rgba(0,0,0,0.18)] backdrop-blur-md">
+                      <ServerCog className="mx-auto h-8 w-8 text-[var(--sf-blue)]" />
+                      <h4 className="mt-3 text-lg font-bold tracking-[-0.03em] text-[var(--sf-text)]">{copy.video.infraTitle}</h4>
+                      <p className="mt-3 text-sm leading-7 text-[var(--sf-text-muted)]">{copy.video.infraBody}</p>
+                    </div>
+                  </div>
+                </BentoCard>
+              </div>
+            </div>
+
+            <BentoCard className="min-h-[16rem] bg-[linear-gradient(160deg,#0ea5e9_0%,#0c8fd0_100%)] text-white">
               <div className="absolute right-6 top-6 opacity-15">
                 <Clapperboard className="h-24 w-24" />
               </div>
-              <div className="relative flex h-full flex-col justify-end">
-                <h3 className="text-2xl font-black tracking-[-0.03em]">{copy.video.syncTitle}</h3>
-                <p className="mt-4 text-sm leading-7 text-white/80">{copy.video.syncBody}</p>
+              <div className="relative flex h-full flex-col justify-between">
+                <div>
+                  <h3 className="text-2xl font-black tracking-[-0.03em]">{copy.video.syncTitle}</h3>
+                  <p className="mt-4 text-sm leading-7 text-white/84">{copy.video.syncBody}</p>
+                </div>
                 <SmartLink
                   href={studioHref}
-                  className="mt-6 inline-flex h-12 items-center justify-center rounded-[1rem] bg-white px-4 text-sm font-semibold text-[var(--sf-blue-strong)] transition hover:bg-slate-100"
+                  className="inline-flex h-12 items-center justify-center rounded-[1rem] bg-white px-4 text-sm font-semibold text-[var(--sf-blue-strong)] transition hover:bg-slate-100"
                 >
                   {copy.video.syncAction}
                 </SmartLink>
-              </div>
-            </BentoCard>
-
-            <BentoCard className="min-h-[16rem] md:[grid-area:color]">
-              <div className="flex h-full flex-col justify-between">
-                <div className="inline-flex h-12 w-12 items-center justify-center rounded-full bg-white shadow-[0_16px_30px_rgba(23,38,69,0.08)]">
-                  <SwatchBook className="h-5 w-5 text-[var(--sf-blue)]" />
-                </div>
-                <div>
-                  <h4 className="text-xl font-bold tracking-[-0.03em] text-[var(--sf-text)]">{copy.video.colorTitle}</h4>
-                  <p className="mt-3 text-sm leading-7 text-[var(--sf-text-muted)]">{copy.video.colorBody}</p>
-                </div>
-              </div>
-            </BentoCard>
-
-            <BentoCard className="min-h-[16rem] overflow-hidden md:[grid-area:infra]">
-              <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(238,243,249,0.72),rgba(223,231,242,0.96))]" />
-              <div className="relative flex h-full items-center justify-center">
-                <div className="w-full max-w-sm rounded-[1.5rem] border border-white/45 bg-white/62 p-8 text-center backdrop-blur-md">
-                  <ServerCog className="mx-auto h-10 w-10 text-[var(--sf-blue)]" />
-                  <h4 className="mt-4 text-xl font-bold tracking-[-0.03em] text-[var(--sf-text)]">{copy.video.infraTitle}</h4>
-                  <p className="mt-3 text-sm leading-7 text-[var(--sf-text-muted)]">{copy.video.infraBody}</p>
-                </div>
               </div>
             </BentoCard>
           </div>

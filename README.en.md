@@ -30,11 +30,9 @@
 - Public brand: `Frametale / 叙影工场`
 - Internal compatibility identifier: `autovideo`
 
-## Homepage Preview
+## Product Note
 
-<p align="center">
-  <img src="docs/assets/hero-screenshot.png" alt="Frametale homepage and workspace preview" width="960">
-</p>
+The public homepage and workspace are still evolving. This repository no longer embeds a static UI screenshot; refer to the current deployment for the latest interface.
 
 ## Core Capabilities
 

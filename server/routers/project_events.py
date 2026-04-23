@@ -26,10 +26,11 @@ def get_project_event_service(request: Request) -> ProjectEventService:
 async def _project_events_subscription(
     project_name: str,
     request: Request,
+    user: CurrentUserFlexible,
 ) -> tuple[ProjectEventService, asyncio.Queue, dict[str, Any]]:
     service = get_project_event_service(request)
     try:
-        queue, snapshot = await service.subscribe(project_name)
+        queue, snapshot = await service.subscribe(project_name, request_user=user)
     except FileNotFoundError as exc:
         raise HTTPException(status_code=404, detail=str(exc))
     return service, queue, snapshot

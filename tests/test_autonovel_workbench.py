@@ -226,6 +226,36 @@ def test_create_job_defaults_visual_import_fields(tmp_path, monkeypatch):
     assert job["default_duration"] == 4
 
 
+def test_claim_imported_project_owner_persists_job_owner(tmp_path):
+    _make_workbench_layout(tmp_path)
+    service = NovelWorkbenchService(tmp_path)
+
+    project_dir = tmp_path / "projects" / "bell-project"
+    project_dir.mkdir()
+    (project_dir / "project.json").write_text(
+        json.dumps(
+            {
+                "title": "Bell",
+                "metadata": {"source": "autonovel"},
+            },
+            ensure_ascii=False,
+        ),
+        encoding="utf-8",
+    )
+
+    service._claim_imported_project_owner(
+        {
+            "target_project_name": "bell-project",
+            "owner_user_id": "user-1",
+            "owner_username": "alice",
+        }
+    )
+
+    project = json.loads((project_dir / "project.json").read_text(encoding="utf-8"))
+    assert project["metadata"]["owner_user_id"] == "user-1"
+    assert project["metadata"]["owner_username"] == "alice"
+
+
 def test_delete_job_removes_terminal_record_and_files(tmp_path, monkeypatch):
     _make_workbench_layout(tmp_path)
     monkeypatch.delenv("AUTONOVEL_ENV_SOURCE", raising=False)

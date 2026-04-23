@@ -2,23 +2,17 @@ import contextlib
 from pathlib import Path
 
 import pytest
+import yaml
 
+from lib.storyboard_sequence import PREVIOUS_STORYBOARD_REFERENCE_LABEL
 from server.services import generation_tasks
 
 
 def _async_return(value):
-    """Create an async function that always returns the given value (ignoring args)."""
-
     async def _inner(*args, **kwargs):
         return value
 
     return _inner
-
-
-from lib.storyboard_sequence import (
-    PREVIOUS_STORYBOARD_REFERENCE_DESCRIPTION,
-    PREVIOUS_STORYBOARD_REFERENCE_LABEL,
-)
 
 
 class _FakePM:
@@ -28,13 +22,31 @@ class _FakePM:
             "content_mode": "narration",
             "style": "Anime",
             "style_description": "cinematic",
+            "visual_capture": {
+                "enabled": True,
+                "use_previous_storyboard": True,
+                "reference_mode": "tone",
+                "continuity_notes": "Keep the hallway glow consistent across cuts.",
+            },
+            "tone_console": {
+                "palette_mode": "cool-cinematic",
+                "saturation": -1,
+                "warmth": -1,
+                "contrast": 1,
+                "tone_notes": "Keep the blacks clean and avoid orange spill.",
+            },
+            "storyboard_sync": {
+                "sync_story_beats": True,
+                "sync_camera_language": True,
+                "export_notes": "Preserve the storyboard cadence through the cut.",
+            },
             "characters": {
                 "Alice": {
                     "character_sheet": "characters/Alice.png",
                     "reference_image": "characters/refs/Alice-ref.png",
                 }
             },
-            "clues": {"玉佩": {"type": "prop", "clue_sheet": "clues/玉佩.png"}},
+            "clues": {"jade": {"type": "prop", "clue_sheet": "clues/jade.png"}},
         }
         self.script = {
             "content_mode": "narration",
@@ -45,20 +57,20 @@ class _FakePM:
                     "segment_break": False,
                     "characters_in_segment": [],
                     "clues_in_segment": [],
-                    "image_prompt": "首镜头",
+                    "image_prompt": "opening shot",
                 },
                 {
                     "segment_id": "E1S02",
                     "duration_seconds": 4,
                     "segment_break": False,
                     "characters_in_segment": ["Alice"],
-                    "clues_in_segment": ["玉佩"],
+                    "clues_in_segment": ["jade"],
                     "image_prompt": {
-                        "scene": "在雨夜街道",
+                        "scene": "rainy alley",
                         "composition": {
                             "shot_type": "Medium Shot",
-                            "lighting": "暖光",
-                            "ambiance": "薄雾",
+                            "lighting": "warm practical light",
+                            "ambiance": "mist",
                         },
                     },
                 },
@@ -67,8 +79,8 @@ class _FakePM:
                     "duration_seconds": 4,
                     "segment_break": True,
                     "characters_in_segment": ["Alice"],
-                    "clues_in_segment": ["玉佩"],
-                    "image_prompt": "切场后的镜头",
+                    "clues_in_segment": ["jade"],
+                    "image_prompt": "after the break",
                 },
             ],
         }
@@ -131,7 +143,7 @@ def _prepare_files(tmp_path: Path):
     (project_path / "storyboards" / "scene_E1S01.png").write_bytes(b"png")
     (project_path / "characters" / "Alice.png").write_bytes(b"png")
     (project_path / "characters" / "refs" / "Alice-ref.png").write_bytes(b"png")
-    (project_path / "clues" / "玉佩.png").write_bytes(b"png")
+    (project_path / "clues" / "jade.png").write_bytes(b"png")
     return project_path
 
 
@@ -150,9 +162,9 @@ class TestGenerationTasks:
 
         video_yaml = generation_tasks._normalize_video_prompt(
             {
-                "action": "行走",
+                "action": "walk forward",
                 "camera_motion": "",
-                "ambiance_audio": "风声",
+                "ambiance_audio": "wind",
                 "dialogue": [{"speaker": "Alice", "line": "hello"}],
             }
         )
@@ -181,6 +193,8 @@ class TestGenerationTasks:
             ),
         )
 
+        clue_sheet_path = project_path / fake_pm.project["clues"]["jade"]["clue_sheet"]
+
         storyboard_result = await generation_tasks.execute_storyboard_task(
             "demo",
             "E1S02",
@@ -191,17 +205,15 @@ class TestGenerationTasks:
             },
         )
         assert storyboard_result["resource_type"] == "storyboards"
+        assert "Visual direction:" in fake_generator.image_calls[0]["prompt"]
+        assert "Keep the hallway glow consistent across cuts." in fake_generator.image_calls[0]["prompt"]
         storyboard_refs = fake_generator.image_calls[0]["reference_images"]
-        assert storyboard_refs == [
-            project_path / "characters" / "Alice.png",
-            project_path / "clues" / "玉佩.png",
-            project_path / "characters" / "Alice.png",
-            {
-                "image": project_path / "storyboards" / "scene_E1S01.png",
-                "label": PREVIOUS_STORYBOARD_REFERENCE_LABEL,
-                "description": PREVIOUS_STORYBOARD_REFERENCE_DESCRIPTION,
-            },
-        ]
+        assert storyboard_refs[0] == project_path / "characters" / "Alice.png"
+        assert storyboard_refs[1] == clue_sheet_path
+        assert storyboard_refs[2] == project_path / "characters" / "Alice.png"
+        assert storyboard_refs[3]["image"] == project_path / "storyboards" / "scene_E1S01.png"
+        assert storyboard_refs[3]["label"] == PREVIOUS_STORYBOARD_REFERENCE_LABEL
+        assert "色调" in storyboard_refs[3]["description"]
 
         await generation_tasks.execute_storyboard_task(
             "demo",
@@ -210,29 +222,34 @@ class TestGenerationTasks:
         )
         assert fake_generator.image_calls[1]["reference_images"] == [
             project_path / "characters" / "Alice.png",
-            project_path / "clues" / "玉佩.png",
+            clue_sheet_path,
         ]
 
         video_result = await generation_tasks.execute_video_task(
             "demo",
             "E1S01",
-            {"script_file": "episode_1.json", "prompt": {"action": "跑", "camera_motion": "Static", "dialogue": []}},
+            {"script_file": "episode_1.json", "prompt": {"action": "run", "camera_motion": "Static", "dialogue": []}},
         )
         assert video_result["resource_type"] == "videos"
         assert video_result["video_uri"] == "uri"
+        assert "Visual_Direction" in fake_generator.video_calls[0]["prompt"]
+        assert (
+            yaml.safe_load(fake_generator.video_calls[0]["prompt"])["Visual_Direction"]
+            .endswith("Preserve the storyboard cadence through the cut.")
+        )
 
         character_result = await generation_tasks.execute_character_task(
             "demo",
             "Alice",
-            {"prompt": "角色描述"},
+            {"prompt": "character description"},
         )
         assert character_result["resource_type"] == "characters"
         assert fake_pm.project["characters"]["Alice"]["character_sheet"] == "characters/Alice.png"
 
         clue_result = await generation_tasks.execute_clue_task(
             "demo",
-            "玉佩",
-            {"prompt": "线索描述"},
+            "jade",
+            {"prompt": "clue description"},
         )
         assert clue_result["resource_type"] == "clues"
 
@@ -258,7 +275,6 @@ class TestGenerationTasks:
             )
 
     async def test_execute_video_task_generates_thumbnail(self, monkeypatch, tmp_path):
-        """视频生成后应自动提取首帧缩略图"""
         project_path = _prepare_files(tmp_path)
         fake_pm = _FakePM(project_path)
         fake_generator = _FakeGenerator()
@@ -278,17 +294,37 @@ class TestGenerationTasks:
         result = await generation_tasks.execute_video_task(
             "demo",
             "E1S01",
-            {"script_file": "episode_1.json", "prompt": {"action": "跑", "camera_motion": "Static", "dialogue": []}},
+            {"script_file": "episode_1.json", "prompt": {"action": "run", "camera_motion": "Static", "dialogue": []}},
         )
 
         assert result["resource_type"] == "videos"
-        # 验证 update_scene_asset 被调用，其中包含 video_thumbnail
         asset_types = [call["asset_type"] for call in fake_pm.updated_assets]
         assert "video_thumbnail" in asset_types
         assert thumbnail_path.exists()
 
+    async def test_execute_storyboard_task_can_disable_previous_frame_reference(self, monkeypatch, tmp_path):
+        project_path = _prepare_files(tmp_path)
+        fake_pm = _FakePM(project_path)
+        fake_pm.project["visual_capture"]["use_previous_storyboard"] = False
+        fake_generator = _FakeGenerator()
+
+        monkeypatch.setattr(generation_tasks, "get_project_manager", lambda: fake_pm)
+        monkeypatch.setattr(generation_tasks, "get_media_generator", _async_return(fake_generator))
+        monkeypatch.setattr(generation_tasks, "emit_project_change_batch", lambda *a, **kw: None)
+
+        await generation_tasks.execute_storyboard_task(
+            "demo",
+            "E1S02",
+            {"script_file": "episode_1.json", "prompt": "direct prompt"},
+        )
+
+        clue_sheet_path = project_path / fake_pm.project["clues"]["jade"]["clue_sheet"]
+        assert fake_generator.image_calls[0]["reference_images"] == [
+            project_path / "characters" / "Alice.png",
+            clue_sheet_path,
+        ]
+
     async def test_get_media_generator_skips_image_backend_for_video_tasks(self, monkeypatch, tmp_path):
-        """视频任务只应初始化视频 backend，避免图片配置缺失导致提前失败。"""
         project_path = _prepare_files(tmp_path)
         fake_pm = _FakePM(project_path)
         fake_video_backend = object()
@@ -326,7 +362,6 @@ class TestGenerationTasks:
         assert generator._video_backend is fake_video_backend
 
     def test_emit_success_batch_includes_fingerprints(self, monkeypatch, tmp_path):
-        """生成成功事件应携带 asset_fingerprints"""
         captured = []
         monkeypatch.setattr(
             generation_tasks,
@@ -376,7 +411,7 @@ class TestGenerationTasks:
             await generation_tasks.execute_character_task("demo", "Alice", {"prompt": ""})
 
         with pytest.raises(ValueError):
-            await generation_tasks.execute_clue_task("demo", "玉佩", {"prompt": ""})
+            await generation_tasks.execute_clue_task("demo", "jade", {"prompt": ""})
 
 
 class TestGetAspectRatio:

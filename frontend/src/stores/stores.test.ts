@@ -70,6 +70,33 @@ describe("stores", () => {
     app.setAssistantToolActivitySuppressed(true);
     expect(useAppStore.getState().assistantToolActivitySuppressed).toBe(true);
 
+    expect(useAppStore.getState().projectSync.connected).toBe(false);
+    app.recordProjectSyncBatch({
+      fingerprint: "fp-1",
+      source: "worker",
+      actions: ["storyboard_ready"],
+    });
+    expect(useAppStore.getState().projectSync).toEqual(
+      expect.objectContaining({
+        connected: true,
+        lastFingerprint: "fp-1",
+        lastSource: "worker",
+        lastActions: ["storyboard_ready"],
+      }),
+    );
+    app.setProjectSyncConnected(false);
+    expect(useAppStore.getState().projectSync.connected).toBe(false);
+    app.resetProjectSync();
+    expect(useAppStore.getState().projectSync).toEqual(
+      expect.objectContaining({
+        connected: false,
+        lastEventAt: null,
+        lastFingerprint: null,
+        lastSource: null,
+        lastActions: [],
+      }),
+    );
+
     app.pushToast("hello");
     expect(useAppStore.getState().toast?.text).toBe("hello");
     expect(useAppStore.getState().toast?.tone).toBe("info");

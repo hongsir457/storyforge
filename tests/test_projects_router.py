@@ -47,6 +47,9 @@ class _FakePM:
     def project_exists(self, name):
         return name in {"ready", "broken"}
 
+    def claim_ownerless_project(self, name, request_user=None, allowed_sources=None):
+        return None
+
     def load_project(self, name):
         if name == "broken":
             raise RuntimeError("broken")

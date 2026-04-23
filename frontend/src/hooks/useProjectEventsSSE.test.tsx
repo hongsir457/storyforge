@@ -111,6 +111,14 @@ describe("useProjectEventsSSE", () => {
       }),
     );
     expect(useAppStore.getState().assistantToolActivitySuppressed).toBe(true);
+    expect(useAppStore.getState().projectSync).toEqual(
+      expect.objectContaining({
+        connected: true,
+        lastFingerprint: "fp-1",
+        lastSource: "filesystem",
+        lastActions: ["created"],
+      }),
+    );
   });
 
   it("defers focus when the user is editing", async () => {
@@ -425,5 +433,33 @@ describe("useProjectEventsSSE", () => {
 
     // fingerprints 应立即（同步）写入 store，无需等待 getProject
     expect(useProjectsStore.getState().getAssetFingerprint("storyboards/scene_E1S01.png")).toBe(1710288000);
+  });
+
+  it("marks project sync disconnected after an SSE error", async () => {
+    let capturedOptions: ProjectEventStreamOptions | undefined;
+    vi.spyOn(API, "openProjectEventStream").mockImplementation((options) => {
+      capturedOptions = options;
+      return { close: vi.fn() } as unknown as EventSource;
+    });
+
+    renderHarness("/");
+
+    act(() => {
+      capturedOptions?.onSnapshot?.(
+        {
+          project_name: "demo",
+          fingerprint: "fp-snapshot",
+          generated_at: "2026-03-01T00:00:00Z",
+        },
+        new MessageEvent("snapshot"),
+      );
+    });
+    expect(useAppStore.getState().projectSync.connected).toBe(true);
+
+    act(() => {
+      capturedOptions?.onError?.(new Event("error"));
+    });
+
+    expect(useAppStore.getState().projectSync.connected).toBe(false);
   });
 });

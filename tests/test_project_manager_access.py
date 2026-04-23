@@ -86,3 +86,28 @@ def test_admin_can_still_access_legacy_projects(tmp_path):
     assert manager.list_projects() == ["legacy-project"]
     assert manager.project_exists("legacy-project") is True
     assert manager.load_project("legacy-project")["title"] == "Legacy"
+
+
+def test_user_can_claim_ownerless_autonovel_import(tmp_path):
+    manager = ProjectManager(str(tmp_path))
+    _write_project(
+        tmp_path,
+        "novel-import",
+        {
+            "title": "Imported",
+            "metadata": {"source": "autonovel"},
+        },
+    )
+
+    owner = _FakeUser(id="user-1", username="alice", sub="alice")
+    set_current_request_user(owner)
+
+    assert manager.project_exists("novel-import") is False
+
+    claimed = manager.claim_ownerless_project("novel-import", allowed_sources={"autonovel"})
+
+    assert claimed is not None
+    assert claimed["metadata"]["owner_user_id"] == "user-1"
+    assert claimed["metadata"]["owner_username"] == "alice"
+    assert manager.project_exists("novel-import") is True
+    assert manager.load_project("novel-import")["title"] == "Imported"

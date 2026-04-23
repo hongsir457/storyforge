@@ -13,7 +13,7 @@ import shutil
 import tempfile
 from collections.abc import Callable
 from pathlib import Path
-from typing import TYPE_CHECKING, Annotated
+from typing import TYPE_CHECKING, Any, Annotated
 
 if TYPE_CHECKING:
     from server.services.jianying_draft_service import JianyingDraftService
@@ -31,6 +31,12 @@ from lib.asset_fingerprints import compute_asset_fingerprints
 from lib.i18n import Translator
 from lib.project_change_hints import project_change_source
 from lib.project_manager import ProjectManager
+from lib.project_visuals import (
+    normalize_project_visual_settings,
+    normalize_storyboard_sync,
+    normalize_tone_console,
+    normalize_visual_capture,
+)
 from lib.status_calculator import StatusCalculator
 from server.auth import CurrentUser, create_download_token, verify_download_token
 from server.routers._validators import validate_backend_value
@@ -81,6 +87,9 @@ class UpdateProjectRequest(BaseModel):
     text_backend_script: str | None = None
     text_backend_overview: str | None = None
     text_backend_style: str | None = None
+    visual_capture: dict[str, Any] | None = None
+    tone_console: dict[str, Any] | None = None
+    storyboard_sync: dict[str, Any] | None = None
 
 
 def _cleanup_temp_file(path: str) -> None:
@@ -434,10 +443,12 @@ async def get_project(
         def _sync():
             manager = get_project_manager()
             calculator = get_status_calculator()
+            manager.claim_ownerless_project(name, request_user=_user, allowed_sources={"autonovel"})
             if not manager.project_exists(name):
                 raise HTTPException(status_code=404, detail=_t("project_not_found", name=name))
 
             project = manager.load_project(name)
+            normalize_project_visual_settings(project)
 
             # 注入计算字段（不写入 JSON，仅用于 API 响应）
             project = calculator.enrich_project(name, project)
@@ -529,6 +540,22 @@ async def update_project(name: str, req: UpdateProjectRequest, _user: CurrentUse
                     project.pop("default_duration", None)
                 else:
                     project["default_duration"] = req.default_duration
+            if "visual_capture" in req.model_fields_set:
+                if req.visual_capture is None:
+                    project.pop("visual_capture", None)
+                else:
+                    project["visual_capture"] = normalize_visual_capture(req.visual_capture)
+            if "tone_console" in req.model_fields_set:
+                if req.tone_console is None:
+                    project.pop("tone_console", None)
+                else:
+                    project["tone_console"] = normalize_tone_console(req.tone_console)
+            if "storyboard_sync" in req.model_fields_set:
+                if req.storyboard_sync is None:
+                    project.pop("storyboard_sync", None)
+                else:
+                    project["storyboard_sync"] = normalize_storyboard_sync(req.storyboard_sync)
+            normalize_project_visual_settings(project)
 
             with project_change_source("webui"):
                 manager.save_project(name, project)

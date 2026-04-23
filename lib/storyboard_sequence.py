@@ -22,6 +22,15 @@ PREVIOUS_STORYBOARD_REFERENCE_LABEL = "上一分镜图（镜头衔接参考）"
 PREVIOUS_STORYBOARD_REFERENCE_DESCRIPTION = (
     "仅用于延续前一镜头的构图、色调和场景连续性，不是新增角色、服装或道具设定；请以当前 prompt 为准生成当前镜头。"
 )
+_PREVIOUS_STORYBOARD_REFERENCE_DESCRIPTION_BY_MODE = {
+    "balanced": PREVIOUS_STORYBOARD_REFERENCE_DESCRIPTION,
+    "composition": (
+        "仅用于延续前一镜头的构图、机位关系和人物阻挡，不新增角色、服装或道具设定；请以当前 prompt 为准生成当前镜头。"
+    ),
+    "tone": (
+        "仅用于延续前一镜头的色调、光线和场景氛围，不新增角色、服装或道具设定；请以当前 prompt 为准生成当前镜头。"
+    ),
+}
 
 
 def get_storyboard_items(script: dict) -> tuple[list[dict], str, str, str]:
@@ -77,11 +86,14 @@ def resolve_previous_storyboard_path(
     return None
 
 
-def build_previous_storyboard_reference(path: Path) -> dict:
+def build_previous_storyboard_reference(path: Path, mode: str = "balanced") -> dict:
     return {
         "image": path,
         "label": PREVIOUS_STORYBOARD_REFERENCE_LABEL,
-        "description": PREVIOUS_STORYBOARD_REFERENCE_DESCRIPTION,
+        "description": _PREVIOUS_STORYBOARD_REFERENCE_DESCRIPTION_BY_MODE.get(
+            mode,
+            PREVIOUS_STORYBOARD_REFERENCE_DESCRIPTION,
+        ),
     }
 
 

@@ -49,6 +49,34 @@ class TestPromptUtils:
         assert parsed_a["Dialogue"][0]["Speaker"] == "姜月茴"
         assert "Dialogue" not in parsed_b
 
+    def test_prompt_yaml_can_include_visual_direction(self):
+        image_text = image_prompt_to_yaml(
+            {
+                "scene": "city night skyline",
+                "composition": {
+                    "shot_type": "Long Shot",
+                    "lighting": "blue neon rain",
+                    "ambiance": "wet haze",
+                },
+            },
+            "Anime",
+            visual_direction="Keep palette continuity with the previous frame.",
+        )
+        video_text = video_prompt_to_yaml(
+            {
+                "action": "Character walks toward the station.",
+                "camera_motion": "Tracking Shot",
+                "ambiance_audio": "rain",
+                "dialogue": [],
+            },
+            visual_direction="Keep camera language aligned with the storyboard sequence.",
+        )
+
+        assert yaml.safe_load(image_text)["Visual_Direction"] == "Keep palette continuity with the previous frame."
+        assert yaml.safe_load(video_text)["Visual_Direction"] == (
+            "Keep camera language aligned with the storyboard sequence."
+        )
+
     def test_structured_checks(self):
         assert is_structured_image_prompt({"scene": "x"})
         assert not is_structured_image_prompt("text")

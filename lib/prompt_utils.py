@@ -33,7 +33,7 @@ CAMERA_MOTIONS = [
 ]
 
 
-def image_prompt_to_yaml(image_prompt: dict, project_style: str) -> str:
+def image_prompt_to_yaml(image_prompt: dict, project_style: str, visual_direction: str = "") -> str:
     """
     将 imagePrompt 结构转换为 YAML 格式字符串
 
@@ -61,10 +61,12 @@ def image_prompt_to_yaml(image_prompt: dict, project_style: str) -> str:
             "ambiance": image_prompt["composition"]["ambiance"],
         },
     }
+    if visual_direction:
+        ordered["Visual_Direction"] = visual_direction
     return yaml.dump(ordered, allow_unicode=True, default_flow_style=False, sort_keys=False)
 
 
-def video_prompt_to_yaml(video_prompt: dict) -> str:
+def video_prompt_to_yaml(video_prompt: dict, visual_direction: str = "") -> str:
     """
     将 videoPrompt 结构转换为 YAML 格式字符串
 
@@ -87,6 +89,8 @@ def video_prompt_to_yaml(video_prompt: dict) -> str:
         "Camera_Motion": video_prompt["camera_motion"],
         "Ambiance_Audio": video_prompt.get("ambiance_audio", ""),
     }
+    if visual_direction:
+        ordered["Visual_Direction"] = visual_direction
 
     # 仅在有对话时添加 Dialogue 字段
     if dialogue:

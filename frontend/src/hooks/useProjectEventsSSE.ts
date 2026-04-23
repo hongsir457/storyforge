@@ -117,6 +117,9 @@ export function useProjectEventsSSE(projectName?: string | null): void {
   const pushToast = useAppStore((s) => s.pushToast);
   const pushWorkspaceNotification = useAppStore((s) => s.pushWorkspaceNotification);
   const clearWorkspaceNotifications = useAppStore((s) => s.clearWorkspaceNotifications);
+  const recordProjectSyncBatch = useAppStore((s) => s.recordProjectSyncBatch);
+  const resetProjectSync = useAppStore((s) => s.resetProjectSync);
+  const setProjectSyncConnected = useAppStore((s) => s.setProjectSyncConnected);
   const setAssistantToolActivitySuppressed = useAppStore(
     (s) => s.setAssistantToolActivitySuppressed
   );
@@ -185,12 +188,14 @@ export function useProjectEventsSSE(projectName?: string | null): void {
     refreshingRef.current = false;
     clearScrollTarget();
     clearWorkspaceNotifications();
+    resetProjectSync();
     return () => {
       queuedFocusRef.current = null;
       clearScrollTarget();
       clearWorkspaceNotifications();
+      resetProjectSync();
     };
-  }, [clearScrollTarget, clearWorkspaceNotifications, projectName]);
+  }, [clearScrollTarget, clearWorkspaceNotifications, projectName, resetProjectSync]);
 
   useEffect(() => {
     if (!projectName) return;
@@ -208,6 +213,11 @@ export function useProjectEventsSSE(projectName?: string | null): void {
           if (disposed) return;
           const previousFingerprint = lastFingerprintRef.current;
           lastFingerprintRef.current = payload.fingerprint;
+          recordProjectSyncBatch({
+            fingerprint: payload.fingerprint,
+            source: "snapshot",
+            actions: ["snapshot"],
+          });
           if (previousFingerprint && previousFingerprint !== payload.fingerprint) {
             void refreshProject();
           }
@@ -215,6 +225,11 @@ export function useProjectEventsSSE(projectName?: string | null): void {
         onChanges(payload: ProjectChangeBatchPayload) {
           if (disposed) return;
           lastFingerprintRef.current = payload.fingerprint;
+          recordProjectSyncBatch({
+            fingerprint: payload.fingerprint,
+            source: payload.source,
+            actions: payload.changes.map((change) => change.action),
+          });
           setAssistantToolActivitySuppressed(true);
 
           // 提取并更新 asset fingerprints（零延迟，立即写入 store）
@@ -301,6 +316,7 @@ export function useProjectEventsSSE(projectName?: string | null): void {
         },
         onError() {
           if (disposed) return;
+          setProjectSyncConnected(false);
           if (sourceRef.current) {
             sourceRef.current.close();
             sourceRef.current = null;
@@ -318,6 +334,7 @@ export function useProjectEventsSSE(projectName?: string | null): void {
 
     return () => {
       disposed = true;
+      setProjectSyncConnected(false);
       if (reconnectTimerRef.current) {
         clearTimeout(reconnectTimerRef.current);
         reconnectTimerRef.current = null;
@@ -335,5 +352,8 @@ export function useProjectEventsSSE(projectName?: string | null): void {
     refreshProject,
     pushToast,
     setAssistantToolActivitySuppressed,
+    setProjectSyncConnected,
+    recordProjectSyncBatch,
+    resetProjectSync,
   ]);
 }

@@ -394,7 +394,17 @@ metadata:
 spec:
   ingressClassName: nginx
   rules:
-    - host: bjmmuazhczom.cloud.sealos.io
+    - host: frametale.studio
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: frametale-frontend
+                port:
+                  number: 80
+    - host: www.frametale.studio
       http:
         paths:
           - path: /
@@ -406,6 +416,7 @@ spec:
                   number: 80
   tls:
     - hosts:
-        - bjmmuazhczom.cloud.sealos.io
-      secretName: wildcard-cloud-sealos-io-cert
+        - frametale.studio
+        - www.frametale.studio
+      secretName: frametale-studio-tls
 

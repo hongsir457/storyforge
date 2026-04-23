@@ -20,6 +20,12 @@ from lib.gemini_shared import get_shared_rate_limiter
 from lib.media_generator import MediaGenerator
 from lib.project_change_hints import emit_project_change_batch, project_change_source
 from lib.project_manager import ProjectManager
+from lib.project_visuals import (
+    build_storyboard_visual_direction,
+    build_video_visual_direction,
+    get_visual_capture_reference_mode,
+    should_use_previous_storyboard_reference,
+)
 from lib.prompt_builders import build_character_prompt, build_clue_prompt
 from lib.prompt_utils import (
     image_prompt_to_yaml,
@@ -339,9 +345,16 @@ def get_aspect_ratio(project: dict, resource_type: str) -> str:
     return "9:16" if project.get("content_mode", "narration") == "narration" else "16:9"
 
 
-def _normalize_storyboard_prompt(prompt: str | dict, style: str) -> str:
+def _normalize_storyboard_prompt(prompt: str | dict, project_or_style: dict[str, Any] | str) -> str:
+    project = project_or_style if isinstance(project_or_style, dict) else None
+    style = project.get("style", "") if project else str(project_or_style or "")
+    visual_direction = build_storyboard_visual_direction(project) if project else ""
+
     if isinstance(prompt, str):
-        return prompt
+        prompt_text = prompt.strip()
+        if visual_direction:
+            return f"{prompt_text}\n\nVisual direction:\n{visual_direction}"
+        return prompt_text
 
     if not isinstance(prompt, dict):
         raise ValueError("prompt must be a string or object")
@@ -362,12 +375,17 @@ def _normalize_storyboard_prompt(prompt: str | dict, style: str) -> str:
             "ambiance": str(composition.get("ambiance", "") or ""),
         },
     }
-    return image_prompt_to_yaml(normalized_prompt, style)
+    return image_prompt_to_yaml(normalized_prompt, style, visual_direction=visual_direction)
 
 
-def _normalize_video_prompt(prompt: str | dict) -> str:
+def _normalize_video_prompt(prompt: str | dict, project: dict[str, Any] | None = None) -> str:
+    visual_direction = build_video_visual_direction(project) if project else ""
+
     if isinstance(prompt, str):
-        return prompt
+        prompt_text = prompt.strip()
+        if visual_direction:
+            return f"{prompt_text}\n\nVisual direction:\n{visual_direction}"
+        return prompt_text
 
     if not isinstance(prompt, dict):
         raise ValueError("prompt must be a string or object")
@@ -400,7 +418,7 @@ def _normalize_video_prompt(prompt: str | dict) -> str:
         "ambiance_audio": str(prompt.get("ambiance_audio", "") or ""),
         "dialogue": normalized_dialogue,
     }
-    return video_prompt_to_yaml(normalized_prompt)
+    return video_prompt_to_yaml(normalized_prompt, visual_direction=visual_direction)
 
 
 def _get_model_default_duration(provider_name: str, model_name: str | None) -> int:
@@ -477,8 +495,17 @@ def _collect_reference_images(
         if extra_path.exists():
             reference_images.append(extra_path)
 
-    if previous_storyboard_path and previous_storyboard_path.exists():
-        reference_images.append(build_previous_storyboard_reference(previous_storyboard_path))
+    if (
+        previous_storyboard_path
+        and previous_storyboard_path.exists()
+        and should_use_previous_storyboard_reference(project)
+    ):
+        reference_images.append(
+            build_previous_storyboard_reference(
+                previous_storyboard_path,
+                mode=get_visual_capture_reference_mode(project),
+            )
+        )
 
     return reference_images or None
 
@@ -628,7 +655,7 @@ async def execute_storyboard_task(
         _target_item, _ = _resolved
 
         _prev_path = resolve_previous_storyboard_path(_project_path, _items, _id_field, resource_id)
-        _prompt_text = _normalize_storyboard_prompt(prompt, _project.get("style", ""))
+        _prompt_text = _normalize_storyboard_prompt(prompt, _project)
         _ref_images = _collect_reference_images(
             _project,
             _project_path,
@@ -713,7 +740,7 @@ async def execute_video_task(
     if not storyboard_file.exists():
         raise ValueError(f"storyboard not found: {storyboard_file.name}")
 
-    prompt_text = _normalize_video_prompt(prompt)
+    prompt_text = _normalize_video_prompt(prompt, project)
     aspect_ratio = get_aspect_ratio(project, "videos")
     seed = payload.get("seed")
     service_tier = payload.get("video_provider_settings", {}).get("service_tier", "default")

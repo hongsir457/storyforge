@@ -16,6 +16,7 @@ from collections.abc import Callable
 from contextlib import contextmanager
 from datetime import datetime
 from pathlib import Path
+from types import SimpleNamespace
 from typing import Any
 
 try:
@@ -31,6 +32,7 @@ else:  # pragma: no cover - non-Windows
 from pydantic import BaseModel, Field
 
 from lib.project_change_hints import emit_project_change_hint
+from lib.project_visuals import normalize_project_visual_settings
 from lib.request_user_context import get_current_request_user
 
 logger = logging.getLogger(__name__)
@@ -348,6 +350,83 @@ class ProjectManager:
                 logger.warning("修复项目 %s 软连接时出错: %s", project_dir.name, e)
                 totals["errors"] += 1
         return totals
+
+    def _resolve_project_dir(self, name: str) -> Path:
+        name = self.normalize_project_name(name)
+        real = os.path.realpath(self.projects_root / name)
+        base = os.path.realpath(self.projects_root) + os.sep
+        if not real.startswith(base):
+            raise ValueError(f"闈炴硶椤圭洰鍚嶇О: '{name}'")
+        return Path(real)
+
+    @classmethod
+    def _coerce_request_user(cls, request_user: Any | None = None) -> Any | None:
+        effective_user = request_user if request_user is not None else get_current_request_user()
+        if effective_user is None:
+            return None
+        if isinstance(effective_user, dict):
+            user_id = str(effective_user.get("owner_user_id") or effective_user.get("id") or "").strip()
+            username = str(
+                effective_user.get("owner_username") or effective_user.get("username") or effective_user.get("sub") or ""
+            ).strip()
+            role = str(effective_user.get("role") or "user").strip() or "user"
+            if not user_id and not username:
+                return None
+            return SimpleNamespace(id=user_id, username=username or None, sub=username or None, role=role)
+        if hasattr(effective_user, "id") and (hasattr(effective_user, "sub") or hasattr(effective_user, "username")):
+            return effective_user
+
+        user_id = str(getattr(effective_user, "owner_user_id", "")).strip()
+        username = str(
+            getattr(effective_user, "owner_username", "")
+            or getattr(effective_user, "username", "")
+            or getattr(effective_user, "sub", "")
+        ).strip()
+        role = str(getattr(effective_user, "role", "")).strip() or "user"
+        if not user_id and not username:
+            return None
+        return SimpleNamespace(id=user_id, username=username or None, sub=username or None, role=role)
+
+    def _read_project_file_unchecked(self, project_name: str) -> tuple[Path, dict]:
+        project_dir = self._resolve_project_dir(project_name)
+        if not project_dir.exists():
+            raise FileNotFoundError(f"椤圭洰 '{project_name}' 涓嶅瓨鍦?")
+
+        project_file = project_dir / self.PROJECT_FILE
+        if not project_file.exists():
+            raise FileNotFoundError(f"椤圭洰鍏冩暟鎹枃浠朵笉瀛樺湪: {project_file}")
+
+        with open(project_file, encoding="utf-8") as f:
+            project = json.load(f)
+        return project_file, project
+
+    def claim_ownerless_project(
+        self,
+        project_name: str,
+        request_user: Any | None = None,
+        *,
+        allowed_sources: set[str] | None = None,
+    ) -> dict | None:
+        effective_user = self._coerce_request_user(request_user)
+        if effective_user is None:
+            return None
+
+        project_file, project = self._read_project_file_unchecked(project_name)
+        if self._project_has_owner(project):
+            if self._can_access_project(project, effective_user):
+                return project
+            return None
+
+        if allowed_sources:
+            source = str(self._get_project_metadata(project).get("source", "")).strip()
+            if source not in allowed_sources:
+                return None
+
+        self._stamp_project_owner(project, request_user=effective_user)
+        self._touch_metadata(project)
+        with self._project_lock(project_name):
+            self._atomic_write_json(project_file, project)
+        return project
 
     def get_project_path(self, name: str) -> Path:
         """获取项目路径（含路径遍历防护）"""
@@ -1127,6 +1206,7 @@ class ProjectManager:
 
         with open(project_file, encoding="utf-8") as f:
             project = json.load(f)
+        normalize_project_visual_settings(project)
         self._ensure_project_access(project_name, project)
         return project
 
@@ -1137,7 +1217,7 @@ class ProjectManager:
         使用独立的 .project.json.lock 而非数据文件本身，避免 os.replace
         更换 inode 后锁失效的问题。
         """
-        lock_path = self._get_project_file_path(project_name).with_suffix(".lock")
+        lock_path = (self._resolve_project_dir(project_name) / self.PROJECT_FILE).with_suffix(".lock")
         lock_path.touch(exist_ok=True)
         fd = open(lock_path, "a+b")
         try:
@@ -1288,6 +1368,7 @@ class ProjectManager:
         }
         if default_duration is not None:
             project["default_duration"] = default_duration
+        normalize_project_visual_settings(project)
 
         self.save_project(project_name, project)
         return project

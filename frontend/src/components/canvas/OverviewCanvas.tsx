@@ -11,6 +11,7 @@ import { PreviewableImageFrame } from "@/components/ui/PreviewableImageFrame";
 import { ProgressBar } from "@/components/ui/ProgressBar";
 import { formatCost, totalBreakdown } from "@/utils/cost-format";
 
+import { VisualSystemsPanel } from "./VisualSystemsPanel";
 import { WelcomeCanvas } from "./WelcomeCanvas";
 
 interface OverviewCanvasProps {
@@ -460,6 +461,12 @@ export function OverviewCanvas({ projectName, projectData }: OverviewCanvasProps
             </div>
           </>
         )}
+
+        <VisualSystemsPanel
+          projectName={projectName}
+          projectData={projectData}
+          refreshProject={refreshProject}
+        />
 
         {projectStyleCard}
 

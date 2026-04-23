@@ -75,12 +75,41 @@ export interface EpisodeMeta {
   videos?: ProgressCategory;
 }
 
+export interface VisualCaptureSettings {
+  enabled: boolean;
+  use_previous_storyboard: boolean;
+  reference_mode: "balanced" | "composition" | "tone";
+  continuity_notes: string;
+}
+
+export interface ToneConsoleSettings {
+  palette_mode:
+    | "story-led"
+    | "editorial-warm"
+    | "cool-cinematic"
+    | "noir-contrast"
+    | "dream-wash";
+  saturation: number;
+  warmth: number;
+  contrast: number;
+  tone_notes: string;
+}
+
+export interface StoryboardSyncSettings {
+  sync_story_beats: boolean;
+  sync_camera_language: boolean;
+  export_notes: string;
+}
+
 export interface ProjectData {
   title: string;
   content_mode: "narration" | "drama";
   style: string;
   style_image?: string;
   style_description?: string;
+  visual_capture?: VisualCaptureSettings;
+  tone_console?: ToneConsoleSettings;
+  storyboard_sync?: StoryboardSyncSettings;
   overview?: ProjectOverview;
   aspect_ratio?: string | AspectRatio;  // 新项目为 string，旧项目可能为 dict
   default_duration?: number | null;     // 新增

@@ -22,6 +22,14 @@ interface FocusedContext {
   id: string;
 }
 
+interface ProjectSyncState {
+  connected: boolean;
+  lastEventAt: number | null;
+  lastFingerprint: string | null;
+  lastSource: string | null;
+  lastActions: string[];
+}
+
 const ALL_ENTITIES_REVISION_KEY = "__all__";
 
 interface AppState {
@@ -35,6 +43,14 @@ interface AppState {
   clearScrollTarget: (requestId?: string) => void;
   assistantToolActivitySuppressed: boolean;
   setAssistantToolActivitySuppressed: (suppressed: boolean) => void;
+  projectSync: ProjectSyncState;
+  setProjectSyncConnected: (connected: boolean) => void;
+  recordProjectSyncBatch: (input: {
+    fingerprint?: string | null;
+    source?: string | null;
+    actions?: string[];
+  }) => void;
+  resetProjectSync: () => void;
 
   // Toast
   toast: Toast | null;
@@ -70,6 +86,13 @@ interface AppState {
 }
 
 const MAX_WORKSPACE_NOTIFICATIONS = 40;
+const DEFAULT_PROJECT_SYNC: ProjectSyncState = {
+  connected: false,
+  lastEventAt: null,
+  lastFingerprint: null,
+  lastSource: null,
+  lastActions: [],
+};
 
 function buildWorkspaceNotification(
   input: WorkspaceNotificationInput,
@@ -111,6 +134,20 @@ export const useAppStore = create<AppState>((set, get) => ({
   assistantToolActivitySuppressed: false,
   setAssistantToolActivitySuppressed: (suppressed) =>
     set({ assistantToolActivitySuppressed: suppressed }),
+  projectSync: DEFAULT_PROJECT_SYNC,
+  setProjectSyncConnected: (connected) =>
+    set((s) => ({ projectSync: { ...s.projectSync, connected } })),
+  recordProjectSyncBatch: (input) =>
+    set((s) => ({
+      projectSync: {
+        connected: true,
+        lastEventAt: Date.now(),
+        lastFingerprint: input.fingerprint ?? s.projectSync.lastFingerprint,
+        lastSource: input.source ?? s.projectSync.lastSource,
+        lastActions: (input.actions ?? []).slice(0, 6),
+      },
+    })),
+  resetProjectSync: () => set({ projectSync: DEFAULT_PROJECT_SYNC }),
 
   toast: null,
   pushToast: (text, tone = "info", options) =>

@@ -1,18 +1,21 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
-import { useLocation } from "wouter";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useLocation, useSearch } from "wouter";
 import {
   AlertCircle,
   Archive,
   BookOpen,
   CheckCircle2,
   ChevronLeft,
+  Copy,
   Download,
   Eye,
   ExternalLink,
   FileText,
   Loader2,
+  MessageCircle,
   RefreshCw,
   ServerCog,
+  Share2,
   Sparkles,
   Square,
   Trash2,
@@ -21,6 +24,7 @@ import { useTranslation } from "react-i18next";
 
 import { API } from "@/api";
 import { SiteLegalFooter } from "@/components/legal/SiteLegalFooter";
+import { Popover } from "@/components/ui/Popover";
 import { useAppStore } from "@/stores/app-store";
 import { useAuthStore } from "@/stores/auth-store";
 import type {
@@ -31,6 +35,7 @@ import type {
   NovelWorkbenchLogResponse,
   NovelWorkbenchStatus,
 } from "@/types";
+import { copyText } from "@/utils/clipboard";
 
 const WORKBENCH_COPY = {
   en: {
@@ -110,6 +115,15 @@ const WORKBENCH_COPY = {
     viewFullLog: "View full log",
     downloadLog: "Download log",
     downloadArtifact: "Download",
+    shareArtifact: "Share this artifact",
+    shareToWechat: "WeChat",
+    shareToX: "X / Twitter",
+    shareLink: "Share link",
+    copyShareLink: "Copy link",
+    shareLinkCopied: "Share link copied.",
+    wechatShareHint:
+      "On mobile browsers this opens the system share sheet so you can send it to WeChat. On desktop, copy the link and forward it in WeChat.",
+    shareSheetError: "Couldn't open the system share sheet.",
     exportWorkspace: "Export workspace ZIP",
     workspacePath: "Workspace Path",
     logFile: "Log File",
@@ -154,6 +168,8 @@ const WORKBENCH_COPY = {
     confirmDelete: (title: string) => `Delete the run record "${title}"?`,
     artifactsSummary: (files: number, chapters: number) => `${files} files · ${chapters} chapters`,
     latestSummary: (finishedAt: string) => `Finished at ${finishedAt}. Continue in the imported project when you are ready for storyboards and video.`,
+    twitterShareText: (artifactLabel: string, title: string) =>
+      `Reading "${artifactLabel}" from ${title} on Frametale.`,
   },
   zh: {
     back: "返回项目",
@@ -276,7 +292,47 @@ const WORKBENCH_COPY = {
   },
 } as const;
 
+const WORKBENCH_SHARE_COPY = {
+  en: {
+    shareArtifact: "Share this artifact",
+    shareToWechat: "WeChat",
+    shareToX: "X / Twitter",
+    shareLink: "Share link",
+    copyShareLink: "Copy link",
+    shareLinkCopied: "Share link copied.",
+    wechatShareHint:
+      "On mobile browsers this opens the system share sheet so you can send it to WeChat. On desktop, copy the link and forward it in WeChat.",
+    shareSheetError: "Couldn't open the system share sheet.",
+    twitterShareText: (artifactLabel: string, title: string) =>
+      `Reading \"${artifactLabel}\" from ${title} on Frametale.`,
+  },
+  zh: {
+    shareArtifact: "分享这个文件",
+    shareToWechat: "微信",
+    shareToX: "X / 推特",
+    shareLink: "分享链接",
+    copyShareLink: "复制链接",
+    shareLinkCopied: "已复制分享链接。",
+    wechatShareHint: "在手机浏览器里会直接调起系统分享面板，可选择微信；桌面端请复制链接后发到微信。",
+    shareSheetError: "无法打开系统分享面板。",
+    twitterShareText: (artifactLabel: string, title: string) => `我正在 Frametale 里阅读《${title}》中的《${artifactLabel}》。`,
+  },
+} as const;
+
 type WorkbenchLocale = keyof typeof WORKBENCH_COPY;
+type ToastTone = "info" | "success" | "error" | "warning";
+
+interface ArtifactShareCopy {
+  shareArtifact: string;
+  shareToWechat: string;
+  shareToX: string;
+  shareLink: string;
+  copyShareLink: string;
+  shareLinkCopied: string;
+  wechatShareHint: string;
+  shareSheetError: string;
+  twitterShareText: (artifactLabel: string, title: string) => string;
+}
 
 function useWorkbenchLocale(): WorkbenchLocale {
   const { i18n } = useTranslation();
@@ -285,6 +341,162 @@ function useWorkbenchLocale(): WorkbenchLocale {
 
 function useWorkbenchCopy() {
   return WORKBENCH_COPY[useWorkbenchLocale()];
+}
+
+function useWorkbenchShareCopy(locale: WorkbenchLocale): ArtifactShareCopy {
+  return WORKBENCH_SHARE_COPY[locale];
+}
+
+function canUseNativeWeChatShare(): boolean {
+  if (typeof navigator === "undefined" || typeof navigator.share !== "function") {
+    return false;
+  }
+  return /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+}
+
+function XBrandIcon({ className = "h-3.5 w-3.5" }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" className={className}>
+      <path d="M18.9 2H22l-6.76 7.72L23 22h-6.08l-4.76-6.9L6.12 22H3l7.23-8.27L1 2h6.23l4.3 6.24L18.9 2Zm-1.06 18h1.69L6.3 3.9H4.5l13.34 16.1Z" />
+    </svg>
+  );
+}
+
+interface ArtifactShareActionsProps {
+  artifact: NovelWorkbenchArtifact;
+  buildShareUrl: (jobId: string, artifactPath: string) => string;
+  downloadLabel: string;
+  downloading: boolean;
+  job: NovelWorkbenchJob;
+  onDownload: () => void;
+  pushToast: (text: string, tone?: ToastTone) => void;
+  shareCopy: ArtifactShareCopy;
+}
+
+export function ArtifactShareActions({
+  artifact,
+  buildShareUrl,
+  downloadLabel,
+  downloading,
+  job,
+  onDownload,
+  pushToast,
+  shareCopy,
+}: ArtifactShareActionsProps) {
+  const wechatButtonRef = useRef<HTMLButtonElement | null>(null);
+  const [wechatPopoverOpen, setWechatPopoverOpen] = useState(false);
+
+  const shareUrl = buildShareUrl(job.job_id, artifact.path);
+  const shareText = shareCopy.twitterShareText(artifact.label, job.title);
+
+  const handleShareToWechat = async () => {
+    if (canUseNativeWeChatShare()) {
+      try {
+        await navigator.share({
+          title: artifact.label,
+          text: shareText,
+          url: shareUrl,
+        });
+        return;
+      } catch (error) {
+        if (error instanceof DOMException && error.name === "AbortError") {
+          return;
+        }
+        pushToast(shareCopy.shareSheetError, "error");
+        setWechatPopoverOpen(true);
+      }
+    }
+
+    setWechatPopoverOpen((open) => !open);
+  };
+
+  const handleCopyLink = async () => {
+    try {
+      await copyText(shareUrl);
+      pushToast(shareCopy.shareLinkCopied, "success");
+      setWechatPopoverOpen(false);
+    } catch (error) {
+      pushToast((error as Error).message, "error");
+    }
+  };
+
+  const handleShareToX = () => {
+    const params = new URLSearchParams({
+      text: shareText,
+      url: shareUrl,
+    });
+    window.open(`https://twitter.com/intent/tweet?${params.toString()}`, "_blank", "noopener,noreferrer");
+  };
+
+  return (
+    <>
+      <div className="flex flex-wrap items-center justify-end gap-1.5">
+        <button
+          ref={wechatButtonRef}
+          type="button"
+          onClick={() => void handleShareToWechat()}
+          aria-label="share-wechat"
+          className="inline-flex items-center gap-1 rounded-lg border border-emerald-500/18 bg-emerald-500/8 px-2 py-1 text-xs text-emerald-700 transition-colors hover:border-emerald-500/30 hover:bg-emerald-500/12"
+        >
+          <MessageCircle className="h-3.5 w-3.5" />
+          {shareCopy.shareToWechat}
+        </button>
+        <button
+          type="button"
+          onClick={handleShareToX}
+          aria-label="share-x"
+          className="inline-flex items-center gap-1 rounded-lg border border-[rgba(117,132,159,0.18)] bg-white px-2 py-1 text-xs text-[var(--sf-text)] transition-colors hover:border-[rgba(24,151,214,0.24)] hover:bg-[rgba(248,250,253,0.98)]"
+        >
+          <XBrandIcon />
+          {shareCopy.shareToX}
+        </button>
+        <button
+          type="button"
+          onClick={onDownload}
+          disabled={downloading}
+          className="inline-flex items-center gap-1 rounded-lg border border-[rgba(117,132,159,0.18)] bg-white px-2 py-1 text-xs text-[var(--sf-text)] transition-colors hover:border-[rgba(24,151,214,0.24)] hover:bg-[rgba(248,250,253,0.98)] disabled:cursor-not-allowed disabled:opacity-60"
+        >
+          {downloading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Download className="h-3.5 w-3.5" />}
+          {downloadLabel}
+        </button>
+      </div>
+
+      <Popover
+        open={wechatPopoverOpen}
+        onClose={() => setWechatPopoverOpen(false)}
+        anchorRef={wechatButtonRef}
+        width="w-80"
+        backgroundColor="rgba(255,255,255,0.98)"
+        className="rounded-[1.4rem] border border-[rgba(117,132,159,0.18)] p-4 shadow-[0_24px_50px_rgba(23,38,69,0.14)]"
+      >
+        <div className="space-y-3 text-[var(--sf-text)]">
+          <div>
+            <div className="inline-flex items-center gap-1 rounded-full border border-emerald-500/18 bg-emerald-500/8 px-2.5 py-1 text-[11px] uppercase tracking-[0.18em] text-emerald-700">
+              <Share2 className="h-3.5 w-3.5" />
+              {shareCopy.shareArtifact}
+            </div>
+            <div className="mt-3 text-sm font-semibold text-[var(--sf-text)]">{artifact.label}</div>
+            <div className="mt-2 text-xs leading-6 text-[var(--sf-text-muted)]">{shareCopy.wechatShareHint}</div>
+          </div>
+
+          <div className="rounded-[1rem] border border-[rgba(117,132,159,0.18)] bg-[rgba(248,250,253,0.92)] p-3">
+            <div className="text-[11px] uppercase tracking-[0.18em] text-[var(--sf-text-soft)]">{shareCopy.shareLink}</div>
+            <div className="mt-2 break-all font-mono text-[11px] leading-5 text-[var(--sf-text-soft)]">{shareUrl}</div>
+          </div>
+
+          <button
+            type="button"
+            onClick={() => void handleCopyLink()}
+            aria-label="copy-share-link"
+            className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-[rgba(117,132,159,0.18)] bg-white px-3 py-2 text-sm font-medium text-[var(--sf-text)] transition-colors hover:border-[rgba(24,151,214,0.24)] hover:bg-[rgba(248,250,253,0.98)]"
+          >
+            <Copy className="h-4 w-4" />
+            {shareCopy.copyShareLink}
+          </button>
+        </div>
+      </Popover>
+    </>
+  );
 }
 
 function RequirementChip({ label, ok }: { label: string; ok: boolean }) {
@@ -370,16 +582,22 @@ function downloadBlob(blob: Blob, filename: string): void {
 }
 
 export function NovelWorkbenchPage() {
-  const [, navigate] = useLocation();
+  const [location, navigate] = useLocation();
+  const search = useSearch();
   const pushToast = useAppStore((state) => state.pushToast);
   const user = useAuthStore((state) => state.user);
   const locale = useWorkbenchLocale();
   const copy = useWorkbenchCopy();
+  const shareCopy = useWorkbenchShareCopy(locale);
   const isAdmin = user?.role === "admin";
+  const requestedSearch = typeof window !== "undefined" ? window.location.search : search;
+  const initialSearchParams = useMemo(() => new URLSearchParams(requestedSearch), [requestedSearch]);
+  const requestedJobId = initialSearchParams.get("job");
+  const requestedArtifactPath = initialSearchParams.get("artifact");
 
   const [status, setStatus] = useState<NovelWorkbenchStatus | null>(null);
   const [jobs, setJobs] = useState<NovelWorkbenchJob[]>([]);
-  const [selectedJobId, setSelectedJobId] = useState<string | null>(null);
+  const [selectedJobId, setSelectedJobId] = useState<string | null>(() => initialSearchParams.get("job"));
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -392,7 +610,7 @@ export function NovelWorkbenchPage() {
   const [seedText, setSeedText] = useState("");
   const [artifacts, setArtifacts] = useState<NovelWorkbenchArtifactListResponse | null>(null);
   const [artifactsLoading, setArtifactsLoading] = useState(false);
-  const [selectedArtifactPath, setSelectedArtifactPath] = useState<string | null>(null);
+  const [selectedArtifactPath, setSelectedArtifactPath] = useState<string | null>(() => initialSearchParams.get("artifact"));
   const [artifactPreview, setArtifactPreview] = useState<NovelWorkbenchArtifactContentResponse | null>(null);
   const [artifactPreviewLoading, setArtifactPreviewLoading] = useState(false);
   const [fullLog, setFullLog] = useState<NovelWorkbenchLogResponse | null>(null);
@@ -429,13 +647,21 @@ export function NovelWorkbenchPage() {
 
   useEffect(() => {
     if (jobs.length === 0) {
-      setSelectedJobId(null);
+      if (!requestedJobId) {
+        setSelectedJobId(null);
+      }
+      return;
+    }
+    if (requestedJobId && jobs.some((job) => job.job_id === requestedJobId)) {
+      if (selectedJobId !== requestedJobId) {
+        setSelectedJobId(requestedJobId);
+      }
       return;
     }
     if (!selectedJobId || !jobs.some((job) => job.job_id === selectedJobId)) {
       setSelectedJobId(jobs[0].job_id);
     }
-  }, [jobs, selectedJobId]);
+  }, [jobs, requestedJobId, selectedJobId]);
 
   const selectedJob = useMemo(
     () => jobs.find((job) => job.job_id === selectedJobId) ?? null,
@@ -467,22 +693,6 @@ export function NovelWorkbenchPage() {
   const successfulJobs = jobs.filter((job) => job.status === "succeeded").length;
   const artifactCount = artifacts?.summary.available_count ?? 0;
 
-  const fetchArtifacts = useCallback(
-    async (jobId: string) => {
-      setArtifactsLoading(true);
-      try {
-        const listing = await API.listNovelWorkbenchArtifacts(jobId);
-        setArtifacts(listing);
-      } catch (error) {
-        setArtifacts(null);
-        pushToast((error as Error).message, "error");
-      } finally {
-        setArtifactsLoading(false);
-      }
-    },
-    [pushToast],
-  );
-
   const handleLoadFullLog = useCallback(
     async (job: NovelWorkbenchJob) => {
       setFullLogLoading(true);
@@ -501,16 +711,37 @@ export function NovelWorkbenchPage() {
   useEffect(() => {
     if (!selectedJobId) {
       setArtifacts(null);
+      setArtifactsLoading(false);
       setSelectedArtifactPath(null);
       setArtifactPreview(null);
       setFullLog(null);
       return;
     }
-    void fetchArtifacts(selectedJobId);
-    setSelectedArtifactPath(null);
+    let cancelled = false;
+    setArtifactsLoading(true);
+    void API.listNovelWorkbenchArtifacts(selectedJobId)
+      .then((listing) => {
+        if (!cancelled) {
+          setArtifacts(listing);
+        }
+      })
+      .catch((error) => {
+        if (!cancelled) {
+          setArtifacts(null);
+          pushToast((error as Error).message, "error");
+        }
+      })
+      .finally(() => {
+        if (!cancelled) {
+          setArtifactsLoading(false);
+        }
+      });
     setArtifactPreview(null);
     setFullLog(null);
-  }, [fetchArtifacts, selectedJobId]);
+    return () => {
+      cancelled = true;
+    };
+  }, [pushToast, selectedJobId]);
 
   useEffect(() => {
     const previewablePath = artifacts?.artifacts.find((artifact) => artifact.previewable)?.path ?? null;
@@ -518,10 +749,40 @@ export function NovelWorkbenchPage() {
       setSelectedArtifactPath(null);
       return;
     }
-    if (!selectedArtifactPath || !artifacts?.artifacts.some((artifact) => artifact.path === selectedArtifactPath)) {
-      setSelectedArtifactPath(previewablePath);
+    const requestedPath =
+      requestedArtifactPath && artifacts?.artifacts.some((artifact) => artifact.path === requestedArtifactPath)
+        ? requestedArtifactPath
+        : null;
+    const nextPath = requestedPath ?? previewablePath;
+    if (requestedPath && selectedArtifactPath !== requestedPath) {
+      setSelectedArtifactPath(requestedPath);
+      return;
     }
-  }, [artifacts, selectedArtifactPath]);
+    if (!selectedArtifactPath || !artifacts?.artifacts.some((artifact) => artifact.path === selectedArtifactPath)) {
+      setSelectedArtifactPath(nextPath);
+    }
+  }, [artifacts, requestedArtifactPath, selectedArtifactPath]);
+
+  useEffect(() => {
+    const params = new URLSearchParams(search);
+    if (selectedJobId) {
+      params.set("job", selectedJobId);
+    } else {
+      params.delete("job");
+    }
+    if (selectedArtifactPath) {
+      params.set("artifact", selectedArtifactPath);
+    } else {
+      params.delete("artifact");
+    }
+
+    const nextSearch = params.toString();
+    const nextTarget = nextSearch ? `${location}?${nextSearch}` : location;
+    const currentTarget = `${location}${search}`;
+    if (nextTarget !== currentTarget) {
+      navigate(nextTarget, { replace: true });
+    }
+  }, [location, navigate, search, selectedArtifactPath, selectedJobId]);
 
   useEffect(() => {
     if (!selectedJobId || !selectedArtifactPath) {
@@ -660,6 +921,20 @@ export function NovelWorkbenchPage() {
       setDownloadingKey(null);
     }
   };
+
+  const buildArtifactShareUrl = useCallback(
+    (jobId: string, artifactPath: string) => {
+      const params = new URLSearchParams(search);
+      params.set("job", jobId);
+      params.set("artifact", artifactPath);
+      const target = `${location}?${params.toString()}`;
+      if (typeof window === "undefined") {
+        return target;
+      }
+      return new URL(target, window.location.origin).toString();
+    },
+    [location, search],
+  );
 
   return (
     <div className="sf-editorial-page flex min-h-screen flex-col text-[var(--sf-text)]">
@@ -1236,19 +1511,16 @@ export function NovelWorkbenchPage() {
                                             {formatFileSize(artifact.size_bytes)} · {formatTimestamp(artifact.modified_at)}
                                           </div>
                                         </button>
-                                        <button
-                                          type="button"
-                                          onClick={() => void handleDownloadArtifact(selectedJob, artifact)}
-                                          disabled={downloadingKey === `artifact:${artifact.path}`}
-                                          className="inline-flex items-center gap-1 rounded-lg border border-[rgba(117,132,159,0.18)] bg-white px-2 py-1 text-xs text-[var(--sf-text)] transition-colors hover:border-[rgba(24,151,214,0.24)] hover:bg-[rgba(248,250,253,0.98)] disabled:cursor-not-allowed disabled:opacity-60"
-                                        >
-                                          {downloadingKey === `artifact:${artifact.path}` ? (
-                                            <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                                          ) : (
-                                            <Download className="h-3.5 w-3.5" />
-                                          )}
-                                          {copy.downloadArtifact}
-                                        </button>
+                                        <ArtifactShareActions
+                                          artifact={artifact}
+                                          buildShareUrl={buildArtifactShareUrl}
+                                          downloadLabel={copy.downloadArtifact}
+                                          downloading={downloadingKey === `artifact:${artifact.path}`}
+                                          job={selectedJob}
+                                          onDownload={() => void handleDownloadArtifact(selectedJob, artifact)}
+                                          pushToast={pushToast}
+                                          shareCopy={shareCopy}
+                                        />
                                       </div>
                                     </div>
                                   ))}

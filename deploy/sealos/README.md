@@ -9,7 +9,8 @@ Frametale currently runs on Sealos as a split stack:
 
 Public URL:
 
-- `https://bjmmuazhczom.cloud.sealos.io`
+- `https://frametale.studio`
+- `https://www.frametale.studio`
 
 ## 1. Target namespace
 
@@ -67,9 +68,35 @@ kubectl rollout status deployment/frametale-backend -n ns-qkcc8vj1
 kubectl rollout status deployment/frametale-frontend -n ns-qkcc8vj1
 ```
 
-## 4. Migrate old SQLite data into PostgreSQL
+## 4. Cut over from live `storyforge-*` resources
 
-If you are upgrading from the old single-pod SQLite deployment, copy the legacy `/app/projects` volume first, then run:
+If the namespace is still running the legacy `storyforge`, `storyforge-backend`, `storyforge-frontend`, `storyforge-postgres`, and `storyforge-redis` resources, use the cutover script instead of doing the migration by hand:
+
+```bash
+pwsh ./scripts/cutover_storyforge_to_frametale.ps1 -DeleteLegacyResources
+```
+
+What the script does:
+
+- copies `storyforge-env` to `frametale-env`
+- creates the checked-in `frametale-*` PVC, Postgres, Redis, backend, and frontend resources
+- freezes legacy writes by scaling down the `storyforge-*` deployments
+- copies `storyforge-projects-data`, `storyforge-data`, and `storyforge-redis-data`
+- copies PostgreSQL data from `storyforge-postgres` into `frametale-postgres`
+- starts `frametale-backend` and `frametale-frontend`, validates them internally, then switches the shared ingress to `frametale-frontend`
+- optionally removes the old `storyforge-*` workloads and services
+
+If you also want to delete the old PVCs after validation, run:
+
+```bash
+pwsh ./scripts/cutover_storyforge_to_frametale.ps1 -DeleteLegacyResources -DeleteLegacyStorage
+```
+
+The default recommendation is to keep the old PVCs for one more verification window, then remove them in a second pass.
+
+## 5. Migrate old SQLite data into PostgreSQL only
+
+If you are upgrading from the old single-pod SQLite deployment and do not have a live `storyforge-*` split stack to cut over from, copy the legacy `/app/projects` volume first, then run:
 
 ```bash
 kubectl exec -n ns-qkcc8vj1 deploy/frametale-backend -- \
@@ -80,13 +107,13 @@ kubectl exec -n ns-qkcc8vj1 deploy/frametale-backend -- \
 
 Make sure the target PostgreSQL schema is already on the latest Alembic revision before running the copy.
 
-## 5. Verify
+## 6. Verify
 
 ```bash
 kubectl get pods -n ns-qkcc8vj1
 kubectl get ingress -n ns-qkcc8vj1
-curl -I https://bjmmuazhczom.cloud.sealos.io
-curl https://bjmmuazhczom.cloud.sealos.io/health
+curl -I https://frametale.studio
+curl https://frametale.studio/health
 ```
 
 Expected result:
@@ -95,7 +122,7 @@ Expected result:
 - ingress resolves to the public URL
 - `/health` returns the Frametale health payload
 
-## 6. Notes
+## 7. Notes
 
 - The Sealos `App` resource in the manifest points at `frametale-frontend:80`
 - Public brand is `Frametale / 叙影工场`

@@ -192,6 +192,7 @@ class NovelWorkbenchService:
         aspect_ratio: str | None = None,
         default_duration: int | None = None,
         runtime_env: Mapping[str, str] | None = None,
+        request_user: Any | None = None,
     ) -> dict[str, Any]:
         title = title.strip()
         seed_text = seed_text.strip()
@@ -250,6 +251,11 @@ class NovelWorkbenchService:
                 "updated_at": now,
                 "started_at": None,
                 "finished_at": None,
+                "owner_user_id": str(getattr(request_user, "id", "")).strip() or None,
+                "owner_username": str(
+                    getattr(request_user, "username", "") or getattr(request_user, "sub", "")
+                ).strip()
+                or None,
             }
             self._jobs[job_id] = job
             runtime_env_snapshot = dict(runtime_env) if runtime_env is not None else {}
@@ -393,6 +399,8 @@ class NovelWorkbenchService:
         if job is None:
             return {}
         view = dict(job)
+        view.pop("owner_user_id", None)
+        view.pop("owner_username", None)
         view["writing_language"] = (
             str(view.get("writing_language") or "").strip() or self.RUNTIME_ENV_DEFAULTS["AUTONOVEL_WRITING_LANGUAGE"]
         )
@@ -402,6 +410,24 @@ class NovelWorkbenchService:
         log_path = Path(view.get("log_path") or "")
         view["log_tail"] = self._read_log_tail(log_path)
         return view
+
+    def _claim_imported_project_owner(self, job: dict[str, Any]) -> None:
+        project_name = str(job.get("target_project_name") or job.get("imported_project_name") or "").strip()
+        if not project_name:
+            return
+        owner_user_id = str(job.get("owner_user_id") or "").strip()
+        owner_username = str(job.get("owner_username") or "").strip()
+        if not owner_user_id and not owner_username:
+            return
+        self.pm.claim_ownerless_project(
+            project_name,
+            request_user={
+                "owner_user_id": owner_user_id,
+                "owner_username": owner_username,
+                "role": "user",
+            },
+            allowed_sources={"autonovel"},
+        )
 
     def _read_log_tail(self, path: Path, limit: int = 20000) -> str:
         if not path.exists():
@@ -590,6 +616,7 @@ class NovelWorkbenchService:
                 stage="importing",
                 runtime_env=runtime_env,
             )
+            self._claim_imported_project_owner(job)
             await self._mark_job(
                 job_id,
                 status="succeeded",

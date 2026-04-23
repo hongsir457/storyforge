@@ -74,6 +74,7 @@ async def create_novel_job(
             aspect_ratio=req.aspect_ratio,
             default_duration=req.default_duration,
             runtime_env=runtime_env,
+            request_user=_user,
         )
     except NovelWorkbenchError as exc:
         _raise_http_error(exc)

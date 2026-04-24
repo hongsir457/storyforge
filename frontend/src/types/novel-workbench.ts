@@ -73,6 +73,29 @@ export interface NovelWorkbenchArtifactContentResponse {
   truncated: boolean;
 }
 
+export type NovelAssistantStage =
+  | "seed"
+  | "style"
+  | "world"
+  | "characters"
+  | "plot"
+  | "outline";
+
+export type NovelAssistantBrief = Record<NovelAssistantStage, string>;
+
+export interface NovelAssistantDraftRequest {
+  stage: NovelAssistantStage;
+  title?: string;
+  writing_language?: string;
+  instruction?: string;
+  brief: Partial<NovelAssistantBrief>;
+}
+
+export interface NovelAssistantDraftResponse {
+  stage: NovelAssistantStage;
+  content: string;
+}
+
 export interface NovelWorkbenchLogResponse {
   path: string;
   content: string;

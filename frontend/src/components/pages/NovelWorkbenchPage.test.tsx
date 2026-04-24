@@ -202,6 +202,7 @@ describe("NovelWorkbenchPage sharing", () => {
     });
 
     vi.restoreAllMocks();
+    window.localStorage.clear();
     vi.spyOn(API, "getNovelWorkbenchStatus").mockResolvedValue(STATUS_FIXTURE);
     vi.spyOn(API, "listNovelWorkbenchJobs").mockResolvedValue({ jobs: JOBS_FIXTURE });
     vi.spyOn(API, "listNovelWorkbenchArtifacts").mockImplementation(async (jobId: string) => ARTIFACTS_FIXTURE[jobId as "job-1" | "job-2"]);
@@ -314,5 +315,45 @@ describe("NovelWorkbenchPage sharing", () => {
       expect(writeText).toHaveBeenCalledWith(expect.stringContaining("job=job-1"));
     });
     expect(pushToast).toHaveBeenCalledWith("Share link copied.", "success");
+  });
+
+  it("lets the writing assistant populate the seed field", async () => {
+    const user = userEvent.setup();
+    vi.spyOn(API, "generateNovelWorkbenchAssistantDraft").mockResolvedValue({
+      stage: "seed",
+      content: "## Draft\nA forged heir hears a forbidden bell and must choose truth over safety.\n\n## Decisions To Confirm\n- Keep the ending bittersweet.",
+    });
+
+    renderPage();
+
+    await waitFor(() => {
+      expect(document.querySelector("#seed-text")).not.toBeNull();
+    });
+
+    const generateButton = Array.from(document.querySelectorAll("button")).find((button) =>
+      /Generate|生成/.test(button.textContent ?? ""),
+    ) as HTMLButtonElement;
+    await user.click(generateButton);
+
+    await waitFor(() => {
+      expect(API.generateNovelWorkbenchAssistantDraft).toHaveBeenCalledWith(
+        expect.objectContaining({ stage: "seed" }),
+      );
+    });
+
+    const confirmButton = Array.from(document.querySelectorAll("button")).find((button) =>
+      /Confirm section|确认本节/.test(button.textContent ?? ""),
+    ) as HTMLButtonElement;
+    await user.click(confirmButton);
+
+    const applyButton = Array.from(document.querySelectorAll("button")).find((button) =>
+      /Use confirmed brief|用确认内容生成 Seed/.test(button.textContent ?? ""),
+    ) as HTMLButtonElement;
+    await user.click(applyButton);
+
+    await waitFor(() => {
+      expect((document.querySelector("#seed-text") as HTMLTextAreaElement).value).toContain("forbidden bell");
+    });
+    expect((document.querySelector("#seed-text") as HTMLTextAreaElement).value).not.toContain("Decisions To Confirm");
   });
 });

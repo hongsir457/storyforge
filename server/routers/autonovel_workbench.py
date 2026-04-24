@@ -5,7 +5,7 @@ from typing import Literal
 
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import FileResponse
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from lib.config.service import ConfigService
 from server.auth import CurrentUser
@@ -13,6 +13,11 @@ from server.dependencies import get_config_service
 from server.services.autonovel_workbench import (
     NovelWorkbenchError,
     get_novel_workbench_service,
+)
+from server.services.novel_writing_assistant import (
+    NovelAssistantStage,
+    NovelWritingAssistantError,
+    generate_novel_assistant_draft,
 )
 
 router = APIRouter()
@@ -26,6 +31,14 @@ class CreateNovelJobRequest(BaseModel):
     style: str | None = None
     aspect_ratio: Literal["9:16", "16:9"] | None = None
     default_duration: Literal[4, 6, 8] | None = None
+
+
+class NovelAssistantDraftRequest(BaseModel):
+    stage: NovelAssistantStage
+    title: str = ""
+    writing_language: str | None = None
+    instruction: str = ""
+    brief: dict[str, str] = Field(default_factory=dict)
 
 
 def _raise_http_error(exc: NovelWorkbenchError) -> None:
@@ -79,6 +92,27 @@ async def create_novel_job(
     except NovelWorkbenchError as exc:
         _raise_http_error(exc)
     return {"success": True, "job": job}
+
+
+@router.post("/novel-workbench/assistant/draft")
+async def draft_novel_assistant_section(
+    req: NovelAssistantDraftRequest,
+    _user: CurrentUser,
+    svc: ConfigService = Depends(get_config_service),
+):
+    runtime_env = await svc.build_novel_workbench_runtime_env()
+    try:
+        content = await generate_novel_assistant_draft(
+            runtime_env=runtime_env,
+            stage=req.stage,
+            title=req.title,
+            writing_language=req.writing_language or runtime_env.get("AUTONOVEL_WRITING_LANGUAGE", ""),
+            instruction=req.instruction,
+            brief=req.brief,
+        )
+    except NovelWritingAssistantError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    return {"stage": req.stage, "content": content}
 
 
 @router.post("/novel-workbench/jobs/{job_id}/cancel")

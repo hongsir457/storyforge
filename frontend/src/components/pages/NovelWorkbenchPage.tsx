@@ -28,6 +28,8 @@ import { Popover } from "@/components/ui/Popover";
 import { useAppStore } from "@/stores/app-store";
 import { useAuthStore } from "@/stores/auth-store";
 import type {
+  NovelAssistantBrief,
+  NovelAssistantStage,
   NovelWorkbenchArtifact,
   NovelWorkbenchArtifactContentResponse,
   NovelWorkbenchArtifactListResponse,
@@ -319,6 +321,108 @@ const WORKBENCH_SHARE_COPY = {
   },
 } as const;
 
+const NOVEL_ASSISTANT_STAGES: NovelAssistantStage[] = [
+  "seed",
+  "style",
+  "world",
+  "characters",
+  "plot",
+  "outline",
+];
+
+const NOVEL_ASSISTANT_STORAGE_KEY = "frametale:novel-workbench-assistant:v1";
+
+const NOVEL_ASSISTANT_COPY = {
+  en: {
+    eyebrow: "Writing partner",
+    title: "Shape the novel before the pipeline starts",
+    body:
+      "Work through the creative brief with AI, confirm each section, then turn the approved material into the seed that drives autonovel.",
+    instructionLabel: "Direction for this pass",
+    instructionPlaceholder:
+      "Tell the assistant what to emphasize, change, avoid, or decide next.",
+    generate: "Generate / refine",
+    generating: "Generating...",
+    confirm: "Confirm section",
+    confirmed: "Confirmed",
+    composeSeed: "Use confirmed brief as seed",
+    clear: "Clear brief",
+    progress: (done: number, total: number) => `${done}/${total} confirmed`,
+    applyToast: "Creative brief copied into the seed field.",
+    clearToast: "Creative brief cleared.",
+    generatedToast: "Assistant draft updated.",
+    stageDetails: {
+      seed: {
+        label: "Seed",
+        guide: "Core premise, protagonist, conflict, stakes, and the question the novel must answer.",
+      },
+      style: {
+        label: "Style",
+        guide: "POV, tense, tone, rhythm, dialogue rules, image wells, and patterns to avoid.",
+      },
+      world: {
+        label: "World",
+        guide: "Rules, institutions, constraints, locations, power structures, and costs.",
+      },
+      characters: {
+        label: "Characters",
+        guide: "Desires, fears, contradictions, relationships, secrets, and arc pressure.",
+      },
+      plot: {
+        label: "Plot",
+        guide: "Act turns, escalation, midpoint, all-is-lost pressure, climax, and aftermath.",
+      },
+      outline: {
+        label: "Outline",
+        guide: "Chapter count, chapter beats, emotional movement, plants/payoffs, and target word counts.",
+      },
+    },
+  },
+  zh: {
+    eyebrow: "写作伙伴",
+    title: "先把小说设想定准，再启动流水线",
+    body: "和 AI 逐步商讨创作简报，确认 seed、风格、世界观、人物、剧情和章节大纲，再把确认后的内容写入 seed。",
+    instructionLabel: "本轮想让助手处理什么",
+    instructionPlaceholder: "写下你想强化、修改、避开的方向，或让 AI 帮你补齐哪些决定。",
+    generate: "生成 / 改写",
+    generating: "生成中...",
+    confirm: "确认本节",
+    confirmed: "已确认",
+    composeSeed: "用确认内容生成 Seed",
+    clear: "清空简报",
+    progress: (done: number, total: number) => `${done}/${total} 已确认`,
+    applyToast: "已把创作简报写入 Seed 文稿。",
+    clearToast: "创作简报已清空。",
+    generatedToast: "助手草案已更新。",
+    stageDetails: {
+      seed: {
+        label: "Seed",
+        guide: "核心设定、主角、冲突、利害关系，以及整本小说必须回答的问题。",
+      },
+      style: {
+        label: "风格",
+        guide: "视角、时态、语气、节奏、对白规则、意象来源和需要避开的写法。",
+      },
+      world: {
+        label: "世界观",
+        guide: "规则、制度、限制、地点、权力结构，以及每条设定带来的代价。",
+      },
+      characters: {
+        label: "人物",
+        guide: "欲望、恐惧、矛盾、关系、秘密，以及推动人物变化的压力。",
+      },
+      plot: {
+        label: "剧情",
+        guide: "幕结构、升级路径、中点反转、低谷、高潮机制和结局余波。",
+      },
+      outline: {
+        label: "大纲",
+        guide: "章节数量、每章事件、情绪推进、伏笔回收和目标字数。",
+      },
+    },
+  },
+} as const;
+
 type WorkbenchLocale = keyof typeof WORKBENCH_COPY;
 type ToastTone = "info" | "success" | "error" | "warning";
 
@@ -347,6 +451,99 @@ function useWorkbenchShareCopy(locale: WorkbenchLocale): ArtifactShareCopy {
   return WORKBENCH_SHARE_COPY[locale];
 }
 
+function createEmptyNovelAssistantBrief(): NovelAssistantBrief {
+  return {
+    seed: "",
+    style: "",
+    world: "",
+    characters: "",
+    plot: "",
+    outline: "",
+  };
+}
+
+function createEmptyNovelAssistantConfirmed(): Record<NovelAssistantStage, boolean> {
+  return {
+    seed: false,
+    style: false,
+    world: false,
+    characters: false,
+    plot: false,
+    outline: false,
+  };
+}
+
+function loadNovelAssistantState(): {
+  brief: NovelAssistantBrief;
+  confirmed: Record<NovelAssistantStage, boolean>;
+} {
+  const fallback = {
+    brief: createEmptyNovelAssistantBrief(),
+    confirmed: createEmptyNovelAssistantConfirmed(),
+  };
+  if (typeof window === "undefined") {
+    return fallback;
+  }
+  try {
+    const raw = window.localStorage.getItem(NOVEL_ASSISTANT_STORAGE_KEY);
+    if (!raw) return fallback;
+    const parsed = JSON.parse(raw) as {
+      brief?: Partial<NovelAssistantBrief>;
+      confirmed?: Partial<Record<NovelAssistantStage, boolean>>;
+    };
+    const brief = createEmptyNovelAssistantBrief();
+    const confirmed = createEmptyNovelAssistantConfirmed();
+    for (const stage of NOVEL_ASSISTANT_STAGES) {
+      brief[stage] = typeof parsed.brief?.[stage] === "string" ? parsed.brief[stage] || "" : "";
+      confirmed[stage] = Boolean(parsed.confirmed?.[stage]);
+    }
+    return { brief, confirmed };
+  } catch {
+    return fallback;
+  }
+}
+
+function saveNovelAssistantState(
+  brief: NovelAssistantBrief,
+  confirmed: Record<NovelAssistantStage, boolean>,
+): void {
+  if (typeof window === "undefined") return;
+  window.localStorage.setItem(NOVEL_ASSISTANT_STORAGE_KEY, JSON.stringify({ brief, confirmed }));
+}
+
+function normalizeNovelAssistantSectionForSeed(value: string): string {
+  let text = value.trim();
+  const decisionsMatch = text.match(/^##\s+Decisions To Confirm\b/im);
+  if (decisionsMatch?.index !== undefined) {
+    text = text.slice(0, decisionsMatch.index).trim();
+  }
+  return text.replace(/^##\s+Draft\s*/i, "").trim();
+}
+
+function composeSeedFromNovelAssistantBrief(
+  brief: NovelAssistantBrief,
+  confirmed: Record<NovelAssistantStage, boolean>,
+  locale: WorkbenchLocale,
+  title: string,
+  writingLanguage: string,
+): string {
+  const copy = NOVEL_ASSISTANT_COPY[locale];
+  const lines = [
+    `# ${title.trim() || (locale === "zh" ? "小说创作简报" : "Novel Creative Brief")}`,
+    "",
+    locale === "zh"
+      ? `写作语言：${writingLanguage}`
+      : `Writing language: ${writingLanguage}`,
+  ];
+  for (const stage of NOVEL_ASSISTANT_STAGES) {
+    if (!confirmed[stage]) continue;
+    const value = normalizeNovelAssistantSectionForSeed(brief[stage]);
+    if (!value) continue;
+    lines.push("", `## ${copy.stageDetails[stage].label}`, value);
+  }
+  return lines.join("\n").trim() + "\n";
+}
+
 function canUseNativeWeChatShare(): boolean {
   if (typeof navigator === "undefined" || typeof navigator.share !== "function") {
     return false;
@@ -359,6 +556,236 @@ function XBrandIcon({ className = "h-3.5 w-3.5" }: { className?: string }) {
     <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" className={className}>
       <path d="M18.9 2H22l-6.76 7.72L23 22h-6.08l-4.76-6.9L6.12 22H3l7.23-8.27L1 2h6.23l4.3 6.24L18.9 2Zm-1.06 18h1.69L6.3 3.9H4.5l13.34 16.1Z" />
     </svg>
+  );
+}
+
+interface NovelWritingAssistantPanelProps {
+  locale: WorkbenchLocale;
+  title: string;
+  writingLanguage: string;
+  onApplySeed: (seed: string) => void;
+  pushToast: (text: string, tone?: ToastTone) => void;
+}
+
+function NovelWritingAssistantPanel({
+  locale,
+  title,
+  writingLanguage,
+  onApplySeed,
+  pushToast,
+}: NovelWritingAssistantPanelProps) {
+  const assistantCopy = NOVEL_ASSISTANT_COPY[locale];
+  const [assistantState, setAssistantState] = useState(loadNovelAssistantState);
+  const [activeStage, setActiveStage] = useState<NovelAssistantStage>("seed");
+  const [instruction, setInstruction] = useState("");
+  const [generatingStage, setGeneratingStage] = useState<NovelAssistantStage | null>(null);
+
+  useEffect(() => {
+    saveNovelAssistantState(assistantState.brief, assistantState.confirmed);
+  }, [assistantState]);
+
+  const activeStageCopy = assistantCopy.stageDetails[activeStage];
+  const confirmedCount = NOVEL_ASSISTANT_STAGES.filter((stage) => assistantState.confirmed[stage]).length;
+  const generating = generatingStage === activeStage;
+
+  const updateStageDraft = useCallback((stage: NovelAssistantStage, value: string) => {
+    setAssistantState((previous) => ({
+      brief: {
+        ...previous.brief,
+        [stage]: value,
+      },
+      confirmed: {
+        ...previous.confirmed,
+        [stage]: false,
+      },
+    }));
+  }, []);
+
+  const handleGenerate = useCallback(async () => {
+    setGeneratingStage(activeStage);
+    try {
+      const response = await API.generateNovelWorkbenchAssistantDraft({
+        stage: activeStage,
+        title,
+        writing_language: writingLanguage,
+        instruction,
+        brief: assistantState.brief,
+      });
+      updateStageDraft(activeStage, response.content);
+      setInstruction("");
+      pushToast(assistantCopy.generatedToast, "success");
+    } catch (error) {
+      pushToast((error as Error).message, "error");
+    } finally {
+      setGeneratingStage(null);
+    }
+  }, [
+    activeStage,
+    assistantCopy.generatedToast,
+    assistantState.brief,
+    instruction,
+    pushToast,
+    title,
+    updateStageDraft,
+    writingLanguage,
+  ]);
+
+  const handleConfirm = useCallback(() => {
+    setAssistantState((previous) => ({
+      brief: previous.brief,
+      confirmed: {
+        ...previous.confirmed,
+        [activeStage]: true,
+      },
+    }));
+  }, [activeStage]);
+
+  const handleApplySeed = useCallback(() => {
+    onApplySeed(
+      composeSeedFromNovelAssistantBrief(
+        assistantState.brief,
+        assistantState.confirmed,
+        locale,
+        title,
+        writingLanguage,
+      ),
+    );
+    pushToast(assistantCopy.applyToast, "success");
+  }, [
+    assistantCopy.applyToast,
+    assistantState.brief,
+    assistantState.confirmed,
+    locale,
+    onApplySeed,
+    pushToast,
+    title,
+    writingLanguage,
+  ]);
+
+  const handleClear = useCallback(() => {
+    setAssistantState({
+      brief: createEmptyNovelAssistantBrief(),
+      confirmed: createEmptyNovelAssistantConfirmed(),
+    });
+    setInstruction("");
+    setActiveStage("seed");
+    pushToast(assistantCopy.clearToast, "warning");
+  }, [assistantCopy.clearToast, pushToast]);
+
+  return (
+    <section className="rounded-[2rem] border border-[rgba(117,132,159,0.18)] bg-white/86 p-6 shadow-[0_18px_40px_rgba(23,38,69,0.06)]">
+      <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+        <div>
+          <div className="inline-flex items-center gap-2 rounded-full border border-amber-300/60 bg-amber-100 px-3 py-1 text-xs font-medium text-amber-900">
+            <MessageCircle className="h-3.5 w-3.5" />
+            {assistantCopy.eyebrow}
+          </div>
+          <h2 className="mt-3 text-2xl font-semibold tracking-[-0.03em] text-[var(--sf-text)]">{assistantCopy.title}</h2>
+          <p className="mt-2 max-w-3xl text-sm leading-7 text-[var(--sf-text-muted)]">{assistantCopy.body}</p>
+        </div>
+        <div className="rounded-full border border-[rgba(117,132,159,0.18)] bg-[rgba(248,250,253,0.92)] px-4 py-2 text-sm font-medium text-[var(--sf-text)]">
+          {assistantCopy.progress(confirmedCount, NOVEL_ASSISTANT_STAGES.length)}
+        </div>
+      </div>
+
+      <div className="mt-5 flex flex-wrap gap-2">
+        {NOVEL_ASSISTANT_STAGES.map((stage) => {
+          const stageCopy = assistantCopy.stageDetails[stage];
+          const selected = stage === activeStage;
+          const confirmed = assistantState.confirmed[stage];
+          return (
+            <button
+              key={stage}
+              type="button"
+              onClick={() => setActiveStage(stage)}
+              className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-sm transition-colors ${
+                selected
+                  ? "border-sky-400/60 bg-sky-100 text-sky-950"
+                  : "border-[rgba(117,132,159,0.18)] bg-white text-[var(--sf-text-muted)] hover:border-sky-300/50 hover:text-[var(--sf-text)]"
+              }`}
+            >
+              {confirmed && <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600" />}
+              {stageCopy.label}
+            </button>
+          );
+        })}
+      </div>
+
+      <div className="mt-5 grid gap-4 lg:grid-cols-[minmax(0,1fr)_340px]">
+        <label className="block">
+          <span className="mb-2 block text-[11px] uppercase tracking-[0.22em] text-[var(--sf-text-soft)]">
+            {activeStageCopy.label}
+          </span>
+          <textarea
+            value={assistantState.brief[activeStage]}
+            onChange={(event) => updateStageDraft(activeStage, event.target.value)}
+            rows={18}
+            className="frametale-input w-full rounded-2xl px-4 py-3.5 text-sm leading-6 outline-none transition"
+          />
+        </label>
+
+        <div className="space-y-4">
+          <div className="rounded-2xl border border-[rgba(117,132,159,0.18)] bg-[rgba(248,250,253,0.92)] p-4 text-sm leading-6 text-[var(--sf-text-muted)]">
+            {activeStageCopy.guide}
+          </div>
+
+          <label className="block">
+            <span className="mb-2 block text-[11px] uppercase tracking-[0.22em] text-[var(--sf-text-soft)]">
+              {assistantCopy.instructionLabel}
+            </span>
+            <textarea
+              value={instruction}
+              onChange={(event) => setInstruction(event.target.value)}
+              rows={6}
+              placeholder={assistantCopy.instructionPlaceholder}
+              className="frametale-input w-full rounded-2xl px-4 py-3.5 text-sm leading-6 outline-none transition"
+            />
+          </label>
+
+          <div className="grid gap-2">
+            <button
+              type="button"
+              onClick={() => void handleGenerate()}
+              disabled={Boolean(generatingStage)}
+              className="frametale-primary-button inline-flex items-center justify-center gap-2 rounded-2xl px-4 py-3 text-sm font-semibold transition hover:-translate-y-0.5 disabled:translate-y-0 disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              {generating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
+              {generating ? assistantCopy.generating : assistantCopy.generate}
+            </button>
+            <button
+              type="button"
+              onClick={handleConfirm}
+              disabled={!assistantState.brief[activeStage].trim()}
+              className="inline-flex items-center justify-center gap-2 rounded-2xl border border-emerald-300/60 bg-emerald-100 px-4 py-3 text-sm font-semibold text-emerald-900 transition hover:-translate-y-0.5 disabled:translate-y-0 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              <CheckCircle2 className="h-4 w-4" />
+              {assistantState.confirmed[activeStage] ? assistantCopy.confirmed : assistantCopy.confirm}
+            </button>
+            <button
+              type="button"
+              onClick={handleApplySeed}
+              disabled={
+                !NOVEL_ASSISTANT_STAGES.some(
+                  (stage) => assistantState.confirmed[stage] && assistantState.brief[stage].trim(),
+                )
+              }
+              className="inline-flex items-center justify-center gap-2 rounded-2xl border border-[rgba(117,132,159,0.18)] bg-white px-4 py-3 text-sm font-semibold text-[var(--sf-text)] transition hover:-translate-y-0.5 disabled:translate-y-0 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              <Copy className="h-4 w-4" />
+              {assistantCopy.composeSeed}
+            </button>
+            <button
+              type="button"
+              onClick={handleClear}
+              className="inline-flex items-center justify-center gap-2 rounded-2xl border border-[rgba(117,132,159,0.18)] bg-white px-4 py-3 text-sm text-[var(--sf-text-muted)] transition-colors hover:border-rose-300/60 hover:text-rose-700"
+            >
+              <Trash2 className="h-4 w-4" />
+              {assistantCopy.clear}
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
   );
 }
 
@@ -1161,6 +1588,14 @@ export function NovelWorkbenchPage() {
                 </section>
               </div>
             </section>
+
+            <NovelWritingAssistantPanel
+              locale={locale}
+              title={title}
+              writingLanguage={writingLanguage}
+              onApplySeed={setSeedText}
+              pushToast={pushToast}
+            />
 
             <details className="rounded-[2rem] border border-[rgba(117,132,159,0.18)] bg-white/82 p-6 shadow-[0_18px_40px_rgba(23,38,69,0.06)]">
               <summary className="cursor-pointer list-none text-sm font-medium text-[var(--sf-text)]">

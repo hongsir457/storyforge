@@ -38,7 +38,7 @@
     volumes:
       - ./projects:/app/projects
       - ./vertex_keys:/app/vertex_keys
-      - ./claude_data:/root/.claude
+      - ./claude_data:/home/app/.claude
     depends_on:
       postgres:
         condition: service_healthy

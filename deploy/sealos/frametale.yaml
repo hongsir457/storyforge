@@ -224,6 +224,11 @@ spec:
     spec:
       automountServiceAccountToken: false
       securityContext:
+        runAsNonRoot: true
+        runAsUser: 10001
+        runAsGroup: 10001
+        fsGroup: 10001
+        fsGroupChangePolicy: OnRootMismatch
         seccompProfile:
           type: RuntimeDefault
       containers:
@@ -246,10 +251,6 @@ spec:
               value: postgresql+asyncpg://frametale:$(POSTGRES_PASSWORD)@frametale-postgres:5432/frametale?ssl=disable
             - name: REDIS_URL
               value: redis://frametale-redis:6379/0
-          command: ["sh", "-c"]
-          args:
-            - >
-              exec uv run uvicorn server.app:app --host 0.0.0.0 --port 1241;
           readinessProbe:
             httpGet:
               path: /health
@@ -270,6 +271,7 @@ spec:
               cpu: "2"
               memory: 3Gi
           securityContext:
+            runAsNonRoot: true
             allowPrivilegeEscalation: false
             capabilities:
               drop: ["ALL"]
@@ -281,7 +283,7 @@ spec:
               mountPath: /app/vertex_keys
               subPath: vertex_keys
             - name: frametale-projects-data
-              mountPath: /root/.claude
+              mountPath: /home/app/.claude
               subPath: claude_data
       volumes:
         - name: frametale-projects-data
@@ -325,6 +327,9 @@ spec:
     spec:
       automountServiceAccountToken: false
       securityContext:
+        runAsNonRoot: true
+        runAsUser: 101
+        runAsGroup: 101
         seccompProfile:
           type: RuntimeDefault
       containers:
@@ -354,6 +359,7 @@ spec:
               cpu: 500m
               memory: 512Mi
           securityContext:
+            runAsNonRoot: true
             allowPrivilegeEscalation: false
             capabilities:
               drop: ["ALL"]

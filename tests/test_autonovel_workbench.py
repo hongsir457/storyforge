@@ -329,3 +329,50 @@ def test_delete_job_rejects_active_runs(tmp_path, monkeypatch):
 
     with pytest.raises(Exception, match="Cancel the novel job before deleting"):
         asyncio.run(service.delete_job("job-running"))
+
+
+def test_public_share_reads_full_previewable_artifact_without_owner_fields(tmp_path):
+    _make_workbench_layout(tmp_path)
+    service = NovelWorkbenchService(tmp_path)
+    workspace_dir = service.workspaces_dir / "job-share"
+    workspace_dir.mkdir(parents=True)
+    canon_content = "# Canon\n" + ("x" * (service.PREVIEW_LIMIT_BYTES + 10))
+    canon_path = workspace_dir / "canon.md"
+    canon_path.write_text(canon_content, encoding="utf-8")
+
+    service._jobs["job-share"] = {
+        "job_id": "job-share",
+        "title": "Bell",
+        "seed_text": "seed",
+        "style": "Photographic",
+        "aspect_ratio": "9:16",
+        "default_duration": 4,
+        "target_project_name": "bell",
+        "imported_project_name": None,
+        "status": "succeeded",
+        "stage": "completed",
+        "error_message": None,
+        "workspace_dir": str(workspace_dir),
+        "log_path": str(service.logs_dir / "job-share.log"),
+        "created_at": "2026-04-15T00:00:00Z",
+        "updated_at": "2026-04-15T00:00:00Z",
+        "started_at": "2026-04-15T00:00:00Z",
+        "finished_at": "2026-04-15T00:01:00Z",
+        "owner_user_id": "user-1",
+        "owner_username": "alice",
+    }
+
+    shared = asyncio.run(service.read_public_job_artifact("job-share", "canon.md"))
+
+    assert shared["job"] == {
+        "job_id": "job-share",
+        "title": "Bell",
+        "status": "succeeded",
+        "created_at": "2026-04-15T00:00:00Z",
+        "updated_at": "2026-04-15T00:00:00Z",
+        "finished_at": "2026-04-15T00:01:00Z",
+    }
+    assert "owner_user_id" not in shared["job"]
+    assert shared["artifact"]["path"] == "canon.md"
+    assert shared["content"] == canon_path.read_bytes().decode("utf-8")
+    assert shared["truncated"] is False

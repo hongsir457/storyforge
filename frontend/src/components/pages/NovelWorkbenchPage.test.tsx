@@ -251,7 +251,7 @@ describe("NovelWorkbenchPage sharing", () => {
     render(
       <ArtifactShareActions
         artifact={ARTIFACTS_FIXTURE["job-1"].artifacts[0]}
-        buildShareUrl={() => "http://localhost:3000/app/novel-workbench?job=job-1&artifact=chapters%2Fch_24.md"}
+        buildShareUrl={() => "http://localhost:3000/share/novel?job=job-1&artifact=chapters%2Fch_24.md"}
         downloadLabel="Download"
         downloading={false}
         job={JOBS_FIXTURE[0]}
@@ -270,7 +270,7 @@ describe("NovelWorkbenchPage sharing", () => {
     expect(intentUrl.pathname).toBe("/intent/tweet");
 
     const sharedUrl = intentUrl.searchParams.get("url");
-    expect(sharedUrl).toContain("/app/novel-workbench");
+    expect(sharedUrl).toContain("/share/novel");
     expect(sharedUrl).toContain("job=job-1");
     expect(sharedUrl).toContain("artifact=chapters%2Fch_24.md");
   });
@@ -292,7 +292,7 @@ describe("NovelWorkbenchPage sharing", () => {
     render(
       <ArtifactShareActions
         artifact={ARTIFACTS_FIXTURE["job-1"].artifacts[0]}
-        buildShareUrl={() => "http://localhost:3000/app/novel-workbench?job=job-1&artifact=chapters%2Fch_24.md"}
+        buildShareUrl={() => "http://localhost:3000/share/novel?job=job-1&artifact=chapters%2Fch_24.md"}
         downloadLabel="Download"
         downloading={false}
         job={JOBS_FIXTURE[0]}

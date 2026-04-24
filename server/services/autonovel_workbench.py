@@ -25,6 +25,7 @@ class NovelWorkbenchService:
     ACTIVE_STATUSES = {"queued", "running"}
     TERMINAL_STATUSES = {"succeeded", "failed", "cancelled"}
     PREVIEW_LIMIT_BYTES = 120_000
+    PUBLIC_SHARE_LIMIT_BYTES = 2_000_000
     AUTH_STATUS_KEY = "GEMINI_API_KEY"
     REQUIRED_RUNTIME_ENV = (
         "AUTONOVEL_WRITER_MODEL",
@@ -326,6 +327,30 @@ class NovelWorkbenchService:
             "truncated": truncated,
         }
 
+    async def read_public_job_artifact(self, job_id: str, relative_path: str) -> dict[str, Any]:
+        job = await self._get_raw_job(job_id)
+        if not job:
+            raise NovelWorkbenchError(f"Novel job not found: {job_id}")
+
+        path, artifact = await self._resolve_job_artifact(job_id, relative_path)
+        if not artifact["previewable"]:
+            raise NovelWorkbenchError(f"Artifact does not support public text sharing: {relative_path}")
+
+        content, truncated = self._read_text_preview(path, limit=self.PUBLIC_SHARE_LIMIT_BYTES)
+        return {
+            "job": {
+                "job_id": str(job.get("job_id") or ""),
+                "title": str(job.get("title") or ""),
+                "status": str(job.get("status") or ""),
+                "created_at": job.get("created_at"),
+                "updated_at": job.get("updated_at"),
+                "finished_at": job.get("finished_at"),
+            },
+            "artifact": artifact,
+            "content": content,
+            "truncated": truncated,
+        }
+
     async def get_job_artifact_path(self, job_id: str, relative_path: str) -> Path:
         path, _artifact = await self._resolve_job_artifact(job_id, relative_path)
         return path
@@ -528,11 +553,12 @@ class NovelWorkbenchService:
             return "text"
         return "binary"
 
-    def _read_text_preview(self, path: Path) -> tuple[str, bool]:
+    def _read_text_preview(self, path: Path, limit: int | None = None) -> tuple[str, bool]:
+        limit = self.PREVIEW_LIMIT_BYTES if limit is None else limit
         with open(path, "rb") as handle:
-            payload = handle.read(self.PREVIEW_LIMIT_BYTES + 1)
-        truncated = len(payload) > self.PREVIEW_LIMIT_BYTES
-        content = payload[: self.PREVIEW_LIMIT_BYTES].decode("utf-8", errors="replace")
+            payload = handle.read(limit + 1)
+        truncated = len(payload) > limit
+        content = payload[:limit].decode("utf-8", errors="replace")
         return content, truncated
 
     async def _resolve_job_artifact(self, job_id: str, relative_path: str) -> tuple[Path, dict[str, Any]]:

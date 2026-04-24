@@ -1351,16 +1351,16 @@ export function NovelWorkbenchPage() {
 
   const buildArtifactShareUrl = useCallback(
     (jobId: string, artifactPath: string) => {
-      const params = new URLSearchParams(search);
+      const params = new URLSearchParams();
       params.set("job", jobId);
       params.set("artifact", artifactPath);
-      const target = `${location}?${params.toString()}`;
+      const target = `/share/novel?${params.toString()}`;
       if (typeof window === "undefined") {
         return target;
       }
       return new URL(target, window.location.origin).toString();
     },
-    [location, search],
+    [],
   );
 
   return (

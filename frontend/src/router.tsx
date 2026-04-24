@@ -1,5 +1,5 @@
-import { lazy, Suspense } from "react";
-import { Redirect, Route, Switch, useSearch } from "wouter";
+import { lazy, Suspense, useEffect } from "react";
+import { Redirect, Route, Switch, useLocation, useSearch } from "wouter";
 import { ToastOverlay } from "@/components/layout/ToastOverlay";
 import { RouteLoadingState } from "@/components/shared/RouteLoadingState";
 import { useAuthStore } from "@/stores/auth-store";
@@ -25,14 +25,45 @@ const StudioWorkspaceRoute = lazy(() =>
   import("@/routes/StudioWorkspaceRoute").then((module) => ({ default: module.StudioWorkspaceRoute })),
 );
 
+function buildPublicNovelSharePath(location: string, search: string): string | null {
+  if (location !== "/app/novel-workbench") {
+    return null;
+  }
+  const params = new URLSearchParams(search);
+  const jobId = params.get("job");
+  const artifactPath = params.get("artifact") ?? params.get("path");
+  if (!jobId || !artifactPath) {
+    return null;
+  }
+
+  const shareParams = new URLSearchParams();
+  shareParams.set("job", jobId);
+  shareParams.set("artifact", artifactPath);
+  return `/share/novel?${shareParams.toString()}`;
+}
+
+function ServerRenderedRedirect({ to }: { to: string }) {
+  useEffect(() => {
+    window.location.replace(to);
+  }, [to]);
+
+  return <RouteLoadingState />;
+}
+
 function AuthGuard({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, isLoading } = useAuthStore();
+  const [location] = useLocation();
+  const search = useSearch();
+  const publicNovelSharePath = buildPublicNovelSharePath(location, search);
 
   if (isLoading) {
     return <RouteLoadingState />;
   }
 
   if (!isAuthenticated) {
+    if (publicNovelSharePath) {
+      return <ServerRenderedRedirect to={publicNovelSharePath} />;
+    }
     return <Redirect to="/login" />;
   }
 

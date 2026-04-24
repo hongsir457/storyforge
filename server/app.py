@@ -7,6 +7,7 @@ Run locally:
 """
 
 import asyncio
+import html
 import logging
 import time
 from contextlib import asynccontextmanager
@@ -16,7 +17,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from starlette.exceptions import HTTPException as StarletteHTTPException
 from starlette.requests import Request
-from starlette.responses import PlainTextResponse, Response
+from starlette.responses import HTMLResponse, PlainTextResponse, Response
 
 from lib import PROJECT_ROOT
 from lib.db import async_session_factory, close_db, init_db
@@ -47,7 +48,7 @@ from server.routers import (
 from server.routers import (
     auth as auth_router,
 )
-from server.services.autonovel_workbench import get_novel_workbench_service
+from server.services.autonovel_workbench import NovelWorkbenchError, get_novel_workbench_service
 from server.services.project_events import ProjectEventService
 
 setup_logging()
@@ -232,6 +233,191 @@ async def serve_skill_md(request: Request) -> Response:
 
     content = template.replace("{{BASE_URL}}", base_url)
     return PlainTextResponse(content, media_type="text/markdown; charset=utf-8")
+
+
+def _render_novel_share_error(title: str, detail: str) -> str:
+    safe_title = html.escape(title)
+    safe_detail = html.escape(detail)
+    return f"""<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{safe_title}</title>
+  <style>
+    :root {{ color-scheme: light; }}
+    body {{
+      margin: 0;
+      background: #f7f8fb;
+      color: #172645;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }}
+    main {{
+      box-sizing: border-box;
+      max-width: 760px;
+      min-height: 100vh;
+      margin: 0 auto;
+      padding: 28px 20px;
+    }}
+    .panel {{
+      border: 1px solid #d9e0ea;
+      border-radius: 14px;
+      background: #fff;
+      padding: 22px;
+    }}
+    h1 {{ margin: 0 0 12px; font-size: 22px; line-height: 1.3; }}
+    p {{ margin: 0; color: #526173; line-height: 1.7; }}
+  </style>
+</head>
+<body>
+  <main>
+    <section class="panel">
+      <h1>{safe_title}</h1>
+      <p>{safe_detail}</p>
+    </section>
+  </main>
+</body>
+</html>"""
+
+
+def _render_novel_share_page(payload: dict) -> str:
+    job = payload.get("job") or {}
+    artifact = payload.get("artifact") or {}
+    job_title = str(job.get("title") or "Novel")
+    artifact_label = str(artifact.get("label") or artifact.get("path") or "Artifact")
+    artifact_path = str(artifact.get("path") or "")
+    modified_at = str(artifact.get("modified_at") or job.get("finished_at") or job.get("updated_at") or "")
+    page_title = f"{artifact_label} - {job_title}"
+    safe_page_title = html.escape(page_title)
+    safe_job_title = html.escape(job_title)
+    safe_artifact_label = html.escape(artifact_label)
+    safe_artifact_path = html.escape(artifact_path)
+    safe_modified_at = html.escape(modified_at)
+    safe_content = html.escape(str(payload.get("content") or ""), quote=False)
+    truncated_notice = (
+        '<div class="notice">This shared preview was truncated. Download the original artifact in Frametale for the full file.</div>'
+        if payload.get("truncated")
+        else ""
+    )
+
+    return f"""<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="format-detection" content="telephone=no,email=no,address=no">
+  <title>{safe_page_title}</title>
+  <meta property="og:title" content="{safe_page_title}">
+  <meta property="og:site_name" content="Frametale">
+  <meta property="og:type" content="article">
+  <style>
+    :root {{ color-scheme: light; }}
+    * {{ box-sizing: border-box; }}
+    body {{
+      margin: 0;
+      background: #f7f8fb;
+      color: #172645;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+    }}
+    main {{
+      width: min(100%, 920px);
+      margin: 0 auto;
+      padding: 22px 16px 40px;
+    }}
+    header {{
+      border-bottom: 1px solid #d9e0ea;
+      padding: 8px 0 18px;
+    }}
+    .brand {{
+      color: #526173;
+      font-size: 13px;
+      letter-spacing: 0;
+    }}
+    h1 {{
+      margin: 12px 0 8px;
+      font-size: clamp(24px, 6vw, 36px);
+      line-height: 1.25;
+      letter-spacing: 0;
+    }}
+    .meta {{
+      color: #526173;
+      font-size: 13px;
+      line-height: 1.7;
+      word-break: break-word;
+    }}
+    .content {{
+      margin-top: 22px;
+      border: 1px solid #d9e0ea;
+      border-radius: 12px;
+      background: #fff;
+      padding: 18px;
+    }}
+    pre {{
+      margin: 0;
+      white-space: pre-wrap;
+      word-break: break-word;
+      overflow-wrap: anywhere;
+      font: 16px/1.9 -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+      color: #172645;
+    }}
+    .notice {{
+      margin-top: 14px;
+      border: 1px solid #f2c94c;
+      border-radius: 10px;
+      background: #fff9db;
+      color: #6f5500;
+      padding: 10px 12px;
+      font-size: 13px;
+      line-height: 1.6;
+    }}
+    @media (max-width: 640px) {{
+      main {{ padding: 18px 12px 32px; }}
+      .content {{ padding: 14px; }}
+      pre {{ font-size: 15px; line-height: 1.85; }}
+    }}
+  </style>
+</head>
+<body>
+  <main>
+    <header>
+      <div class="brand">Frametale shared novel text</div>
+      <h1>{safe_artifact_label}</h1>
+      <div class="meta">{safe_job_title}</div>
+      <div class="meta">{safe_artifact_path}{(" · " + safe_modified_at) if safe_modified_at else ""}</div>
+    </header>
+    <section class="content">
+      <pre>{safe_content}</pre>
+      {truncated_notice}
+    </section>
+  </main>
+</body>
+</html>"""
+
+
+@app.get("/share/novel", include_in_schema=False)
+async def serve_novel_artifact_share(job: str = "", artifact: str | None = None, path: str | None = None) -> Response:
+    job_id = job.strip()
+    artifact_path = (artifact or path or "").strip()
+    if not job_id or not artifact_path:
+        return HTMLResponse(
+            _render_novel_share_error(
+                "Novel share link is incomplete.", "The link is missing its job or artifact value."
+            ),
+            status_code=400,
+        )
+
+    try:
+        payload = await get_novel_workbench_service().read_public_job_artifact(job_id, artifact_path)
+    except NovelWorkbenchError as exc:
+        return HTMLResponse(
+            _render_novel_share_error("Novel share is unavailable.", str(exc)),
+            status_code=404,
+        )
+
+    return HTMLResponse(
+        _render_novel_share_page(payload),
+        headers={"Cache-Control": "public, max-age=60"},
+    )
 
 
 frontend_dist_dir = PROJECT_ROOT / "frontend" / "dist"

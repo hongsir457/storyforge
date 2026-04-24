@@ -46,6 +46,8 @@ import type {
   CustomProviderModelInput,
   DiscoveredModel,
   CostEstimateResponse,
+  NovelAssistantChatRequest,
+  NovelAssistantChatResponse,
   NovelAssistantDraftRequest,
   NovelAssistantDraftResponse,
   NovelWorkbenchArtifactContentResponse,
@@ -542,6 +544,13 @@ class API {
 
   static async generateNovelWorkbenchAssistantDraft(payload: NovelAssistantDraftRequest): Promise<NovelAssistantDraftResponse> {
     return this.request("/novel-workbench/assistant/draft", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    });
+  }
+
+  static async chatNovelWorkbenchAssistant(payload: NovelAssistantChatRequest): Promise<NovelAssistantChatResponse> {
+    return this.request("/novel-workbench/assistant/chat", {
       method: "POST",
       body: JSON.stringify(payload),
     });

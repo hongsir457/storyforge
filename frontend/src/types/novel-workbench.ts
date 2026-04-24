@@ -96,6 +96,28 @@ export interface NovelAssistantDraftResponse {
   content: string;
 }
 
+export interface NovelAssistantChatMessage {
+  role: "user" | "assistant";
+  content: string;
+}
+
+export interface NovelAssistantChatRequest {
+  stage: NovelAssistantStage;
+  title?: string;
+  writing_language?: string;
+  message: string;
+  brief: Partial<NovelAssistantBrief>;
+  confirmed: Partial<Record<NovelAssistantStage, boolean>>;
+  messages: NovelAssistantChatMessage[];
+}
+
+export interface NovelAssistantChatResponse {
+  stage: NovelAssistantStage;
+  reply: string;
+  draft: string | null;
+  ready_to_confirm: boolean;
+}
+
 export interface NovelWorkbenchLogResponse {
   path: string;
   content: string;

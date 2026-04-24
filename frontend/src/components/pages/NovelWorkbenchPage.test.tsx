@@ -319,9 +319,11 @@ describe("NovelWorkbenchPage sharing", () => {
 
   it("lets the writing assistant populate the seed field", async () => {
     const user = userEvent.setup();
-    vi.spyOn(API, "generateNovelWorkbenchAssistantDraft").mockResolvedValue({
+    vi.spyOn(API, "chatNovelWorkbenchAssistant").mockResolvedValue({
       stage: "seed",
-      content: "## Draft\nA forged heir hears a forbidden bell and must choose truth over safety.\n\n## Decisions To Confirm\n- Keep the ending bittersweet.",
+      reply: "I drafted the Seed. Edit it if needed, then confirm this step.",
+      draft: "A forged heir hears a forbidden bell and must choose truth over safety.",
+      ready_to_confirm: true,
     });
 
     renderPage();
@@ -330,26 +332,14 @@ describe("NovelWorkbenchPage sharing", () => {
       expect(document.querySelector("#seed-text")).not.toBeNull();
     });
 
-    const generateButton = Array.from(document.querySelectorAll("button")).find((button) =>
-      /Generate|生成/.test(button.textContent ?? ""),
-    ) as HTMLButtonElement;
-    await user.click(generateButton);
+    await user.click(document.querySelector('button[aria-label="novel-assistant-draft-current"]') as HTMLButtonElement);
 
     await waitFor(() => {
-      expect(API.generateNovelWorkbenchAssistantDraft).toHaveBeenCalledWith(
-        expect.objectContaining({ stage: "seed" }),
-      );
+      expect(API.chatNovelWorkbenchAssistant).toHaveBeenCalledWith(expect.objectContaining({ stage: "seed" }));
     });
 
-    const confirmButton = Array.from(document.querySelectorAll("button")).find((button) =>
-      /Confirm section|确认本节/.test(button.textContent ?? ""),
-    ) as HTMLButtonElement;
-    await user.click(confirmButton);
-
-    const applyButton = Array.from(document.querySelectorAll("button")).find((button) =>
-      /Use confirmed brief|用确认内容生成 Seed/.test(button.textContent ?? ""),
-    ) as HTMLButtonElement;
-    await user.click(applyButton);
+    await user.click(document.querySelector('button[aria-label="novel-assistant-confirm-stage"]') as HTMLButtonElement);
+    await user.click(document.querySelector('button[aria-label="novel-assistant-apply-seed"]') as HTMLButtonElement);
 
     await waitFor(() => {
       expect((document.querySelector("#seed-text") as HTMLTextAreaElement).value).toContain("forbidden bell");

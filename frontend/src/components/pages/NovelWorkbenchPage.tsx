@@ -4,6 +4,7 @@ import {
   AlertCircle,
   Archive,
   BookOpen,
+  Bot,
   CheckCircle2,
   ChevronLeft,
   Copy,
@@ -13,6 +14,7 @@ import {
   FileText,
   Loader2,
   MessageCircle,
+  Send,
   RefreshCw,
   ServerCog,
   Share2,
@@ -351,6 +353,28 @@ const NOVEL_ASSISTANT_COPY = {
     applyToast: "Creative brief copied into the seed field.",
     clearToast: "Creative brief cleared.",
     generatedToast: "Assistant draft updated.",
+    inputPlaceholder: "Discuss the current step, ask for options, or tell the assistant what to change...",
+    send: "Send",
+    draftAction: "Draft this step",
+    drafting: "Thinking...",
+    assistantName: "Assistant",
+    userName: "You",
+    currentDraft: "Editable draft",
+    draftHint: "The assistant updates this draft from the conversation. Edit it directly before confirming.",
+    emptyDraft: "No draft yet. Start the conversation or ask the assistant to draft this step.",
+    confirmAndContinue: "Confirm and continue",
+    applyConfirmed: "Apply confirmed brief to Seed",
+    stepLabel: "Current step",
+    reset: "Reset assistant",
+    readyToConfirm: "Ready to confirm",
+    errorMessage: "The writing assistant could not respond.",
+    draftInstruction: (stageLabel: string) => `Draft or refine the ${stageLabel} section now.`,
+    introMessage:
+      "Hi. I will guide this novel through Seed, Style, World, Characters, Plot, and Outline. Tell me your initial idea, or ask me to draft the current step.",
+    confirmedMessage: (stageLabel: string, nextStageLabel?: string) =>
+      nextStageLabel
+        ? `${stageLabel} is confirmed. I have moved us to ${nextStageLabel}; tell me what you already know there, or ask me to draft it.`
+        : `${stageLabel} is confirmed. All six sections are ready; apply the confirmed brief to the Seed field when you want to run the pipeline.`,
     stageDetails: {
       seed: {
         label: "Seed",
@@ -394,6 +418,28 @@ const NOVEL_ASSISTANT_COPY = {
     applyToast: "已把创作简报写入 Seed 文稿。",
     clearToast: "创作简报已清空。",
     generatedToast: "助手草案已更新。",
+    inputPlaceholder: "和助手讨论当前步骤，要求给选项、改方向，或直接让它起草...",
+    send: "发送",
+    draftAction: "起草本步",
+    drafting: "思考中...",
+    assistantName: "助手",
+    userName: "你",
+    currentDraft: "可编辑草案",
+    draftHint: "助手会把对话结果沉淀到这里。你可以直接改完再确认。",
+    emptyDraft: "还没有草案。先对话，或让助手起草当前步骤。",
+    confirmAndContinue: "确认并进入下一步",
+    applyConfirmed: "写入已确认 Seed",
+    stepLabel: "当前步骤",
+    reset: "重置助手",
+    readyToConfirm: "可以确认",
+    errorMessage: "写作助手暂时无法回复。",
+    draftInstruction: (stageLabel: string) => `请现在起草或改写「${stageLabel}」这一节。`,
+    introMessage:
+      "你好，我会按 Seed、风格、世界观、人物、剧情、大纲六步陪你把小说设想定下来。你可以先说最初的灵感，也可以让我直接起草当前步骤。",
+    confirmedMessage: (stageLabel: string, nextStageLabel?: string) =>
+      nextStageLabel
+        ? `「${stageLabel}」已确认。我已经切到「${nextStageLabel}」，你可以告诉我已知设想，或让我先起草。`
+        : `「${stageLabel}」已确认。六个部分都准备好了，可以把已确认内容写入 Seed 并启动流水线。`,
     stageDetails: {
       seed: {
         label: "Seed",
@@ -473,13 +519,65 @@ function createEmptyNovelAssistantConfirmed(): Record<NovelAssistantStage, boole
   };
 }
 
-function loadNovelAssistantState(): {
+type NovelAssistantMessageRole = "assistant" | "user";
+
+interface NovelAssistantLocalMessage {
+  id: string;
+  role: NovelAssistantMessageRole;
+  content: string;
+  stage?: NovelAssistantStage;
+  readyToConfirm?: boolean;
+  createdAt: string;
+}
+
+interface NovelAssistantLocalState {
   brief: NovelAssistantBrief;
   confirmed: Record<NovelAssistantStage, boolean>;
-} {
+  activeStage: NovelAssistantStage;
+  messages: NovelAssistantLocalMessage[];
+}
+
+function createNovelAssistantMessageId(): string {
+  return `novel-assistant-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+}
+
+function createNovelAssistantMessage(
+  role: NovelAssistantMessageRole,
+  content: string,
+  stage?: NovelAssistantStage,
+  readyToConfirm = false,
+): NovelAssistantLocalMessage {
+  return {
+    id: createNovelAssistantMessageId(),
+    role,
+    content,
+    stage,
+    readyToConfirm,
+    createdAt: new Date().toISOString(),
+  };
+}
+
+function createInitialNovelAssistantMessages(locale: WorkbenchLocale): NovelAssistantLocalMessage[] {
+  return [
+    createNovelAssistantMessage("assistant", NOVEL_ASSISTANT_COPY[locale].introMessage, "seed"),
+  ];
+}
+
+function createEmptyNovelAssistantState(locale: WorkbenchLocale): NovelAssistantLocalState {
+  return {
+    brief: createEmptyNovelAssistantBrief(),
+    confirmed: createEmptyNovelAssistantConfirmed(),
+    activeStage: "seed",
+    messages: createInitialNovelAssistantMessages(locale),
+  };
+}
+
+function loadNovelAssistantState(locale: WorkbenchLocale): NovelAssistantLocalState {
   const fallback = {
     brief: createEmptyNovelAssistantBrief(),
     confirmed: createEmptyNovelAssistantConfirmed(),
+    activeStage: "seed" as NovelAssistantStage,
+    messages: createInitialNovelAssistantMessages(locale),
   };
   if (typeof window === "undefined") {
     return fallback;
@@ -490,6 +588,8 @@ function loadNovelAssistantState(): {
     const parsed = JSON.parse(raw) as {
       brief?: Partial<NovelAssistantBrief>;
       confirmed?: Partial<Record<NovelAssistantStage, boolean>>;
+      activeStage?: NovelAssistantStage;
+      messages?: Partial<NovelAssistantLocalMessage>[];
     };
     const brief = createEmptyNovelAssistantBrief();
     const confirmed = createEmptyNovelAssistantConfirmed();
@@ -497,18 +597,41 @@ function loadNovelAssistantState(): {
       brief[stage] = typeof parsed.brief?.[stage] === "string" ? parsed.brief[stage] || "" : "";
       confirmed[stage] = Boolean(parsed.confirmed?.[stage]);
     }
-    return { brief, confirmed };
+    const activeStage = parsed.activeStage && NOVEL_ASSISTANT_STAGES.includes(parsed.activeStage)
+      ? parsed.activeStage
+      : "seed";
+    const messages = Array.isArray(parsed.messages)
+      ? parsed.messages
+          .filter((message): message is NovelAssistantLocalMessage =>
+            Boolean(message)
+            && (message.role === "assistant" || message.role === "user")
+            && typeof message.content === "string"
+            && typeof message.id === "string",
+          )
+          .slice(-60)
+      : [];
+    return {
+      brief,
+      confirmed,
+      activeStage,
+      messages: messages.length > 0 ? messages : fallback.messages,
+    };
   } catch {
     return fallback;
   }
 }
 
-function saveNovelAssistantState(
-  brief: NovelAssistantBrief,
-  confirmed: Record<NovelAssistantStage, boolean>,
-): void {
+function saveNovelAssistantState(state: NovelAssistantLocalState): void {
   if (typeof window === "undefined") return;
-  window.localStorage.setItem(NOVEL_ASSISTANT_STORAGE_KEY, JSON.stringify({ brief, confirmed }));
+  window.localStorage.setItem(
+    NOVEL_ASSISTANT_STORAGE_KEY,
+    JSON.stringify({
+      brief: state.brief,
+      confirmed: state.confirmed,
+      activeStage: state.activeStage,
+      messages: state.messages.slice(-60),
+    }),
+  );
 }
 
 function normalizeNovelAssistantSectionForSeed(value: string): string {
@@ -575,21 +698,35 @@ function NovelWritingAssistantPanel({
   pushToast,
 }: NovelWritingAssistantPanelProps) {
   const assistantCopy = NOVEL_ASSISTANT_COPY[locale];
-  const [assistantState, setAssistantState] = useState(loadNovelAssistantState);
-  const [activeStage, setActiveStage] = useState<NovelAssistantStage>("seed");
-  const [instruction, setInstruction] = useState("");
-  const [generatingStage, setGeneratingStage] = useState<NovelAssistantStage | null>(null);
+  const [assistantState, setAssistantState] = useState(() => loadNovelAssistantState(locale));
+  const [localInput, setLocalInput] = useState("");
+  const [sending, setSending] = useState(false);
+  const transcriptRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
-    saveNovelAssistantState(assistantState.brief, assistantState.confirmed);
+    saveNovelAssistantState(assistantState);
   }, [assistantState]);
 
+  useEffect(() => {
+    const node = transcriptRef.current;
+    if (!node) return;
+    if (typeof node.scrollTo === "function") {
+      node.scrollTo({ top: node.scrollHeight, behavior: "smooth" });
+    } else {
+      node.scrollTop = node.scrollHeight;
+    }
+  }, [assistantState.messages, sending]);
+
+  const activeStage = assistantState.activeStage;
   const activeStageCopy = assistantCopy.stageDetails[activeStage];
   const confirmedCount = NOVEL_ASSISTANT_STAGES.filter((stage) => assistantState.confirmed[stage]).length;
-  const generating = generatingStage === activeStage;
+  const hasConfirmedBrief = NOVEL_ASSISTANT_STAGES.some(
+    (stage) => assistantState.confirmed[stage] && assistantState.brief[stage].trim(),
+  );
 
   const updateStageDraft = useCallback((stage: NovelAssistantStage, value: string) => {
     setAssistantState((previous) => ({
+      ...previous,
       brief: {
         ...previous.brief,
         [stage]: value,
@@ -601,44 +738,120 @@ function NovelWritingAssistantPanel({
     }));
   }, []);
 
-  const handleGenerate = useCallback(async () => {
-    setGeneratingStage(activeStage);
+  const handleSelectStage = useCallback((stage: NovelAssistantStage) => {
+    setAssistantState((previous) => ({ ...previous, activeStage: stage }));
+  }, []);
+
+  const appendAssistantMessage = useCallback(
+    (content: string, stage: NovelAssistantStage, readyToConfirm = false) => {
+      setAssistantState((previous) => ({
+        ...previous,
+        messages: [
+          ...previous.messages,
+          createNovelAssistantMessage("assistant", content, stage, readyToConfirm),
+        ].slice(-60),
+      }));
+    },
+    [],
+  );
+
+  const sendAssistantMessage = useCallback(async (message: string) => {
+    const trimmed = message.trim();
+    if (!trimmed || sending) return;
+
+    const snapshot = assistantState;
+    const userMessage = createNovelAssistantMessage("user", trimmed, snapshot.activeStage);
+    const nextMessages = [...snapshot.messages, userMessage].slice(-60);
+    setAssistantState((previous) => ({ ...previous, messages: nextMessages }));
+    setLocalInput("");
+    setSending(true);
+
     try {
-      const response = await API.generateNovelWorkbenchAssistantDraft({
-        stage: activeStage,
+      const response = await API.chatNovelWorkbenchAssistant({
+        stage: snapshot.activeStage,
         title,
         writing_language: writingLanguage,
-        instruction,
-        brief: assistantState.brief,
+        message: trimmed,
+        brief: snapshot.brief,
+        confirmed: snapshot.confirmed,
+        messages: nextMessages.map((item) => ({
+          role: item.role,
+          content: item.content,
+        })),
       });
-      updateStageDraft(activeStage, response.content);
-      setInstruction("");
+      const assistantMessage = createNovelAssistantMessage(
+        "assistant",
+        response.reply,
+        response.stage,
+        response.ready_to_confirm,
+      );
+      setAssistantState((previous) => ({
+        ...previous,
+        activeStage: response.stage,
+        brief: response.draft
+          ? {
+              ...previous.brief,
+              [response.stage]: response.draft,
+            }
+          : previous.brief,
+        confirmed: response.draft
+          ? {
+              ...previous.confirmed,
+              [response.stage]: false,
+            }
+          : previous.confirmed,
+        messages: [...previous.messages, assistantMessage].slice(-60),
+      }));
       pushToast(assistantCopy.generatedToast, "success");
     } catch (error) {
       pushToast((error as Error).message, "error");
+      appendAssistantMessage(assistantCopy.errorMessage, snapshot.activeStage);
     } finally {
-      setGeneratingStage(null);
+      setSending(false);
     }
   }, [
-    activeStage,
+    appendAssistantMessage,
     assistantCopy.generatedToast,
-    assistantState.brief,
-    instruction,
+    assistantCopy.errorMessage,
+    assistantState,
     pushToast,
+    sending,
     title,
-    updateStageDraft,
     writingLanguage,
   ]);
 
+  const handleDraftCurrentStage = useCallback(() => {
+    void sendAssistantMessage(assistantCopy.draftInstruction(activeStageCopy.label));
+  }, [activeStageCopy.label, assistantCopy, sendAssistantMessage]);
+
   const handleConfirm = useCallback(() => {
+    const currentIndex = NOVEL_ASSISTANT_STAGES.indexOf(activeStage);
+    const nextStage = NOVEL_ASSISTANT_STAGES
+      .slice(currentIndex + 1)
+      .find((stage) => !assistantState.confirmed[stage]);
+    const confirmedText = assistantCopy.confirmedMessage(
+      activeStageCopy.label,
+      nextStage ? assistantCopy.stageDetails[nextStage].label : undefined,
+    );
     setAssistantState((previous) => ({
+      ...previous,
       brief: previous.brief,
       confirmed: {
         ...previous.confirmed,
         [activeStage]: true,
       },
+      activeStage: nextStage ?? activeStage,
+      messages: [
+        ...previous.messages,
+        createNovelAssistantMessage("assistant", confirmedText, nextStage ?? activeStage),
+      ].slice(-60),
     }));
-  }, [activeStage]);
+  }, [
+    activeStage,
+    activeStageCopy.label,
+    assistantCopy,
+    assistantState.confirmed,
+  ]);
 
   const handleApplySeed = useCallback(() => {
     onApplySeed(
@@ -663,129 +876,195 @@ function NovelWritingAssistantPanel({
   ]);
 
   const handleClear = useCallback(() => {
-    setAssistantState({
-      brief: createEmptyNovelAssistantBrief(),
-      confirmed: createEmptyNovelAssistantConfirmed(),
-    });
-    setInstruction("");
-    setActiveStage("seed");
+    setAssistantState(createEmptyNovelAssistantState(locale));
+    setLocalInput("");
     pushToast(assistantCopy.clearToast, "warning");
-  }, [assistantCopy.clearToast, pushToast]);
+  }, [assistantCopy.clearToast, locale, pushToast]);
+
+  const handleKeyDown = useCallback((event: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (event.key === "Enter" && !event.shiftKey) {
+      event.preventDefault();
+      void sendAssistantMessage(localInput);
+    }
+  }, [localInput, sendAssistantMessage]);
 
   return (
-    <section className="rounded-[2rem] border border-[rgba(117,132,159,0.18)] bg-white/86 p-6 shadow-[0_18px_40px_rgba(23,38,69,0.06)]">
-      <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-        <div>
-          <div className="inline-flex items-center gap-2 rounded-full border border-amber-300/60 bg-amber-100 px-3 py-1 text-xs font-medium text-amber-900">
-            <MessageCircle className="h-3.5 w-3.5" />
-            {assistantCopy.eyebrow}
+    <aside className="sticky top-6 flex max-h-[calc(100vh-3rem)] min-h-[42rem] flex-col overflow-hidden rounded-[2rem] border border-[rgba(117,132,159,0.18)] bg-white/92 shadow-[0_24px_70px_rgba(23,38,69,0.12)]">
+      <div className="border-b border-[rgba(117,132,159,0.14)] bg-[rgba(248,250,253,0.92)] px-5 py-4">
+        <div className="flex items-start justify-between gap-3">
+          <div className="min-w-0">
+            <div className="flex items-center gap-2 text-sm font-semibold text-[var(--sf-text)]">
+              <Bot className="h-4 w-4 text-[var(--sf-blue)]" />
+              {assistantCopy.eyebrow}
+            </div>
+            <p className="mt-1 text-xs leading-5 text-[var(--sf-text-muted)]">{assistantCopy.body}</p>
           </div>
-          <h2 className="mt-3 text-2xl font-semibold tracking-[-0.03em] text-[var(--sf-text)]">{assistantCopy.title}</h2>
-          <p className="mt-2 max-w-3xl text-sm leading-7 text-[var(--sf-text-muted)]">{assistantCopy.body}</p>
-        </div>
-        <div className="rounded-full border border-[rgba(117,132,159,0.18)] bg-[rgba(248,250,253,0.92)] px-4 py-2 text-sm font-medium text-[var(--sf-text)]">
-          {assistantCopy.progress(confirmedCount, NOVEL_ASSISTANT_STAGES.length)}
+          <div className="shrink-0 rounded-full border border-[rgba(117,132,159,0.18)] bg-white px-3 py-1 text-xs font-medium text-[var(--sf-text)]">
+            {assistantCopy.progress(confirmedCount, NOVEL_ASSISTANT_STAGES.length)}
+          </div>
         </div>
       </div>
 
-      <div className="mt-5 flex flex-wrap gap-2">
-        {NOVEL_ASSISTANT_STAGES.map((stage) => {
-          const stageCopy = assistantCopy.stageDetails[stage];
-          const selected = stage === activeStage;
-          const confirmed = assistantState.confirmed[stage];
+      <div className="border-b border-[rgba(117,132,159,0.14)] px-4 py-3">
+        <div className="mb-2 flex items-center justify-between gap-2">
+          <div className="text-[11px] uppercase tracking-[0.22em] text-[var(--sf-text-soft)]">
+            {assistantCopy.stepLabel}
+          </div>
+          {assistantState.messages.at(-1)?.readyToConfirm && (
+            <span className="rounded-full bg-emerald-100 px-2 py-1 text-[11px] font-medium text-emerald-800">
+              {assistantCopy.readyToConfirm}
+            </span>
+          )}
+        </div>
+        <div className="grid grid-cols-2 gap-2">
+          {NOVEL_ASSISTANT_STAGES.map((stage, index) => {
+            const stageCopy = assistantCopy.stageDetails[stage];
+            const selected = stage === activeStage;
+            const confirmed = assistantState.confirmed[stage];
+            return (
+              <button
+                key={stage}
+                type="button"
+                aria-label={`assistant-stage-${stage}`}
+                onClick={() => handleSelectStage(stage)}
+                className={`flex min-h-10 items-center justify-between gap-2 rounded-xl border px-3 py-2 text-left text-xs transition-colors ${
+                  selected
+                    ? "border-sky-400/60 bg-sky-100 text-sky-950"
+                    : "border-[rgba(117,132,159,0.18)] bg-white text-[var(--sf-text-muted)] hover:border-sky-300/50 hover:text-[var(--sf-text)]"
+                }`}
+              >
+                <span className="flex min-w-0 items-center gap-2">
+                  <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[rgba(117,132,159,0.12)] text-[10px]">
+                    {index + 1}
+                  </span>
+                  <span className="truncate">{stageCopy.label}</span>
+                </span>
+                {confirmed && <CheckCircle2 className="h-3.5 w-3.5 shrink-0 text-emerald-600" />}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      <div ref={transcriptRef} className="min-h-0 flex-1 space-y-3 overflow-y-auto px-4 py-4">
+        {assistantState.messages.map((message) => {
+          const isUser = message.role === "user";
           return (
-            <button
-              key={stage}
-              type="button"
-              onClick={() => setActiveStage(stage)}
-              className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-sm transition-colors ${
-                selected
-                  ? "border-sky-400/60 bg-sky-100 text-sky-950"
-                  : "border-[rgba(117,132,159,0.18)] bg-white text-[var(--sf-text-muted)] hover:border-sky-300/50 hover:text-[var(--sf-text)]"
+            <article
+              key={message.id}
+              className={`rounded-2xl border px-3 py-2.5 ${
+                isUser
+                  ? "ml-8 border-sky-300/40 bg-sky-100/80"
+                  : "mr-4 border-[rgba(117,132,159,0.18)] bg-white"
               }`}
             >
-              {confirmed && <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600" />}
-              {stageCopy.label}
-            </button>
+              <div className="mb-1 flex items-center gap-2 text-[11px] font-medium text-[var(--sf-text-soft)]">
+                {isUser ? assistantCopy.userName : assistantCopy.assistantName}
+                {message.stage && (
+                  <span className="rounded-full bg-[rgba(117,132,159,0.1)] px-2 py-0.5">
+                    {assistantCopy.stageDetails[message.stage].label}
+                  </span>
+                )}
+              </div>
+              <div className="whitespace-pre-wrap break-words text-sm leading-6 text-[var(--sf-text)]">
+                {message.content}
+              </div>
+            </article>
           );
         })}
+        {sending && (
+          <div className="mr-4 inline-flex items-center gap-2 rounded-2xl border border-[rgba(117,132,159,0.18)] bg-white px-3 py-2 text-sm text-[var(--sf-text-muted)]">
+            <Loader2 className="h-4 w-4 animate-spin text-[var(--sf-blue)]" />
+            {assistantCopy.drafting}
+          </div>
+        )}
       </div>
 
-      <div className="mt-5 grid gap-4 lg:grid-cols-[minmax(0,1fr)_340px]">
+      <div className="border-t border-[rgba(117,132,159,0.14)] bg-[rgba(248,250,253,0.86)] px-4 py-4">
         <label className="block">
-          <span className="mb-2 block text-[11px] uppercase tracking-[0.22em] text-[var(--sf-text-soft)]">
-            {activeStageCopy.label}
-          </span>
+          <div className="mb-2 flex items-center justify-between gap-3">
+            <span className="text-[11px] uppercase tracking-[0.22em] text-[var(--sf-text-soft)]">
+              {assistantCopy.currentDraft}
+            </span>
+            <span className="truncate text-xs text-[var(--sf-text-muted)]">{activeStageCopy.guide}</span>
+          </div>
           <textarea
+            aria-label="novel-assistant-draft"
             value={assistantState.brief[activeStage]}
             onChange={(event) => updateStageDraft(activeStage, event.target.value)}
-            rows={18}
-            className="frametale-input w-full rounded-2xl px-4 py-3.5 text-sm leading-6 outline-none transition"
+            rows={7}
+            placeholder={assistantCopy.emptyDraft}
+            className="frametale-input max-h-56 min-h-32 w-full resize-y rounded-2xl px-4 py-3 text-sm leading-6 outline-none transition"
           />
         </label>
+        <p className="mt-2 text-xs leading-5 text-[var(--sf-text-soft)]">{assistantCopy.draftHint}</p>
 
-        <div className="space-y-4">
-          <div className="rounded-2xl border border-[rgba(117,132,159,0.18)] bg-[rgba(248,250,253,0.92)] p-4 text-sm leading-6 text-[var(--sf-text-muted)]">
-            {activeStageCopy.guide}
-          </div>
-
-          <label className="block">
-            <span className="mb-2 block text-[11px] uppercase tracking-[0.22em] text-[var(--sf-text-soft)]">
-              {assistantCopy.instructionLabel}
-            </span>
-            <textarea
-              value={instruction}
-              onChange={(event) => setInstruction(event.target.value)}
-              rows={6}
-              placeholder={assistantCopy.instructionPlaceholder}
-              className="frametale-input w-full rounded-2xl px-4 py-3.5 text-sm leading-6 outline-none transition"
-            />
-          </label>
-
-          <div className="grid gap-2">
+        <div className="mt-3 grid gap-2">
+          <button
+            type="button"
+            aria-label="novel-assistant-draft-current"
+            onClick={handleDraftCurrentStage}
+            disabled={sending}
+            className="frametale-primary-button inline-flex items-center justify-center gap-2 rounded-2xl px-4 py-3 text-sm font-semibold transition hover:-translate-y-0.5 disabled:translate-y-0 disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
+            {sending ? assistantCopy.drafting : assistantCopy.draftAction}
+          </button>
+          <div className="grid grid-cols-2 gap-2">
             <button
               type="button"
-              onClick={() => void handleGenerate()}
-              disabled={Boolean(generatingStage)}
-              className="frametale-primary-button inline-flex items-center justify-center gap-2 rounded-2xl px-4 py-3 text-sm font-semibold transition hover:-translate-y-0.5 disabled:translate-y-0 disabled:cursor-not-allowed disabled:opacity-60"
-            >
-              {generating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
-              {generating ? assistantCopy.generating : assistantCopy.generate}
-            </button>
-            <button
-              type="button"
+              aria-label="novel-assistant-confirm-stage"
               onClick={handleConfirm}
               disabled={!assistantState.brief[activeStage].trim()}
-              className="inline-flex items-center justify-center gap-2 rounded-2xl border border-emerald-300/60 bg-emerald-100 px-4 py-3 text-sm font-semibold text-emerald-900 transition hover:-translate-y-0.5 disabled:translate-y-0 disabled:cursor-not-allowed disabled:opacity-50"
+              className="inline-flex items-center justify-center gap-2 rounded-2xl border border-emerald-300/60 bg-emerald-100 px-3 py-2.5 text-sm font-semibold text-emerald-900 transition hover:-translate-y-0.5 disabled:translate-y-0 disabled:cursor-not-allowed disabled:opacity-50"
             >
               <CheckCircle2 className="h-4 w-4" />
-              {assistantState.confirmed[activeStage] ? assistantCopy.confirmed : assistantCopy.confirm}
+              {assistantCopy.confirmAndContinue}
             </button>
             <button
               type="button"
+              aria-label="novel-assistant-apply-seed"
               onClick={handleApplySeed}
-              disabled={
-                !NOVEL_ASSISTANT_STAGES.some(
-                  (stage) => assistantState.confirmed[stage] && assistantState.brief[stage].trim(),
-                )
-              }
-              className="inline-flex items-center justify-center gap-2 rounded-2xl border border-[rgba(117,132,159,0.18)] bg-white px-4 py-3 text-sm font-semibold text-[var(--sf-text)] transition hover:-translate-y-0.5 disabled:translate-y-0 disabled:cursor-not-allowed disabled:opacity-50"
+              disabled={!hasConfirmedBrief}
+              className="inline-flex items-center justify-center gap-2 rounded-2xl border border-[rgba(117,132,159,0.18)] bg-white px-3 py-2.5 text-sm font-semibold text-[var(--sf-text)] transition hover:-translate-y-0.5 disabled:translate-y-0 disabled:cursor-not-allowed disabled:opacity-50"
             >
               <Copy className="h-4 w-4" />
-              {assistantCopy.composeSeed}
-            </button>
-            <button
-              type="button"
-              onClick={handleClear}
-              className="inline-flex items-center justify-center gap-2 rounded-2xl border border-[rgba(117,132,159,0.18)] bg-white px-4 py-3 text-sm text-[var(--sf-text-muted)] transition-colors hover:border-rose-300/60 hover:text-rose-700"
-            >
-              <Trash2 className="h-4 w-4" />
-              {assistantCopy.clear}
+              {assistantCopy.applyConfirmed}
             </button>
           </div>
         </div>
+
+        <div className="mt-3 flex items-end gap-2">
+          <textarea
+            value={localInput}
+            onChange={(event) => setLocalInput(event.target.value)}
+            onKeyDown={handleKeyDown}
+            rows={2}
+            placeholder={assistantCopy.inputPlaceholder}
+            className="frametale-input min-h-12 flex-1 resize-none rounded-2xl px-4 py-3 text-sm leading-5 outline-none transition"
+          />
+          <button
+            type="button"
+            aria-label="novel-assistant-send"
+            onClick={() => void sendAssistantMessage(localInput)}
+            disabled={sending || !localInput.trim()}
+            className="inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-[var(--sf-blue)] text-white shadow-[0_10px_24px_rgba(24,151,214,0.24)] transition hover:-translate-y-0.5 disabled:translate-y-0 disabled:cursor-not-allowed disabled:opacity-50"
+            title={assistantCopy.send}
+          >
+            <Send className="h-4 w-4" />
+          </button>
+        </div>
+
+        <button
+          type="button"
+          onClick={handleClear}
+          className="mt-3 inline-flex items-center gap-2 text-xs text-[var(--sf-text-soft)] transition-colors hover:text-rose-700"
+        >
+          <Trash2 className="h-3.5 w-3.5" />
+          {assistantCopy.reset}
+        </button>
       </div>
-    </section>
+    </aside>
   );
 }
 
@@ -1420,7 +1699,8 @@ export function NovelWorkbenchPage() {
             {copy.loading}
           </div>
         ) : (
-          <div className="space-y-6">
+          <div className="grid gap-6 2xl:grid-cols-[minmax(0,1fr)_430px]">
+            <div className="min-w-0 space-y-6">
             <section className="grid gap-6 xl:grid-cols-[minmax(0,1.14fr)_360px]">
               <div className="relative overflow-hidden rounded-[2rem] border border-[rgba(117,132,159,0.18)] bg-[linear-gradient(180deg,rgba(255,255,255,0.92),rgba(244,248,252,0.98))] p-8 shadow-[0_24px_60px_rgba(23,38,69,0.08)]">
                 <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(24,151,214,0.14),transparent_28%),radial-gradient(circle_at_bottom_right,rgba(216,165,90,0.14),transparent_32%)]" />
@@ -1588,15 +1868,6 @@ export function NovelWorkbenchPage() {
                 </section>
               </div>
             </section>
-
-            <NovelWritingAssistantPanel
-              locale={locale}
-              title={title}
-              writingLanguage={writingLanguage}
-              onApplySeed={setSeedText}
-              pushToast={pushToast}
-            />
-
             <details className="rounded-[2rem] border border-[rgba(117,132,159,0.18)] bg-white/82 p-6 shadow-[0_18px_40px_rgba(23,38,69,0.06)]">
               <summary className="cursor-pointer list-none text-sm font-medium text-[var(--sf-text)]">
                 {copy.diagnosticsToggle}
@@ -2018,6 +2289,15 @@ export function NovelWorkbenchPage() {
                 )}
               </div>
             </section>
+            </div>
+
+            <NovelWritingAssistantPanel
+              locale={locale}
+              title={title}
+              writingLanguage={writingLanguage}
+              onApplySeed={setSeedText}
+              pushToast={pushToast}
+            />
           </div>
         )}
       </main>

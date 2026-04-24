@@ -17,6 +17,7 @@ from server.services.autonovel_workbench import (
 from server.services.novel_writing_assistant import (
     NovelAssistantStage,
     NovelWritingAssistantError,
+    generate_novel_assistant_chat,
     generate_novel_assistant_draft,
 )
 
@@ -39,6 +40,21 @@ class NovelAssistantDraftRequest(BaseModel):
     writing_language: str | None = None
     instruction: str = ""
     brief: dict[str, str] = Field(default_factory=dict)
+
+
+class NovelAssistantChatMessagePayload(BaseModel):
+    role: Literal["user", "assistant"]
+    content: str
+
+
+class NovelAssistantChatRequest(BaseModel):
+    stage: NovelAssistantStage
+    title: str = ""
+    writing_language: str | None = None
+    message: str = Field(min_length=1)
+    brief: dict[str, str] = Field(default_factory=dict)
+    confirmed: dict[str, bool] = Field(default_factory=dict)
+    messages: list[NovelAssistantChatMessagePayload] = Field(default_factory=list, max_length=32)
 
 
 def _raise_http_error(exc: NovelWorkbenchError) -> None:
@@ -113,6 +129,29 @@ async def draft_novel_assistant_section(
     except NovelWritingAssistantError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
     return {"stage": req.stage, "content": content}
+
+
+@router.post("/novel-workbench/assistant/chat")
+async def chat_with_novel_assistant(
+    req: NovelAssistantChatRequest,
+    _user: CurrentUser,
+    svc: ConfigService = Depends(get_config_service),
+):
+    runtime_env = await svc.build_novel_workbench_runtime_env()
+    try:
+        result = await generate_novel_assistant_chat(
+            runtime_env=runtime_env,
+            stage=req.stage,
+            title=req.title,
+            writing_language=req.writing_language or runtime_env.get("AUTONOVEL_WRITING_LANGUAGE", ""),
+            message=req.message,
+            brief=req.brief,
+            confirmed=req.confirmed,
+            messages=[message.model_dump() for message in req.messages],
+        )
+    except NovelWritingAssistantError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    return result
 
 
 @router.post("/novel-workbench/jobs/{job_id}/cancel")

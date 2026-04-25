@@ -339,7 +339,6 @@ describe("NovelWorkbenchPage sharing", () => {
     });
 
     await user.click(document.querySelector('button[aria-label="novel-assistant-confirm-stage"]') as HTMLButtonElement);
-    await user.click(document.querySelector('button[aria-label="novel-assistant-apply-seed"]') as HTMLButtonElement);
 
     await waitFor(() => {
       expect((document.querySelector("#seed-text") as HTMLTextAreaElement).value).toContain("forbidden bell");

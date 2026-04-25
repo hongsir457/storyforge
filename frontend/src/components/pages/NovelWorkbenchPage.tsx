@@ -50,6 +50,15 @@ const WORKBENCH_COPY = {
       "Grow a seed into a long-form manuscript here, then hand the result back to Frametale for storyboard and video production.",
     refresh: "Refresh",
     loading: "Loading novel workbench...",
+    navPrimary: "Start novel",
+    navReadiness: "Run readiness",
+    navLatest: "Latest",
+    navSnapshot: "Snapshot",
+    navHistory: "History",
+    navDiagnostics: "Diagnostics",
+    navClose: "Hide panel",
+    focusedTitle: "Start this novel",
+    focusedBody: "Use the assistant to settle the idea, then run the novel pipeline from this form.",
     heroEyebrow: "Novel starter",
     heroTitle: "Start a full-length narrative from one seed.",
     heroBody:
@@ -182,6 +191,15 @@ const WORKBENCH_COPY = {
     subtitle: "在这里把 seed 扩写成长篇小说，再把结果交回 Frametale 继续做分镜与视频制作。",
     refresh: "刷新",
     loading: "正在加载小说工坊...",
+    navPrimary: "启动小说",
+    navReadiness: "运行准备",
+    navLatest: "最近完成",
+    navSnapshot: "Snapshot",
+    navHistory: "历史记录",
+    navDiagnostics: "诊断",
+    navClose: "收起",
+    focusedTitle: "启动当前小说",
+    focusedBody: "先和写作助手把设想确认清楚，再从这里启动小说流水线。",
     heroEyebrow: "Novel starter",
     heroTitle: "从一个 seed 启动完整长篇叙事。",
     heroBody:
@@ -471,6 +489,7 @@ const NOVEL_ASSISTANT_COPY = {
 
 type WorkbenchLocale = keyof typeof WORKBENCH_COPY;
 type ToastTone = "info" | "success" | "error" | "warning";
+type NovelWorkbenchPanel = "readiness" | "latest" | "snapshot" | "history" | "diagnostics";
 
 interface ArtifactShareCopy {
   shareArtifact: string;
@@ -720,9 +739,6 @@ function NovelWritingAssistantPanel({
   const activeStage = assistantState.activeStage;
   const activeStageCopy = assistantCopy.stageDetails[activeStage];
   const confirmedCount = NOVEL_ASSISTANT_STAGES.filter((stage) => assistantState.confirmed[stage]).length;
-  const hasConfirmedBrief = NOVEL_ASSISTANT_STAGES.some(
-    (stage) => assistantState.confirmed[stage] && assistantState.brief[stage].trim(),
-  );
 
   const updateStageDraft = useCallback((stage: NovelAssistantStage, value: string) => {
     setAssistantState((previous) => ({
@@ -736,10 +752,6 @@ function NovelWritingAssistantPanel({
         [stage]: false,
       },
     }));
-  }, []);
-
-  const handleSelectStage = useCallback((stage: NovelAssistantStage) => {
-    setAssistantState((previous) => ({ ...previous, activeStage: stage }));
   }, []);
 
   const appendAssistantMessage = useCallback(
@@ -846,18 +858,13 @@ function NovelWritingAssistantPanel({
         createNovelAssistantMessage("assistant", confirmedText, nextStage ?? activeStage),
       ].slice(-60),
     }));
-  }, [
-    activeStage,
-    activeStageCopy.label,
-    assistantCopy,
-    assistantState.confirmed,
-  ]);
-
-  const handleApplySeed = useCallback(() => {
     onApplySeed(
       composeSeedFromNovelAssistantBrief(
         assistantState.brief,
-        assistantState.confirmed,
+        {
+          ...assistantState.confirmed,
+          [activeStage]: true,
+        },
         locale,
         title,
         writingLanguage,
@@ -865,9 +872,11 @@ function NovelWritingAssistantPanel({
     );
     pushToast(assistantCopy.applyToast, "success");
   }, [
-    assistantCopy.applyToast,
-    assistantState.brief,
+    activeStage,
+    activeStageCopy.label,
+    assistantCopy,
     assistantState.confirmed,
+    assistantState.brief,
     locale,
     onApplySeed,
     pushToast,
@@ -889,7 +898,7 @@ function NovelWritingAssistantPanel({
   }, [localInput, sendAssistantMessage]);
 
   return (
-    <aside className="sticky top-6 flex max-h-[calc(100vh-3rem)] min-h-[42rem] flex-col overflow-hidden rounded-[2rem] border border-[rgba(117,132,159,0.18)] bg-white/92 shadow-[0_24px_70px_rgba(23,38,69,0.12)]">
+    <aside className="flex max-h-[calc(100vh-3rem)] min-h-[40rem] flex-col overflow-hidden rounded-[2rem] border border-[rgba(117,132,159,0.18)] bg-white/92 shadow-[0_24px_70px_rgba(23,38,69,0.12)] xl:sticky xl:top-6">
       <div className="border-b border-[rgba(117,132,159,0.14)] bg-[rgba(248,250,253,0.92)] px-5 py-4">
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
@@ -902,47 +911,6 @@ function NovelWritingAssistantPanel({
           <div className="shrink-0 rounded-full border border-[rgba(117,132,159,0.18)] bg-white px-3 py-1 text-xs font-medium text-[var(--sf-text)]">
             {assistantCopy.progress(confirmedCount, NOVEL_ASSISTANT_STAGES.length)}
           </div>
-        </div>
-      </div>
-
-      <div className="border-b border-[rgba(117,132,159,0.14)] px-4 py-3">
-        <div className="mb-2 flex items-center justify-between gap-2">
-          <div className="text-[11px] uppercase tracking-[0.22em] text-[var(--sf-text-soft)]">
-            {assistantCopy.stepLabel}
-          </div>
-          {assistantState.messages.at(-1)?.readyToConfirm && (
-            <span className="rounded-full bg-emerald-100 px-2 py-1 text-[11px] font-medium text-emerald-800">
-              {assistantCopy.readyToConfirm}
-            </span>
-          )}
-        </div>
-        <div className="grid grid-cols-2 gap-2">
-          {NOVEL_ASSISTANT_STAGES.map((stage, index) => {
-            const stageCopy = assistantCopy.stageDetails[stage];
-            const selected = stage === activeStage;
-            const confirmed = assistantState.confirmed[stage];
-            return (
-              <button
-                key={stage}
-                type="button"
-                aria-label={`assistant-stage-${stage}`}
-                onClick={() => handleSelectStage(stage)}
-                className={`flex min-h-10 items-center justify-between gap-2 rounded-xl border px-3 py-2 text-left text-xs transition-colors ${
-                  selected
-                    ? "border-sky-400/60 bg-sky-100 text-sky-950"
-                    : "border-[rgba(117,132,159,0.18)] bg-white text-[var(--sf-text-muted)] hover:border-sky-300/50 hover:text-[var(--sf-text)]"
-                }`}
-              >
-                <span className="flex min-w-0 items-center gap-2">
-                  <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[rgba(117,132,159,0.12)] text-[10px]">
-                    {index + 1}
-                  </span>
-                  <span className="truncate">{stageCopy.label}</span>
-                </span>
-                {confirmed && <CheckCircle2 className="h-3.5 w-3.5 shrink-0 text-emerald-600" />}
-              </button>
-            );
-          })}
         </div>
       </div>
 
@@ -972,6 +940,41 @@ function NovelWritingAssistantPanel({
             </article>
           );
         })}
+        {assistantState.brief[activeStage].trim() && (
+          <article className="mr-4 rounded-2xl border border-emerald-300/50 bg-emerald-50/90 px-3 py-3">
+            <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
+              <div className="flex min-w-0 items-center gap-2 text-[11px] font-medium text-emerald-900">
+                <span>{assistantCopy.currentDraft}</span>
+                <span className="rounded-full bg-white/80 px-2 py-0.5 text-[var(--sf-text-muted)]">
+                  {activeStageCopy.label}
+                </span>
+                {assistantState.messages[assistantState.messages.length - 1]?.readyToConfirm && (
+                  <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-emerald-800">
+                    {assistantCopy.readyToConfirm}
+                  </span>
+                )}
+              </div>
+              <button
+                type="button"
+                aria-label="novel-assistant-confirm-stage"
+                onClick={handleConfirm}
+                disabled={!assistantState.brief[activeStage].trim()}
+                className="inline-flex items-center gap-1.5 rounded-full border border-emerald-300/70 bg-white px-3 py-1.5 text-xs font-semibold text-emerald-900 transition hover:bg-emerald-100 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                <CheckCircle2 className="h-3.5 w-3.5" />
+                {assistantCopy.confirmAndContinue}
+              </button>
+            </div>
+            <textarea
+              aria-label="novel-assistant-draft"
+              value={assistantState.brief[activeStage]}
+              onChange={(event) => updateStageDraft(activeStage, event.target.value)}
+              rows={8}
+              className="frametale-input max-h-72 min-h-40 w-full resize-y rounded-2xl px-4 py-3 text-sm leading-6 outline-none transition"
+            />
+            <p className="mt-2 text-xs leading-5 text-emerald-900/70">{assistantCopy.draftHint}</p>
+          </article>
+        )}
         {sending && (
           <div className="mr-4 inline-flex items-center gap-2 rounded-2xl border border-[rgba(117,132,159,0.18)] bg-white px-3 py-2 text-sm text-[var(--sf-text-muted)]">
             <Loader2 className="h-4 w-4 animate-spin text-[var(--sf-blue)]" />
@@ -981,60 +984,23 @@ function NovelWritingAssistantPanel({
       </div>
 
       <div className="border-t border-[rgba(117,132,159,0.14)] bg-[rgba(248,250,253,0.86)] px-4 py-4">
-        <label className="block">
-          <div className="mb-2 flex items-center justify-between gap-3">
-            <span className="text-[11px] uppercase tracking-[0.22em] text-[var(--sf-text-soft)]">
-              {assistantCopy.currentDraft}
-            </span>
-            <span className="truncate text-xs text-[var(--sf-text-muted)]">{activeStageCopy.guide}</span>
-          </div>
-          <textarea
-            aria-label="novel-assistant-draft"
-            value={assistantState.brief[activeStage]}
-            onChange={(event) => updateStageDraft(activeStage, event.target.value)}
-            rows={7}
-            placeholder={assistantCopy.emptyDraft}
-            className="frametale-input max-h-56 min-h-32 w-full resize-y rounded-2xl px-4 py-3 text-sm leading-6 outline-none transition"
-          />
-        </label>
-        <p className="mt-2 text-xs leading-5 text-[var(--sf-text-soft)]">{assistantCopy.draftHint}</p>
-
-        <div className="mt-3 grid gap-2">
+        <div className="mb-3 flex flex-wrap items-center gap-2">
           <button
             type="button"
             aria-label="novel-assistant-draft-current"
             onClick={handleDraftCurrentStage}
             disabled={sending}
-            className="frametale-primary-button inline-flex items-center justify-center gap-2 rounded-2xl px-4 py-3 text-sm font-semibold transition hover:-translate-y-0.5 disabled:translate-y-0 disabled:cursor-not-allowed disabled:opacity-60"
+            className="frametale-primary-button inline-flex items-center justify-center gap-2 rounded-full px-4 py-2 text-sm font-semibold transition hover:-translate-y-0.5 disabled:translate-y-0 disabled:cursor-not-allowed disabled:opacity-60"
           >
             {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
             {sending ? assistantCopy.drafting : assistantCopy.draftAction}
           </button>
-          <div className="grid grid-cols-2 gap-2">
-            <button
-              type="button"
-              aria-label="novel-assistant-confirm-stage"
-              onClick={handleConfirm}
-              disabled={!assistantState.brief[activeStage].trim()}
-              className="inline-flex items-center justify-center gap-2 rounded-2xl border border-emerald-300/60 bg-emerald-100 px-3 py-2.5 text-sm font-semibold text-emerald-900 transition hover:-translate-y-0.5 disabled:translate-y-0 disabled:cursor-not-allowed disabled:opacity-50"
-            >
-              <CheckCircle2 className="h-4 w-4" />
-              {assistantCopy.confirmAndContinue}
-            </button>
-            <button
-              type="button"
-              aria-label="novel-assistant-apply-seed"
-              onClick={handleApplySeed}
-              disabled={!hasConfirmedBrief}
-              className="inline-flex items-center justify-center gap-2 rounded-2xl border border-[rgba(117,132,159,0.18)] bg-white px-3 py-2.5 text-sm font-semibold text-[var(--sf-text)] transition hover:-translate-y-0.5 disabled:translate-y-0 disabled:cursor-not-allowed disabled:opacity-50"
-            >
-              <Copy className="h-4 w-4" />
-              {assistantCopy.applyConfirmed}
-            </button>
+          <div className="min-w-0 flex-1 truncate text-xs text-[var(--sf-text-muted)]">
+            {activeStageCopy.label} · {activeStageCopy.guide}
           </div>
         </div>
 
-        <div className="mt-3 flex items-end gap-2">
+        <div className="flex items-end gap-2">
           <textarea
             value={localInput}
             onChange={(event) => setLocalInput(event.target.value)}
@@ -1309,6 +1275,7 @@ export function NovelWorkbenchPage() {
   const [submitting, setSubmitting] = useState(false);
   const [cancellingJobId, setCancellingJobId] = useState<string | null>(null);
   const [deletingJobId, setDeletingJobId] = useState<string | null>(null);
+  const [activeStatusPanel, setActiveStatusPanel] = useState<NovelWorkbenchPanel | null>(null);
 
   const [title, setTitle] = useState("");
   const [projectName, setProjectName] = useState("");
@@ -1398,6 +1365,34 @@ export function NovelWorkbenchPage() {
   const activeJobs = jobs.filter((job) => isActiveJob(job.status)).length;
   const successfulJobs = jobs.filter((job) => job.status === "succeeded").length;
   const artifactCount = artifacts?.summary.available_count ?? 0;
+  const statusNavItems: { id: NovelWorkbenchPanel; label: string; value: string; ok?: boolean }[] = [
+    {
+      id: "readiness",
+      label: copy.navReadiness,
+      value: status?.requirements.all_ready ? copy.readyTitle : copy.blockedTitle,
+      ok: Boolean(status?.requirements.all_ready),
+    },
+    {
+      id: "latest",
+      label: copy.navLatest,
+      value: latestSuccessfulJob?.title ?? copy.latestEmpty,
+    },
+    {
+      id: "snapshot",
+      label: copy.navSnapshot,
+      value: `${jobs.length} / ${activeJobs} / ${successfulJobs}`,
+    },
+    {
+      id: "history",
+      label: copy.navHistory,
+      value: `${jobs.length}`,
+    },
+    {
+      id: "diagnostics",
+      label: copy.navDiagnostics,
+      value: status?.autonovel_env_mode ?? "-",
+    },
+  ];
 
   const handleLoadFullLog = useCallback(
     async (job: NovelWorkbenchJob) => {
@@ -1699,25 +1694,162 @@ export function NovelWorkbenchPage() {
             {copy.loading}
           </div>
         ) : (
-          <div className="grid gap-6 2xl:grid-cols-[minmax(0,1fr)_430px]">
+          <div className="space-y-5">
+            <nav className="rounded-[1.5rem] border border-[rgba(117,132,159,0.18)] bg-white/86 p-2 shadow-[0_18px_40px_rgba(23,38,69,0.06)]">
+              <div className="flex flex-wrap items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setActiveStatusPanel(null)}
+                  className={`inline-flex items-center gap-2 rounded-2xl px-4 py-2 text-sm font-semibold transition ${
+                    activeStatusPanel === null
+                      ? "bg-sky-100 text-sky-950"
+                      : "text-[var(--sf-text-muted)] hover:bg-[rgba(248,250,253,0.96)] hover:text-[var(--sf-text)]"
+                  }`}
+                >
+                  <BookOpen className="h-4 w-4" />
+                  {copy.navPrimary}
+                </button>
+                {statusNavItems.map((item) => (
+                  <button
+                    key={item.id}
+                    type="button"
+                    onClick={() => setActiveStatusPanel((current) => (current === item.id ? null : item.id))}
+                    className={`inline-flex min-w-0 items-center gap-2 rounded-2xl border px-3 py-2 text-sm transition ${
+                      activeStatusPanel === item.id
+                        ? "border-sky-300/60 bg-sky-100 text-sky-950"
+                        : "border-transparent text-[var(--sf-text-muted)] hover:border-[rgba(117,132,159,0.18)] hover:bg-[rgba(248,250,253,0.96)] hover:text-[var(--sf-text)]"
+                    }`}
+                  >
+                    {item.ok !== undefined && (
+                      <span className={`h-2 w-2 rounded-full ${item.ok ? "bg-emerald-500" : "bg-amber-500"}`} />
+                    )}
+                    <span>{item.label}</span>
+                    <span className="max-w-36 truncate rounded-full bg-white/70 px-2 py-0.5 text-xs text-[var(--sf-text-soft)]">
+                      {item.value}
+                    </span>
+                  </button>
+                ))}
+              </div>
+            </nav>
+
+            {activeStatusPanel && activeStatusPanel !== "history" && (
+              <section className="rounded-[1.5rem] border border-[rgba(117,132,159,0.18)] bg-white/88 p-5 shadow-[0_18px_40px_rgba(23,38,69,0.06)]">
+                {activeStatusPanel === "readiness" && (
+                  <div className="flex items-start gap-3">
+                    {status?.requirements.all_ready ? (
+                      <CheckCircle2 className="mt-0.5 h-5 w-5 text-emerald-600" />
+                    ) : (
+                      <AlertCircle className="mt-0.5 h-5 w-5 text-amber-600" />
+                    )}
+                    <div>
+                      <h3 className="text-base font-semibold text-[var(--sf-text)]">
+                        {status?.requirements.all_ready ? copy.readyTitle : copy.blockedTitle}
+                      </h3>
+                      <p className="mt-2 text-sm leading-6 text-[var(--sf-text-muted)]">
+                        {status?.requirements.all_ready
+                          ? copy.readyBody
+                          : missingRequiredEnv.length > 0
+                            ? `${copy.blockedBody} ${missingRequiredEnv.join(" · ")}`
+                            : copy.blockedBody}
+                      </p>
+                      {missingOptionalEnv.length > 0 && (
+                        <p className="mt-2 text-sm leading-6 text-amber-700">
+                          {copy.optionalBody} {missingOptionalEnv.join(" · ")}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {activeStatusPanel === "latest" && (
+                  <div>
+                    <div className="text-xs uppercase tracking-[0.24em] text-[var(--sf-text-soft)]">{copy.latestEyebrow}</div>
+                    {latestSuccessfulJob ? (
+                      <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
+                        <div>
+                          <h3 className="text-lg font-semibold text-[var(--sf-text)]">{latestSuccessfulJob.title}</h3>
+                          <p className="mt-1 text-sm leading-6 text-[var(--sf-text-muted)]">
+                            {copy.latestSummary(formatTimestamp(latestSuccessfulJob.finished_at))}
+                          </p>
+                        </div>
+                        {latestSuccessfulJob.imported_project_name && (
+                          <button
+                            type="button"
+                            onClick={() => navigate(`/app/projects/${latestSuccessfulJob.imported_project_name}`)}
+                            className="inline-flex items-center gap-2 rounded-full border border-emerald-300/60 bg-emerald-100 px-4 py-2 text-sm font-medium text-emerald-900 transition hover:-translate-y-0.5"
+                          >
+                            <ExternalLink className="h-4 w-4" />
+                            {copy.latestAction}
+                          </button>
+                        )}
+                      </div>
+                    ) : (
+                      <p className="mt-3 text-sm leading-7 text-[var(--sf-text-muted)]">{copy.latestEmpty}</p>
+                    )}
+                  </div>
+                )}
+
+                {activeStatusPanel === "snapshot" && (
+                  <div className="grid gap-3 md:grid-cols-4">
+                    <MetricCard label={copy.totalRuns} value={String(jobs.length)} detail={copy.runHistoryTitle} />
+                    <MetricCard label={copy.activeRuns} value={String(activeJobs)} detail={copy.statusLabels.running} />
+                    <MetricCard label={copy.successfulRuns} value={String(successfulJobs)} detail={copy.statusLabels.succeeded} />
+                    <MetricCard label={copy.artifactCount} value={String(artifactCount)} detail={copy.artifactsTitle} />
+                  </div>
+                )}
+
+                {activeStatusPanel === "diagnostics" && (
+                  <div className="space-y-4">
+                    <div className="flex flex-wrap gap-2">
+                      <RequirementChip label={copy.requirementLabels.workspace_root_exists} ok={Boolean(status?.requirements.workspace_root_exists)} />
+                      <RequirementChip label={copy.requirementLabels.autonovel_repo_exists} ok={Boolean(status?.requirements.autonovel_repo_exists)} />
+                      <RequirementChip label={copy.requirementLabels.importer_exists} ok={Boolean(status?.requirements.importer_exists)} />
+                      <RequirementChip label={copy.requirementLabels.autonovel_env_exists} ok={Boolean(status?.requirements.autonovel_env_exists)} />
+                      <RequirementChip label={copy.requirementLabels.git_available} ok={Boolean(status?.requirements.git_available)} />
+                      <RequirementChip label={copy.requirementLabels.uv_available} ok={Boolean(status?.requirements.uv_available)} />
+                    </div>
+                    <div className="grid gap-4 text-xs md:grid-cols-4">
+                      <div>
+                        <div className="uppercase tracking-wide text-[var(--sf-text-soft)]">{copy.workspaceRoot}</div>
+                        <div className="mt-2 break-all font-mono text-[var(--sf-text-muted)]">{status?.workspace_root}</div>
+                      </div>
+                      <div>
+                        <div className="uppercase tracking-wide text-[var(--sf-text-soft)]">{copy.autonovelSource}</div>
+                        <div className="mt-2 break-all font-mono text-[var(--sf-text-muted)]">{status?.autonovel_source_dir}</div>
+                      </div>
+                      <div>
+                        <div className="uppercase tracking-wide text-[var(--sf-text-soft)]">{copy.importerScript}</div>
+                        <div className="mt-2 break-all font-mono text-[var(--sf-text-muted)]">{status?.importer_script}</div>
+                      </div>
+                      <div>
+                        <div className="uppercase tracking-wide text-[var(--sf-text-soft)]">{copy.runtimeEnv}</div>
+                        <div className="mt-2 break-all font-mono text-[var(--sf-text-muted)]">{status?.autonovel_env_source}</div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </section>
+            )}
+
+            <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_400px]">
             <div className="min-w-0 space-y-6">
-            <section className="grid gap-6 xl:grid-cols-[minmax(0,1.14fr)_360px]">
-              <div className="relative overflow-hidden rounded-[2rem] border border-[rgba(117,132,159,0.18)] bg-[linear-gradient(180deg,rgba(255,255,255,0.92),rgba(244,248,252,0.98))] p-8 shadow-[0_24px_60px_rgba(23,38,69,0.08)]">
+            <section className="grid gap-6">
+              <div className="relative overflow-hidden rounded-[2rem] border border-[rgba(117,132,159,0.18)] bg-[linear-gradient(180deg,rgba(255,255,255,0.92),rgba(244,248,252,0.98))] p-6 shadow-[0_24px_60px_rgba(23,38,69,0.08)]">
                 <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(24,151,214,0.14),transparent_28%),radial-gradient(circle_at_bottom_right,rgba(216,165,90,0.14),transparent_32%)]" />
                 <div className="relative space-y-6">
                   <div className="inline-flex items-center gap-2 rounded-full border border-sky-300/60 bg-sky-100 px-3 py-1 text-xs font-medium text-sky-900">
                     <Sparkles className="h-3.5 w-3.5" />
-                    {copy.heroEyebrow}
+                    {copy.navPrimary}
                   </div>
 
                   <div className="max-w-3xl space-y-3">
-                    <h2 className="text-[2.3rem] font-semibold leading-[1.05] tracking-[-0.04em] text-[var(--sf-text)]">
-                      {copy.heroTitle}
+                    <h2 className="text-[1.75rem] font-semibold leading-tight tracking-[-0.03em] text-[var(--sf-text)]">
+                      {copy.focusedTitle}
                     </h2>
-                    <p className="max-w-2xl text-base leading-8 text-[var(--sf-text-muted)]">{copy.heroBody}</p>
+                    <p className="max-w-2xl text-sm leading-6 text-[var(--sf-text-muted)]">{copy.focusedBody}</p>
                   </div>
 
-                  <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_320px]">
+                  <div className="grid gap-5">
                     <form onSubmit={(event) => void handleCreateJob(event)} className="space-y-4 rounded-[1.7rem] border border-[rgba(117,132,159,0.18)] bg-[rgba(248,250,253,0.92)] p-5">
                       <label className="block">
                         <span className="mb-2 block text-[11px] uppercase tracking-[0.22em] text-[var(--sf-text-soft)]">{copy.formTitle}</span>
@@ -1762,7 +1894,7 @@ export function NovelWorkbenchPage() {
                           id="seed-text"
                           value={seedText}
                           onChange={(event) => setSeedText(event.target.value)}
-                          rows={12}
+                          rows={18}
                           placeholder={copy.seedPlaceholder}
                           className="frametale-input w-full rounded-2xl px-4 py-3.5 text-sm outline-none transition"
                         />
@@ -1780,149 +1912,11 @@ export function NovelWorkbenchPage() {
                       </button>
                     </form>
 
-                    <div className="rounded-[1.7rem] border border-[rgba(117,132,159,0.18)] bg-white/88 p-5">
-                      <div className="text-[11px] uppercase tracking-[0.24em] text-[var(--sf-text-soft)]">{copy.flowEyebrow}</div>
-                      <h3 className="mt-3 text-xl font-semibold tracking-[-0.02em] text-[var(--sf-text)]">{copy.flowTitle}</h3>
-                      <div className="mt-4 grid gap-3">
-                        {copy.flowSteps.map((step, index) => (
-                          <div key={step} className="rounded-2xl border border-[rgba(117,132,159,0.18)] bg-[rgba(248,250,253,0.92)] px-4 py-3 text-sm leading-6 text-[var(--sf-text-muted)]">
-                            <span className="mr-2 text-[var(--sf-text-soft)]">{index + 1}.</span>
-                            {step}
-                          </div>
-                        ))}
-                      </div>
-                    </div>
                   </div>
                 </div>
-              </div>
-
-              <div className="space-y-4">
-                <section
-                  className={`rounded-[32px] border p-6 shadow-[0_24px_70px_rgba(2,6,23,0.26)] ${
-                    status?.requirements.all_ready
-                      ? "border-emerald-500/20 bg-emerald-500/8"
-                      : "border-rose-500/20 bg-rose-500/8"
-                  }`}
-                >
-                  <div className="text-[11px] uppercase tracking-[0.24em] text-[var(--sf-text-soft)]">{copy.readyEyebrow}</div>
-                  <div className="mt-4 flex items-start gap-3">
-                    {status?.requirements.all_ready ? (
-                      <CheckCircle2 className="mt-0.5 h-5 w-5 text-emerald-300" />
-                    ) : (
-                      <AlertCircle className="mt-0.5 h-5 w-5 text-rose-300" />
-                    )}
-                    <div className="space-y-2">
-                      <h3 className="text-lg font-semibold text-[var(--sf-text)]">
-                        {status?.requirements.all_ready ? copy.readyTitle : copy.blockedTitle}
-                      </h3>
-                      <p className="text-sm leading-6 text-[var(--sf-text-muted)]">
-                        {status?.requirements.all_ready
-                          ? copy.readyBody
-                          : missingRequiredEnv.length > 0
-                            ? `${copy.blockedBody} ${missingRequiredEnv.join(" · ")}`
-                            : copy.blockedBody}
-                      </p>
-                      {missingOptionalEnv.length > 0 && (
-                        <p className="text-sm leading-6 text-amber-700">
-                          {copy.optionalBody} {missingOptionalEnv.join(" · ")}
-                        </p>
-                      )}
-                    </div>
-                  </div>
-                </section>
-
-                <section className="rounded-[2rem] border border-[rgba(117,132,159,0.18)] bg-white/82 p-6 shadow-[0_18px_40px_rgba(23,38,69,0.06)]">
-                  <div className="text-[11px] uppercase tracking-[0.24em] text-[var(--sf-text-soft)]">{copy.latestEyebrow}</div>
-                  {latestSuccessfulJob ? (
-                    <>
-                      <h3 className="mt-3 text-xl font-semibold tracking-[-0.02em] text-[var(--sf-text)]">{latestSuccessfulJob.title}</h3>
-                      <p className="mt-2 text-sm leading-7 text-[var(--sf-text-muted)]">
-                        {copy.latestSummary(formatTimestamp(latestSuccessfulJob.finished_at))}
-                      </p>
-                      {latestSuccessfulJob.imported_project_name && (
-                        <button
-                          type="button"
-                          onClick={() => navigate(`/app/projects/${latestSuccessfulJob.imported_project_name}`)}
-                          className="mt-4 inline-flex items-center gap-2 rounded-full border border-emerald-300/60 bg-emerald-100 px-4 py-2 text-sm font-medium text-emerald-900 transition hover:-translate-y-0.5"
-                        >
-                          <ExternalLink className="h-4 w-4" />
-                          {copy.latestAction}
-                        </button>
-                      )}
-                    </>
-                  ) : (
-                    <p className="mt-3 text-sm leading-7 text-[var(--sf-text-muted)]">{copy.latestEmpty}</p>
-                  )}
-                </section>
-
-                <section className="rounded-[2rem] border border-[rgba(117,132,159,0.18)] bg-white/82 p-6 shadow-[0_18px_40px_rgba(23,38,69,0.06)]">
-                  <div className="text-[11px] uppercase tracking-[0.24em] text-[var(--sf-text-soft)]">{copy.pulseEyebrow}</div>
-                  <div className="mt-4 grid gap-3">
-                    <MetricCard label={copy.totalRuns} value={String(jobs.length)} detail={copy.runHistoryTitle} />
-                    <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-1">
-                      <MetricCard label={copy.activeRuns} value={String(activeJobs)} detail={copy.statusLabels.running} />
-                      <MetricCard label={copy.successfulRuns} value={String(successfulJobs)} detail={copy.statusLabels.succeeded} />
-                    </div>
-                    <MetricCard label={copy.artifactCount} value={String(artifactCount)} detail={copy.artifactsTitle} />
-                  </div>
-                </section>
               </div>
             </section>
-            <details className="rounded-[2rem] border border-[rgba(117,132,159,0.18)] bg-white/82 p-6 shadow-[0_18px_40px_rgba(23,38,69,0.06)]">
-              <summary className="cursor-pointer list-none text-sm font-medium text-[var(--sf-text)]">
-                {copy.diagnosticsToggle}
-              </summary>
-
-              <div className="mt-5 space-y-5">
-                <div className="flex flex-wrap gap-2">
-                  <RequirementChip label={copy.requirementLabels.workspace_root_exists} ok={Boolean(status?.requirements.workspace_root_exists)} />
-                  <RequirementChip label={copy.requirementLabels.autonovel_repo_exists} ok={Boolean(status?.requirements.autonovel_repo_exists)} />
-                  <RequirementChip label={copy.requirementLabels.importer_exists} ok={Boolean(status?.requirements.importer_exists)} />
-                  <RequirementChip label={copy.requirementLabels.autonovel_env_exists} ok={Boolean(status?.requirements.autonovel_env_exists)} />
-                  <RequirementChip label={copy.requirementLabels.git_available} ok={Boolean(status?.requirements.git_available)} />
-                  <RequirementChip label={copy.requirementLabels.uv_available} ok={Boolean(status?.requirements.uv_available)} />
-                </div>
-
-                <div className="grid gap-4 lg:grid-cols-2 xl:grid-cols-4">
-                  <div>
-                    <div className="text-xs uppercase tracking-wide text-[var(--sf-text-soft)]">{copy.workspaceRoot}</div>
-                    <div className="mt-2 break-all font-mono text-xs text-[var(--sf-text-muted)]">{status?.workspace_root}</div>
-                  </div>
-                  <div>
-                    <div className="text-xs uppercase tracking-wide text-[var(--sf-text-soft)]">{copy.autonovelSource}</div>
-                    <div className="mt-2 break-all font-mono text-xs text-[var(--sf-text-muted)]">{status?.autonovel_source_dir}</div>
-                  </div>
-                  <div>
-                    <div className="text-xs uppercase tracking-wide text-[var(--sf-text-soft)]">{copy.importerScript}</div>
-                    <div className="mt-2 break-all font-mono text-xs text-[var(--sf-text-muted)]">{status?.importer_script}</div>
-                  </div>
-                  <div>
-                    <div className="text-xs uppercase tracking-wide text-[var(--sf-text-soft)]">{copy.runtimeEnv}</div>
-                    <div className="mt-2 break-all font-mono text-xs text-[var(--sf-text-muted)]">{status?.autonovel_env_source}</div>
-                  </div>
-                </div>
-
-                <div className="grid gap-4 lg:grid-cols-2">
-                  <div className="rounded-[1.5rem] border border-[rgba(117,132,159,0.18)] bg-[rgba(248,250,253,0.92)] p-4">
-                    <div className="text-xs uppercase tracking-wide text-[var(--sf-text-soft)]">{copy.coreDependencies}</div>
-                    <div className="mt-3 flex flex-wrap gap-2">
-                      {Object.entries(status?.env_status?.required ?? {}).map(([key, ok]) => (
-                        <RequirementChip key={key} label={key} ok={ok} />
-                      ))}
-                    </div>
-                  </div>
-                  <div className="rounded-[1.5rem] border border-[rgba(117,132,159,0.18)] bg-[rgba(248,250,253,0.92)] p-4">
-                    <div className="text-xs uppercase tracking-wide text-[var(--sf-text-soft)]">{copy.optionalExtensions}</div>
-                    <div className="mt-3 flex flex-wrap gap-2">
-                      {Object.entries(status?.env_status?.optional ?? {}).map(([key, ok]) => (
-                        <RequirementChip key={key} label={key} ok={ok} />
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </details>
-
+            {activeStatusPanel === "history" && (
             <section className="grid gap-6 xl:grid-cols-[340px,1fr]">
               <div className="rounded-[32px] border border-[rgba(117,132,159,0.18)] bg-white/86 p-5 shadow-[0_18px_40px_rgba(23,38,69,0.06)]">
                 <div className="mb-4 flex items-center justify-between">
@@ -2289,6 +2283,7 @@ export function NovelWorkbenchPage() {
                 )}
               </div>
             </section>
+            )}
             </div>
 
             <NovelWritingAssistantPanel
@@ -2298,6 +2293,7 @@ export function NovelWorkbenchPage() {
               onApplySeed={setSeedText}
               pushToast={pushToast}
             />
+            </div>
           </div>
         )}
       </main>

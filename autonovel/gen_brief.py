@@ -117,6 +117,100 @@ def load_cuts(ch: int) -> dict | None:
     return load_json(p)
 
 
+def available_chapters() -> list[int]:
+    chapters = []
+    for path in sorted(CHAPTERS_DIR.glob("ch_*.md")):
+        match = re.search(r"ch_(\d+)$", path.stem)
+        if match:
+            chapters.append(int(match.group(1)))
+    return chapters
+
+
+def auto_select_chapter_from_eval() -> tuple[int, str, str] | None:
+    candidates: list[tuple[float, int, dict, Path]] = []
+    for ch in available_chapters():
+        eval_path = latest_chapter_eval(ch)
+        if eval_path is None:
+            continue
+        try:
+            data = load_json(eval_path)
+            score = float(data.get("overall_score"))
+        except (OSError, json.JSONDecodeError, TypeError, ValueError):
+            continue
+        candidates.append((score, ch, data, eval_path))
+
+    if not candidates:
+        return None
+
+    score, ch, data, path = min(candidates, key=lambda item: (item[0], item[1]))
+    suggestion = ""
+    for revision in data.get("top_3_revisions", []):
+        if revision:
+            suggestion = revision
+            break
+    if not suggestion:
+        suggestion = (
+            data.get("prose_quality", {}).get("fix")
+            or data.get("engagement", {}).get("fix")
+            or "Revise the weakest-scoring dimension from the latest chapter evaluation."
+        )
+    return ch, f"lowest per-chapter eval ({score}/10) from {path.name}", suggestion
+
+
+def auto_select_chapter_from_panel() -> tuple[int, str, str] | None:
+    panel = load_panel()
+    if panel is None:
+        return None
+
+    counts: dict[int, int] = {}
+    for disagreement in panel.get("disagreements", []):
+        chapter = disagreement.get("chapter")
+        if isinstance(chapter, int):
+            counts[chapter] = counts.get(chapter, 0) + max(len(disagreement.get("flagged_by", [])), 1)
+    for reader_data in panel.get("readers", {}).values():
+        for key in ("momentum_loss", "cut_candidate", "worst_scene", "thinnest_character", "missing_scene"):
+            answer = reader_data.get(key, "")
+            if not isinstance(answer, str):
+                continue
+            for chapter_str in re.findall(r"Ch(?:apter|\.?)\s*(\d+)", answer, re.IGNORECASE):
+                chapter = int(chapter_str)
+                counts[chapter] = counts.get(chapter, 0) + 1
+
+    if not counts:
+        return None
+
+    ch, count = max(counts.items(), key=lambda item: (item[1], -item[0]))
+    suggestion = f"Start revision with Chapter {ch}; it drew the most reader-panel concern."
+    return ch, f"reader panel mentions ({count} total flags)", suggestion
+
+
+def auto_select_chapter_from_cuts() -> tuple[int, str, str] | None:
+    candidates: list[tuple[float, int, int, dict]] = []
+    for path in sorted(EDIT_LOGS_DIR.glob("ch*_cuts.json")):
+        match = re.match(r"ch(\d+)_cuts\.json$", path.name)
+        if not match:
+            continue
+        ch = int(match.group(1))
+        try:
+            data = load_json(path)
+        except (OSError, json.JSONDecodeError):
+            continue
+        fat_pct = float(data.get("overall_fat_percentage") or 0)
+        cuttable = int(data.get("total_cuttable_words") or 0)
+        candidates.append((fat_pct, cuttable, ch, data))
+
+    if not candidates:
+        return None
+
+    fat_pct, cuttable, ch, data = max(candidates, key=lambda item: (item[0], item[1], -item[2]))
+    suggestion = data.get("one_sentence_verdict") or f"Compress Chapter {ch}; it shows the highest cut pressure."
+    return ch, f"adversarial cuts ({fat_pct}% fat, {cuttable} cuttable words)", suggestion
+
+
+def auto_select_chapter() -> tuple[int, str, str] | None:
+    return auto_select_chapter_from_eval() or auto_select_chapter_from_panel() or auto_select_chapter_from_cuts()
+
+
 # ---------------------------------------------------------------------------
 # panel feedback extraction
 # ---------------------------------------------------------------------------
@@ -586,19 +680,24 @@ def build_cuts_brief(ch: int) -> str:
 def build_auto_brief() -> tuple[int, str]:
     """Auto-detect weakest chapter and build a combined brief."""
     full_eval_path = latest_full_eval()
-    if full_eval_path is None:
-        sys.exit("ERROR: no *_full.json found in eval_logs/")
-
-    full_eval = load_json(full_eval_path)
+    full_eval = load_json(full_eval_path) if full_eval_path is not None else {}
     ch = full_eval.get("weakest_chapter")
+    selection_note = ""
+    fallback_top_suggestion = ""
     if ch is None:
-        sys.exit("ERROR: full eval does not contain 'weakest_chapter'")
+        fallback = auto_select_chapter()
+        if fallback is None:
+            sys.exit("ERROR: could not auto-detect a chapter from eval logs, reader panel, or cuts")
+        ch, selection_note, fallback_top_suggestion = fallback
+        print(f"Auto-selected chapter: {ch}", file=sys.stderr)
+        print(f"  Fallback source: {selection_note}", file=sys.stderr)
+    else:
+        print(f"Auto-detected weakest chapter: {ch}", file=sys.stderr)
+        if full_eval_path is not None:
+            print(f"  Source: {full_eval_path.name}", file=sys.stderr)
 
-    print(f"Auto-detected weakest chapter: {ch}", file=sys.stderr)
-    print(f"  Source: {full_eval_path.name}", file=sys.stderr)
-
-    top_sug = full_eval.get("top_suggestion", "")
-    weakest_dim = full_eval.get("weakest_dimension", "")
+    top_sug = full_eval.get("top_suggestion", "") or fallback_top_suggestion
+    weakest_dim = full_eval.get("weakest_dimension", "") or "full eval unavailable"
     novel_score = full_eval.get("novel_score", "?")
 
     text = chapter_text(ch)
@@ -612,11 +711,15 @@ def build_auto_brief() -> tuple[int, str]:
     change_num = 1
 
     # Full eval context
+    if selection_note:
+        problem_parts.append(f"**Auto-selection fallback:** {selection_note}.")
     problem_parts.append(
         f"**Weakest chapter in the novel** (novel score: {novel_score}/10, weakest dimension: {weakest_dim})."
     )
     if top_sug:
-        problem_parts.append(f"**Top suggestion from full eval:** {top_sug}")
+        problem_parts.append(f"**Top suggestion:** {top_sug}")
+    if full_eval.get("error"):
+        problem_parts.append(f"**Full eval status:** {full_eval['error']}")
 
     # Per-dimension notes from full eval that mention this chapter
     dim_keys = [

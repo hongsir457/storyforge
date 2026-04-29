@@ -41,6 +41,23 @@ def call_writer(prompt, max_tokens=4000):
     return generate_text(payload, timeout=120, base_url=API_BASE)
 
 
+def _truncate_words(text: str, limit: int) -> str:
+    words = text.split()
+    return " ".join(words[:limit])
+
+
+def fallback_summary(chapter_num: int, title: str, opening: str, closing: str, dialogue: list[str]) -> str:
+    summary_parts = [
+        f'Chapter {chapter_num}, "{title}", opens with {opening[:220] or "an unresolved situation"}.',
+        f"It closes on {closing[:220] or 'a new unanswered turn'}.",
+    ]
+    if dialogue:
+        summary_parts.append(f'Key dialogue centers on "{dialogue[0][:180]}".')
+    else:
+        summary_parts.append("The chapter's movement is preserved here through opening and closing excerpts.")
+    return " ".join(summary_parts)
+
+
 def extract_key_passages(text):
     """Get opening, closing, and best dialogue from a chapter."""
     words = text.split()
@@ -61,28 +78,39 @@ def main():
     chapter_files = discover_chapter_files()
     if not chapter_files:
         raise SystemExit("ERROR: No chapter files found.")
-    seed_excerpt = (BASE_DIR / "seed.txt").read_text(encoding="utf-8").strip()
+    fallback_chapters: list[int] = []
+    fallback_errors: list[str] = []
+    seed_path = BASE_DIR / "seed.txt"
+    seed_excerpt = seed_path.read_text(encoding="utf-8").strip() if seed_path.exists() else ""
     seed_excerpt = " ".join(seed_excerpt.split())[:1200]
 
     for path in chapter_files:
         ch = int(path.stem.removeprefix("ch_"))
-        text = path.read_text()
+        text = path.read_text(encoding="utf-8")
         wc = len(text.split())
         opening, closing, dialogue = extract_key_passages(text)
+        title = text.strip().splitlines()[0].lstrip("# ").strip() if text.strip() else f"Chapter {ch}"
+        opening_excerpt = opening or _truncate_words(text, 80) or title
+        closing_excerpt = closing or _truncate_words(text, 80) or title
 
-        # Get a 100-word summary from the model
-        summary = call_writer(
-            f"Summarize this chapter in exactly 3 sentences in {WRITING_LANGUAGE}. "
-            f"What happens, what changes, what question is left open.\n\nCHAPTER {ch}:\n{text}",
-            max_tokens=200,
-        )
+        try:
+            summary = call_writer(
+                f"Summarize this chapter in exactly 3 sentences in {WRITING_LANGUAGE}. "
+                f"What happens, what changes, what question is left open.\n\nCHAPTER {ch}:\n{text}",
+                max_tokens=200,
+            )
+        except Exception as exc:
+            summary = fallback_summary(ch, title, opening_excerpt, closing_excerpt, dialogue)
+            fallback_chapters.append(ch)
+            fallback_errors.append(f"Chapter {ch}: {exc}")
+            print(f"Ch {ch}: fallback summary ({exc})")
 
         entry = f"""### Chapter {ch} ({wc} words)
 **Summary:** {summary}
 
-**Opening:** {opening}...
+**Opening:** {opening_excerpt}...
 
-**Closing:** ...{closing}
+**Closing:** ...{closing_excerpt}
 
 **Key dialogue:**
 """
@@ -109,11 +137,20 @@ SEED / PREMISE:
 ---
 
 """
+    if fallback_chapters:
+        full += (
+            "NOTE: Deterministic fallback summaries were used for "
+            + ", ".join(f"Chapter {chapter}" for chapter in fallback_chapters)
+            + " because model summarization failed.\n\n---\n\n"
+        )
     full += "\n---\n\n".join(summaries)
 
     out_path = BASE_DIR / "arc_summary.md"
-    out_path.write_text(full)
+    out_path.write_text(full, encoding="utf-8")
     print(f"\nSaved to {out_path} ({len(full.split())} words)")
+    if fallback_errors:
+        for error in fallback_errors:
+            print(f"  WARN: {error}")
 
 
 if __name__ == "__main__":

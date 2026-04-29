@@ -1236,6 +1236,10 @@ function isActiveJob(status: NovelWorkbenchJob["status"]): boolean {
   return status === "queued" || status === "running";
 }
 
+function isHistoryJob(status: NovelWorkbenchJob["status"]): boolean {
+  return !isActiveJob(status);
+}
+
 function formatFileSize(sizeBytes: number): string {
   if (sizeBytes < 1024) return `${sizeBytes} B`;
   if (sizeBytes < 1024 * 1024) return `${(sizeBytes / 1024).toFixed(1)} KB`;
@@ -1275,7 +1279,9 @@ export function NovelWorkbenchPage() {
   const [submitting, setSubmitting] = useState(false);
   const [cancellingJobId, setCancellingJobId] = useState<string | null>(null);
   const [deletingJobId, setDeletingJobId] = useState<string | null>(null);
-  const [activeStatusPanel, setActiveStatusPanel] = useState<NovelWorkbenchPanel | null>(null);
+  const [activeStatusPanel, setActiveStatusPanel] = useState<NovelWorkbenchPanel | null>(() =>
+    initialSearchParams.has("job") || initialSearchParams.has("artifact") ? "history" : null,
+  );
 
   const [title, setTitle] = useState("");
   const [projectName, setProjectName] = useState("");
@@ -1336,10 +1342,14 @@ export function NovelWorkbenchPage() {
     }
   }, [jobs, requestedJobId, selectedJobId]);
 
-  const selectedJob = useMemo(
+  const selectedJobRecord = useMemo(
     () => jobs.find((job) => job.job_id === selectedJobId) ?? null,
     [jobs, selectedJobId],
   );
+  const selectedJob = activeStatusPanel === "history" && selectedJobRecord && !isHistoryJob(selectedJobRecord.status)
+    ? null
+    : selectedJobRecord;
+  const activeSelectedJob = selectedJobRecord && isActiveJob(selectedJobRecord.status) ? selectedJobRecord : null;
   const selectedArtifact = useMemo(
     () => artifacts?.artifacts.find((artifact) => artifact.path === selectedArtifactPath) ?? null,
     [artifacts, selectedArtifactPath],
@@ -1364,6 +1374,7 @@ export function NovelWorkbenchPage() {
   }, [artifacts]);
   const activeJobs = jobs.filter((job) => isActiveJob(job.status)).length;
   const successfulJobs = jobs.filter((job) => job.status === "succeeded").length;
+  const historyJobs = jobs.filter((job) => isHistoryJob(job.status));
   const artifactCount = artifacts?.summary.available_count ?? 0;
   const statusNavItems: { id: NovelWorkbenchPanel; label: string; value: string; ok?: boolean }[] = [
     {
@@ -1385,7 +1396,7 @@ export function NovelWorkbenchPage() {
     {
       id: "history",
       label: copy.navHistory,
-      value: `${jobs.length}`,
+      value: `${historyJobs.length}`,
     },
     {
       id: "diagnostics",
@@ -1479,7 +1490,7 @@ export function NovelWorkbenchPage() {
 
     const nextSearch = params.toString();
     const nextTarget = nextSearch ? `${location}?${nextSearch}` : location;
-    const currentTarget = `${location}${search}`;
+    const currentTarget = `${location}${search ? `?${search}` : ""}`;
     if (nextTarget !== currentTarget) {
       navigate(nextTarget, { replace: true });
     }
@@ -1916,24 +1927,71 @@ export function NovelWorkbenchPage() {
                 </div>
               </div>
             </section>
+            {activeStatusPanel !== "history" && activeSelectedJob && (
+              <section
+                className="rounded-[32px] border border-[rgba(117,132,159,0.18)] bg-white/86 p-5 shadow-[0_18px_40px_rgba(23,38,69,0.06)]"
+                data-testid="novel-workbench-selected-job-panel"
+              >
+                <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <h2 className="text-lg font-semibold tracking-[-0.02em] text-[var(--sf-text)]">
+                        {activeSelectedJob.title}
+                      </h2>
+                      <JobStatusBadge status={activeSelectedJob.status} locale={locale} />
+                    </div>
+                    <p className="mt-2 text-sm leading-6 text-[var(--sf-text-muted)]">
+                      {copy.stage} <span className="text-[var(--sf-text)]">{activeSelectedJob.stage}</span> · {copy.target}{" "}
+                      <span className="font-mono text-[var(--sf-text)]">{activeSelectedJob.target_project_name}</span>
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => void handleCancelJob(activeSelectedJob)}
+                    disabled={cancellingJobId === activeSelectedJob.job_id}
+                    className="inline-flex items-center gap-1.5 rounded-full border border-rose-500/30 bg-rose-500/10 px-4 py-2 text-sm text-rose-200 transition-colors hover:bg-rose-500/20 disabled:cursor-not-allowed disabled:opacity-60"
+                  >
+                    {cancellingJobId === activeSelectedJob.job_id ? <Loader2 className="h-4 w-4 animate-spin" /> : <Square className="h-4 w-4" />}
+                    {copy.cancel}
+                  </button>
+                </div>
+                <div className="mt-4 rounded-[24px] border border-[rgba(117,132,159,0.18)] bg-[rgba(248,250,253,0.92)] p-4">
+                  <div className="mb-2 flex items-center justify-between gap-3">
+                    <div className="text-xs uppercase tracking-wide text-[var(--sf-text-soft)]">{copy.logTail}</div>
+                    {activeSelectedJob.status === "running" && (
+                      <span className="inline-flex items-center gap-1 text-xs text-amber-300">
+                        <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                        {copy.liveRefreshing}
+                      </span>
+                    )}
+                  </div>
+                  <pre className="max-h-[24rem] overflow-auto whitespace-pre-wrap break-words rounded-xl border border-[rgba(117,132,159,0.18)] bg-[rgba(240,245,250,0.95)] p-3 font-mono text-xs text-[var(--sf-text)]">
+                    {activeSelectedJob.log_tail || copy.noLogsYet}
+                  </pre>
+                </div>
+              </section>
+            )}
             {activeStatusPanel === "history" && (
             <section className="grid gap-6 xl:grid-cols-[340px,1fr]">
-              <div className="rounded-[32px] border border-[rgba(117,132,159,0.18)] bg-white/86 p-5 shadow-[0_18px_40px_rgba(23,38,69,0.06)]">
+              <div
+                className="rounded-[32px] border border-[rgba(117,132,159,0.18)] bg-white/86 p-5 shadow-[0_18px_40px_rgba(23,38,69,0.06)]"
+                data-testid="novel-workbench-history-list"
+              >
                 <div className="mb-4 flex items-center justify-between">
                   <div>
                     <div className="text-[11px] uppercase tracking-[0.24em] text-[var(--sf-text-soft)]">{copy.runHistoryEyebrow}</div>
                     <h2 className="mt-2 text-base font-semibold text-[var(--sf-text)]">{copy.runHistoryTitle}</h2>
                   </div>
-                  <span className="text-xs text-[var(--sf-text-soft)]">{jobs.length}</span>
+                  <span className="text-xs text-[var(--sf-text-soft)]">{historyJobs.length}</span>
                 </div>
 
                 <div className="space-y-3">
-                  {jobs.length === 0 ? (
+                  {historyJobs.length === 0 ? (
                     <div className="rounded-[24px] border border-dashed border-[rgba(117,132,159,0.22)] bg-[rgba(248,250,253,0.78)] px-4 py-10 text-center text-sm text-[var(--sf-text-muted)]">
                       {copy.runHistoryEmpty}
                     </div>
                   ) : (
-                    jobs.map((job) => {
+                    historyJobs.map((job) => {
                       const selected = selectedJobId === job.job_id;
                       const jobIsActive = isActiveJob(job.status);
                       const cancelling = cancellingJobId === job.job_id;
@@ -2003,7 +2061,10 @@ export function NovelWorkbenchPage() {
                 </div>
               </div>
 
-              <div className="rounded-[32px] border border-[rgba(117,132,159,0.18)] bg-white/86 p-5 shadow-[0_18px_40px_rgba(23,38,69,0.06)]">
+              <div
+                className="rounded-[32px] border border-[rgba(117,132,159,0.18)] bg-white/86 p-5 shadow-[0_18px_40px_rgba(23,38,69,0.06)]"
+                data-testid="novel-workbench-history-detail"
+              >
                 {selectedJob ? (
                   <div className="space-y-5">
                     <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">

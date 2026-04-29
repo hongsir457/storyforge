@@ -1,4 +1,4 @@
-import { render, waitFor } from "@testing-library/react";
+import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { Router } from "wouter";
@@ -86,6 +86,29 @@ const JOBS_FIXTURE = [
   },
 ];
 
+const RUNNING_JOB_FIXTURE = {
+  job_id: "job-running",
+  title: "Running Novel",
+  seed_text: "active-seed",
+  seed_excerpt: "active-seed",
+  writing_language: "English",
+  style: "Cinematic",
+  aspect_ratio: "16:9" as const,
+  default_duration: 6 as const,
+  target_project_name: "running-novel",
+  imported_project_name: null,
+  status: "running" as const,
+  stage: "revision",
+  error_message: null,
+  workspace_dir: "C:/workbench/job-running",
+  log_path: "C:/workbench/job-running/run.log",
+  log_tail: "live-tail",
+  created_at: "2026-04-23T12:00:00Z",
+  updated_at: "2026-04-23T12:05:00Z",
+  started_at: "2026-04-23T12:00:05Z",
+  finished_at: null,
+};
+
 const ARTIFACTS_FIXTURE: Record<"job-1" | "job-2", NovelWorkbenchArtifactListResponse> = {
   "job-1": {
     summary: {
@@ -163,6 +186,7 @@ const SHARE_COPY_FIXTURE = {
 };
 
 function renderPage(path = "/app/novel-workbench") {
+  window.history.replaceState({}, "", path);
   const location = memoryLocation({ path, record: true });
   return {
     ...render(
@@ -242,6 +266,55 @@ describe("NovelWorkbenchPage sharing", () => {
     await waitFor(() => {
       expect(window.location.search).toContain("job=job-2");
     });
+    expect(await screen.findByText("Preview for job-2 / chapters/ch_99.md")).toBeInTheDocument();
+  });
+
+  it("keeps active run logs on the main page instead of listing the run in history", async () => {
+    const user = userEvent.setup();
+    vi.mocked(API.listNovelWorkbenchJobs).mockResolvedValue({
+      jobs: [RUNNING_JOB_FIXTURE, ...JOBS_FIXTURE],
+    });
+    vi.mocked(API.listNovelWorkbenchArtifacts).mockImplementation(async (jobId: string) => {
+      if (jobId === "job-running") {
+        return {
+          summary: {
+            available_count: 0,
+            chapter_count: 0,
+            has_seed: false,
+            has_outline: false,
+            has_world: false,
+            has_characters: false,
+            has_canon: false,
+            has_state: false,
+            has_manuscript: false,
+            has_pdf: false,
+          },
+          artifacts: [],
+        };
+      }
+      return ARTIFACTS_FIXTURE[jobId as "job-1" | "job-2"];
+    });
+
+    renderPage();
+
+    await waitFor(() => {
+      expect(document.querySelector('[data-testid="novel-workbench-selected-job-panel"]')).not.toBeNull();
+    });
+    expect(screen.getByText("Running Novel")).toBeInTheDocument();
+    expect(screen.getByText("live-tail")).toBeInTheDocument();
+
+    const historyButton = Array.from(document.querySelectorAll("button")).find((button) =>
+      button.textContent?.includes("History") || button.textContent?.includes("历史记录"),
+    ) as HTMLButtonElement;
+    expect(historyButton).toBeDefined();
+    await user.click(historyButton);
+
+    await waitFor(() => {
+      expect(document.querySelector('[data-testid="novel-workbench-history-detail"]')).not.toBeNull();
+    });
+    expect(document.querySelector('[data-testid="novel-workbench-history-detail"]')?.textContent).not.toContain(
+      "Running Novel",
+    );
   });
 
   it("opens an X intent with a selection-preserving share URL", async () => {

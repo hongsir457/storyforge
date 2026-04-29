@@ -36,6 +36,7 @@ JUDGE_MODEL = os.environ.get("AUTONOVEL_JUDGE_MODEL", "gemini-3-flash-preview")
 API_BASE_URL = os.environ.get("AUTONOVEL_API_BASE_URL", "https://generativelanguage.googleapis.com")
 CHAPTERS_DIR = BASE_DIR / "chapters"
 EVAL_LOG_DIR = BASE_DIR / "eval_logs"
+EDIT_LOG_DIR = BASE_DIR / "edit_logs"
 EVAL_LOG_DIR.mkdir(exist_ok=True)
 
 
@@ -307,6 +308,71 @@ def load_all_chapters():
         num = int(re.search(r"ch_(\d+)", f).group(1))
         chapters[num] = Path(f).read_text()
     return chapters
+
+
+def coerce_score(value):
+    try:
+        return float(value)
+    except (TypeError, ValueError):
+        return None
+
+
+def load_latest_chapter_eval_results():
+    latest: dict[int, dict] = {}
+    for path in sorted(EVAL_LOG_DIR.glob("*_ch*.json"), reverse=True):
+        match = re.search(r"_ch(\d+)\.json$", path.name)
+        if not match:
+            continue
+        chapter_num = int(match.group(1))
+        if chapter_num in latest:
+            continue
+        try:
+            latest[chapter_num] = json.loads(path.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError):
+            continue
+    return latest
+
+
+def load_panel_issue_counts():
+    panel_path = EDIT_LOG_DIR / "reader_panel.json"
+    if not panel_path.exists():
+        return {}
+    try:
+        panel = json.loads(panel_path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return {}
+
+    counts: dict[int, int] = {}
+    for disagreement in panel.get("disagreements", []):
+        chapter_num = disagreement.get("chapter")
+        if isinstance(chapter_num, int):
+            counts[chapter_num] = counts.get(chapter_num, 0) + max(len(disagreement.get("flagged_by", [])), 1)
+    for reader_data in panel.get("readers", {}).values():
+        for key in ("momentum_loss", "cut_candidate", "worst_scene", "thinnest_character", "missing_scene"):
+            answer = reader_data.get(key, "")
+            if not isinstance(answer, str):
+                continue
+            for chapter_num in re.findall(r"Ch(?:apter)?\s*(\d+)", answer, re.IGNORECASE):
+                number = int(chapter_num)
+                counts[number] = counts.get(number, 0) + 1
+    return counts
+
+
+def load_cut_pressure():
+    pressure: dict[int, tuple[float, int]] = {}
+    for path in sorted(EDIT_LOG_DIR.glob("ch*_cuts.json")):
+        match = re.match(r"ch(\d+)_cuts\.json$", path.name)
+        if not match:
+            continue
+        chapter_num = int(match.group(1))
+        try:
+            data = json.loads(path.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError):
+            continue
+        fat = coerce_score(data.get("overall_fat_percentage")) or 0.0
+        cuttable = int(coerce_score(data.get("total_cuttable_words")) or 0)
+        pressure[chapter_num] = (fat, cuttable)
+    return pressure
 
 
 def call_judge(prompt, max_tokens=2000):
@@ -806,10 +872,84 @@ def evaluate_full():
 # --- Main ---
 
 
+def fallback_full_evaluation(exc: Exception) -> dict:
+    chapters = load_all_chapters()
+    chapter_evals = load_latest_chapter_eval_results()
+    scored_chapters = []
+    for chapter_num, data in chapter_evals.items():
+        score = coerce_score(data.get("overall_score"))
+        if score is None:
+            continue
+        scored_chapters.append((score, chapter_num, data))
+
+    weakest_chapter = None
+    novel_score = 0.0
+    top_suggestion = ""
+    source_note = ""
+
+    if scored_chapters:
+        scored_chapters.sort(key=lambda item: (item[0], item[1]))
+        novel_score = round(sum(score for score, _, _ in scored_chapters) / len(scored_chapters), 2)
+        weakest_score, weakest_chapter, weakest_eval = scored_chapters[0]
+        revisions = weakest_eval.get("top_3_revisions", [])
+        if revisions:
+            top_suggestion = revisions[0]
+        else:
+            top_suggestion = (
+                weakest_eval.get("prose_quality", {}).get("fix")
+                or weakest_eval.get("engagement", {}).get("fix")
+                or "Re-evaluate the weakest chapter and revise the lowest-scoring dimension first."
+            )
+        source_note = (
+            f"Heuristic fallback used the latest per-chapter evals; Chapter {weakest_chapter} is lowest at "
+            f"{weakest_score}/10."
+        )
+    else:
+        panel_counts = load_panel_issue_counts()
+        if panel_counts:
+            weakest_chapter = max(panel_counts.items(), key=lambda item: (item[1], -item[0]))[0]
+            source_note = (
+                f"Heuristic fallback used reader panel issue counts; Chapter {weakest_chapter} drew the most flags."
+            )
+            top_suggestion = f"Start revision with Chapter {weakest_chapter}; it drew the most reader-panel concern."
+        else:
+            cut_pressure = load_cut_pressure()
+            if cut_pressure:
+                weakest_chapter = max(cut_pressure.items(), key=lambda item: (item[1][0], item[1][1], -item[0]))[0]
+                source_note = (
+                    f"Heuristic fallback used adversarial cut pressure; Chapter {weakest_chapter} is the fattest pass."
+                )
+                top_suggestion = f"Compress Chapter {weakest_chapter} first based on adversarial cut pressure."
+
+    if weakest_chapter is None:
+        weakest_chapter = min(chapters) if chapters else 1
+        source_note = "No chapter evals, panel output, or cuts were available; selected the first chapter as fallback."
+        top_suggestion = f"Run a targeted chapter evaluation for Chapter {weakest_chapter} before another review cycle."
+
+    note = f"{source_note} Full-novel evaluation failed: {type(exc).__name__}: {exc}"
+    return {
+        "arc_completion": {"score": novel_score, "note": note},
+        "pacing_curve": {"score": novel_score, "note": note},
+        "theme_coherence": {"score": novel_score, "note": note},
+        "foreshadowing_resolution": {"score": novel_score, "note": note},
+        "world_consistency": {"score": novel_score, "note": note},
+        "voice_consistency": {"score": novel_score, "note": note},
+        "overall_engagement": {"score": novel_score, "note": note},
+        "novel_score": novel_score,
+        "weakest_dimension": "full_evaluation_unavailable",
+        "weakest_chapter": weakest_chapter,
+        "top_suggestion": top_suggestion,
+        "error": f"full novel evaluation failed: {exc}",
+        "evaluation_mode": "fallback",
+    }
+
+
 def safe_evaluate(label: str, evaluator, score_key: str) -> dict:
     try:
         result = evaluator()
     except Exception as exc:
+        if score_key == "novel_score":
+            return fallback_full_evaluation(exc)
         return {
             score_key: 0.0,
             "error": f"{label} evaluation failed: {exc}",

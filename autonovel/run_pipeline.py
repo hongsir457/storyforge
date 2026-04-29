@@ -150,6 +150,11 @@ def uv_run(script: str, timeout: int = 600) -> subprocess.CompletedProcess:
     return run_tool(f"uv run python {script}", timeout=timeout)
 
 
+def revision_step_skipped(result: subprocess.CompletedProcess) -> bool:
+    output = f"{result.stdout or ''}\n{result.stderr or ''}"
+    return "REVISION_STATUS: skipped_model_failure" in output
+
+
 # ---------------------------------------------------------------------------
 # Helpers: git operations
 # ---------------------------------------------------------------------------
@@ -564,7 +569,20 @@ def run_revision(state: dict, max_cycles: int = MAX_REVISION_CYCLES) -> dict:
 
             # Run revision
             step(f"Revising Ch {ch_num} with brief {brief_file.name}...")
-            uv_run(f"gen_revision.py {ch_num} {brief_file}", timeout=600)
+            revision_result = uv_run(f"gen_revision.py {ch_num} {brief_file}", timeout=600)
+            if revision_result.returncode != 0 or revision_step_skipped(revision_result):
+                ch_file = CHAPTERS_DIR / f"ch_{ch_num:02d}.md"
+                word_count = len(ch_file.read_text().split()) if ch_file.exists() else 0
+                step(f"Revision for Ch {ch_num} did not produce a new draft; preserving current chapter")
+                log_result(
+                    "skipped",
+                    f"rev-ch{ch_num:02d}",
+                    pre_score,
+                    word_count,
+                    "skip",
+                    f"Cycle {cycle}: {question} revision unavailable; chapter preserved",
+                )
+                continue
 
             # Evaluate revised chapter
             post_eval = uv_run(f"evaluate.py --chapter={ch_num}", timeout=300)
@@ -667,6 +685,10 @@ def run_revision(state: dict, max_cycles: int = MAX_REVISION_CYCLES) -> dict:
 
                 step(f"Stars: {stars}, Items: {total_items} ({major_items} major, {qualified} qualified)")
 
+                if review_data.get("review_failed") or review_data.get("error"):
+                    step("Review generation failed; skipping review-driven revision loop")
+                    break
+
                 # Stop if: ≥4★, no major unqualified items, or >half qualified
                 if stars >= 4.5 and major_items == 0:
                     step("★★★★½ with no major items — novel is ready.")
@@ -691,8 +713,11 @@ def run_revision(state: dict, max_cycles: int = MAX_REVISION_CYCLES) -> dict:
                     if ch_match:
                         ch_num = int(ch_match.group(1))
                         step(f"Revising Ch {ch_num} from review brief...")
-                        uv_run(f"gen_revision.py {ch_num} {brief}", timeout=600)
-                        git_add_commit(f"review round {rnd}: revise ch{ch_num:02d} from reviewer feedback")
+                        revision_result = uv_run(f"gen_revision.py {ch_num} {brief}", timeout=600)
+                        if revision_result.returncode != 0 or revision_step_skipped(revision_result):
+                            step(f"Review revision for Ch {ch_num} did not produce a new draft; preserving current chapter")
+                        else:
+                            git_add_commit(f"review round {rnd}: revise ch{ch_num:02d} from reviewer feedback")
 
             # Step 5: Mechanical fixes from review
             # Run slop pass on any mentioned patterns

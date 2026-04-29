@@ -21,6 +21,7 @@ load_dotenv(BASE_DIR / ".env")
 
 JUDGE_MODEL = os.environ.get("AUTONOVEL_JUDGE_MODEL", "gemini-3-flash-preview")
 API_BASE = os.environ.get("AUTONOVEL_API_BASE_URL", "https://generativelanguage.googleapis.com")
+CHAPTERS_DIR = BASE_DIR / "chapters"
 
 READERS = {
     "editor": {
@@ -188,10 +189,46 @@ def find_disagreements(results):
     return disagreements
 
 
+def discover_chapter_files() -> list[Path]:
+    return sorted(CHAPTERS_DIR.glob("ch_*.md"))
+
+
+def build_fallback_arc_summary() -> str:
+    chapter_files = discover_chapter_files()
+    if not chapter_files:
+        return "# ARC SUMMARY\n\nNo arc summary or chapter files were available.\n"
+
+    lines = [
+        "# ARC SUMMARY",
+        "",
+        "This fallback summary was generated from chapter openings and closings because arc_summary.md was missing.",
+        "",
+    ]
+    for path in chapter_files:
+        chapter_num = int(path.stem.removeprefix("ch_"))
+        text = path.read_text(encoding="utf-8")
+        words = text.split()
+        opening = " ".join(words[:120])
+        closing = " ".join(words[-120:])
+        lines.append(f"### Chapter {chapter_num} ({len(words)} words)")
+        lines.append(f"Opening: {opening}...")
+        lines.append(f"Closing: ...{closing}")
+        lines.append("")
+    return "\n".join(lines)
+
+
+def load_arc_summary() -> tuple[str, list[str]]:
+    arc_summary_path = BASE_DIR / "arc_summary.md"
+    if arc_summary_path.exists():
+        return arc_summary_path.read_text(encoding="utf-8"), []
+    return build_fallback_arc_summary(), ["arc_summary.md missing; used chapter-excerpt fallback summary."]
+
+
 def main():
-    arc_summary = (BASE_DIR / "arc_summary.md").read_text()
+    arc_summary, warnings = load_arc_summary()
 
     results = {}
+    errors = []
     for reader_key, reader_info in READERS.items():
         print(f"\n{'=' * 50}")
         print(f"READING: {reader_info['name']}")
@@ -207,6 +244,7 @@ def main():
             print(f"  Would recommend: {result.get('would_recommend', '')[:150]}...")
         except Exception as e:
             print(f"  ERROR: {e}")
+            errors.append(f"{reader_info['name']}: {e}")
 
     # Find disagreements
     disagreements = find_disagreements(results)
@@ -244,9 +282,16 @@ def main():
             print(f"    Not flagged: {', '.join(d['not_flagged'])}")
 
     # Save full results
-    output = {"readers": results, "disagreements": disagreements, "timestamp": datetime.now().isoformat()}
+    output = {
+        "readers": results,
+        "disagreements": disagreements,
+        "warnings": warnings,
+        "errors": errors,
+        "timestamp": datetime.now().isoformat(),
+    }
     out_path = BASE_DIR / "edit_logs" / "reader_panel.json"
-    with open(out_path, "w") as f:
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+    with open(out_path, "w", encoding="utf-8") as f:
         json.dump(output, f, indent=2)
     print(f"\nSaved to {out_path}")
 

@@ -48,8 +48,35 @@ def call_model(prompt, max_tokens=1500):
     return json.loads(text)
 
 
+def _truncate_words(text: str, limit: int) -> str:
+    words = text.split()
+    return " ".join(words[:limit])
+
+
+def fallback_outline_entry(chapter_num: int, title: str, text: str, word_count: int) -> dict:
+    paragraphs = [block.strip().replace("\n", " ") for block in text.split("\n\n") if block.strip()]
+    body_blocks = [block for block in paragraphs if not block.startswith("#")] or paragraphs
+    summary_source = " ".join(body_blocks[:2]) or text
+    beats = [_truncate_words(block, 24) for block in body_blocks[:4] if block]
+    closing_note = _truncate_words(body_blocks[-1] if body_blocks else text, 24)
+    return {
+        "title": title or f"Chapter {chapter_num}",
+        "location": "Unknown",
+        "characters": [],
+        "summary": _truncate_words(summary_source, 80) or f"Chapter {chapter_num} advances the manuscript.",
+        "beats": beats[:5] or [f"Chapter {chapter_num} advances the manuscript without a model-generated beat list."],
+        "try_fail": "unknown",
+        "plants": [],
+        "harvests": [],
+        "emotional_arc": closing_note or "Emotional arc unavailable in deterministic fallback.",
+        "chapter_question": closing_note or "Open question unavailable in deterministic fallback.",
+        "words": word_count,
+    }
+
+
 def main():
     entries = []
+    fallback_notes: list[str] = []
 
     chapter_files = discover_chapter_files()
     if not chapter_files:
@@ -57,7 +84,7 @@ def main():
 
     for path in chapter_files:
         ch = int(path.stem.removeprefix("ch_"))
-        text = path.read_text()
+        text = path.read_text(encoding="utf-8")
         wc = len(text.split())
 
         title_line = text.strip().split("\n")[0].lstrip("# ").strip()
@@ -82,7 +109,15 @@ Return JSON with these fields:
 
 JSON only, no other text. All natural-language string values must be in {WRITING_LANGUAGE}."""
 
-        data = call_model(prompt)
+        try:
+            data = call_model(prompt)
+        except Exception as exc:
+            data = fallback_outline_entry(ch, title_line, text, wc)
+            fallback_notes.append(f"Chapter {ch}: {exc}")
+            print(f"  {ch:2d}. {title_line} ({wc}w, fallback)")
+            data["num"] = ch
+            entries.append(data)
+            continue
         data["num"] = ch
         data["words"] = wc
         entries.append(data)
@@ -158,9 +193,18 @@ JSON only, no other text. All natural-language string values must be in {WRITING
     lines.append("---")
     lines.append("")
     lines.append("*Outline rebuilt from actual chapters, Cycle 5.*")
+    if fallback_notes:
+        lines.append("")
+        lines.append("## REBUILD NOTES")
+        lines.append("")
+        lines.append(
+            "The following chapters used deterministic fallback outline entries because model analysis failed:"
+        )
+        for note in fallback_notes:
+            lines.append(f"- {note}")
 
     out = "\n".join(lines)
-    (BASE_DIR / "outline.md").write_text(out)
+    (BASE_DIR / "outline.md").write_text(out, encoding="utf-8")
     print(f"\nSaved outline.md ({len(out.split())} words)")
 
 

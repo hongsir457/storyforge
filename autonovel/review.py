@@ -17,6 +17,7 @@ import json
 import os
 import re
 import sys
+import traceback
 from datetime import datetime
 from pathlib import Path
 
@@ -197,6 +198,9 @@ def should_stop(parsed_review):
     - No major unqualified items
     - More than half the items are qualified/hedged
     """
+    if parsed_review.get("review_failed") or parsed_review.get("error"):
+        return False, "review generation failed"
+
     stars = parsed_review.get("stars", 0) or 0
     total = parsed_review["total_items"]
     major = parsed_review["major_items"]
@@ -216,27 +220,48 @@ def cmd_review(args):
     """Generate a review."""
     title = get_title()
     manuscript = build_manuscript()
-
-    prompt = REVIEW_PROMPT.format(title=title, manuscript=manuscript, writing_language=WRITING_LANGUAGE)
-
-    review_text = call_reviewer(prompt)
-
-    # Save raw review
     LOGS_DIR.mkdir(exist_ok=True)
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     log_path = LOGS_DIR / f"{timestamp}_review.json"
 
-    parsed = parse_review(review_text)
+    prompt = REVIEW_PROMPT.format(title=title, manuscript=manuscript, writing_language=WRITING_LANGUAGE)
+
+    try:
+        if not has_auth_config():
+            raise RuntimeError(auth_error_message())
+        review_text = call_reviewer(prompt)
+        parsed = parse_review(review_text)
+    except Exception as exc:
+        error_text = f"{type(exc).__name__}: {exc}"
+        review_text = (
+            "# Review Unavailable\n\n"
+            "The reviewer model failed before a manuscript review could be produced.\n\n"
+            f"Error: {error_text}\n"
+        )
+        parsed = {
+            "stars": 0,
+            "critic_summary": "",
+            "professor_items": [],
+            "total_items": 0,
+            "major_items": 0,
+            "qualified_items": 0,
+            "raw_text": review_text,
+            "error": error_text,
+            "review_failed": True,
+            "_debug_traceback": traceback.format_exc(),
+        }
+        print(f"\nReview failed: {error_text}", file=sys.stderr)
+
     parsed["timestamp"] = timestamp
     parsed["title"] = title
     parsed["word_count"] = len(manuscript.split())
 
-    log_path.write_text(json.dumps(parsed, indent=2, default=str))
+    log_path.write_text(json.dumps(parsed, indent=2, default=str), encoding="utf-8")
     print(f"\nReview saved to {log_path}", file=sys.stderr)
 
     # Save human-readable copy
     if args.output:
-        Path(args.output).write_text(review_text)
+        Path(args.output).write_text(review_text, encoding="utf-8")
         print(f"Human-readable copy: {args.output}", file=sys.stderr)
 
     # Print summary
@@ -264,6 +289,8 @@ def cmd_parse(args):
 
     print(f"Latest review: {latest.get('timestamp', 'unknown')}")
     print(f"Stars: {latest.get('stars', '?')}")
+    if latest.get("error"):
+        print(f"Review status: {latest['error']}")
     print(f"\nACTIONABLE ITEMS ({latest['total_items']}):")
 
     for item in latest.get("professor_items", []):
@@ -285,10 +312,6 @@ def main():
     parser.add_argument("--parse", action="store_true", help="Parse most recent review")
 
     args = parser.parse_args()
-
-    if not has_auth_config():
-        print(f"ERROR: {auth_error_message()}", file=sys.stderr)
-        sys.exit(1)
 
     if args.parse:
         cmd_parse(args)

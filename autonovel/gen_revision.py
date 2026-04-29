@@ -4,9 +4,9 @@ Revision chapter generator. Rewrites a chapter from a specific revision brief.
 Usage: python gen_revision.py <chapter_num> <brief_file>
 """
 
+import json
 import os
 import sys
-import json
 import traceback
 from datetime import datetime
 from pathlib import Path

@@ -35,7 +35,9 @@ def test_build_arc_summary_falls_back_when_model_call_fails(tmp_path, monkeypatc
 
     monkeypatch.setattr(build_arc_summary, "BASE_DIR", tmp_path)
     monkeypatch.setattr(build_arc_summary, "CHAPTERS_DIR", chapters_dir)
-    monkeypatch.setattr(build_arc_summary, "call_writer", lambda *args, **kwargs: (_ for _ in ()).throw(RuntimeError("api down")))
+    monkeypatch.setattr(
+        build_arc_summary, "call_writer", lambda *args, **kwargs: (_ for _ in ()).throw(RuntimeError("api down"))
+    )
 
     build_arc_summary.main()
 
@@ -57,7 +59,9 @@ def test_build_outline_falls_back_when_model_call_fails(tmp_path, monkeypatch):
 
     monkeypatch.setattr(build_outline, "BASE_DIR", tmp_path)
     monkeypatch.setattr(build_outline, "CHAPTERS_DIR", chapters_dir)
-    monkeypatch.setattr(build_outline, "call_model", lambda *args, **kwargs: (_ for _ in ()).throw(RuntimeError("api down")))
+    monkeypatch.setattr(
+        build_outline, "call_model", lambda *args, **kwargs: (_ for _ in ()).throw(RuntimeError("api down"))
+    )
 
     build_outline.main()
 
@@ -79,7 +83,9 @@ def test_reader_panel_writes_json_when_arc_summary_is_missing(tmp_path, monkeypa
 
     monkeypatch.setattr(reader_panel, "BASE_DIR", tmp_path)
     monkeypatch.setattr(reader_panel, "CHAPTERS_DIR", chapters_dir)
-    monkeypatch.setattr(reader_panel, "call_reader", lambda *args, **kwargs: (_ for _ in ()).throw(RuntimeError("api down")))
+    monkeypatch.setattr(
+        reader_panel, "call_reader", lambda *args, **kwargs: (_ for _ in ()).throw(RuntimeError("api down"))
+    )
 
     reader_panel.main()
 
@@ -136,7 +142,9 @@ def test_review_writes_failed_artifact_when_model_call_fails(tmp_path, monkeypat
     monkeypatch.setattr(review, "CHAPTERS_DIR", chapters_dir)
     monkeypatch.setattr(review, "LOGS_DIR", logs_dir)
     monkeypatch.setattr(review, "has_auth_config", lambda: True)
-    monkeypatch.setattr(review, "call_reviewer", lambda *args, **kwargs: (_ for _ in ()).throw(RuntimeError("api down")))
+    monkeypatch.setattr(
+        review, "call_reviewer", lambda *args, **kwargs: (_ for _ in ()).throw(RuntimeError("api down"))
+    )
 
     parsed = review.cmd_review(SimpleNamespace(output=None))
 
@@ -159,7 +167,9 @@ def test_gen_brief_auto_falls_back_when_full_eval_lacks_weakest_chapter(tmp_path
     briefs_dir.mkdir()
 
     _write_chapter(chapters_dir, 1, "Bellroom", "Cass enters the bellroom. Perin keeps the peace.")
-    _write_chapter(chapters_dir, 2, "The Contract", "Cass confronts Perin. The argument lands flat and ends without force.")
+    _write_chapter(
+        chapters_dir, 2, "The Contract", "Cass confronts Perin. The argument lands flat and ends without force."
+    )
     (tmp_path / "voice.md").write_text("voice rules\n", encoding="utf-8")
 
     (eval_logs_dir / "20260424_020000_full.json").write_text(
@@ -205,7 +215,9 @@ def test_gen_revision_preserves_chapter_when_model_call_fails(tmp_path, monkeypa
     monkeypatch.setattr(gen_revision, "BASE_DIR", tmp_path)
     monkeypatch.setattr(gen_revision, "CHAPTERS_DIR", chapters_dir)
     monkeypatch.setattr(gen_revision, "EDIT_LOGS_DIR", edit_logs_dir)
-    monkeypatch.setattr(gen_revision, "call_writer", lambda *args, **kwargs: (_ for _ in ()).throw(RuntimeError("api down")))
+    monkeypatch.setattr(
+        gen_revision, "call_writer", lambda *args, **kwargs: (_ for _ in ()).throw(RuntimeError("api down"))
+    )
 
     gen_revision.main(["1", str(brief)])
 

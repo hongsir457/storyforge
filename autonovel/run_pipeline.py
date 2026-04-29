@@ -715,7 +715,9 @@ def run_revision(state: dict, max_cycles: int = MAX_REVISION_CYCLES) -> dict:
                         step(f"Revising Ch {ch_num} from review brief...")
                         revision_result = uv_run(f"gen_revision.py {ch_num} {brief}", timeout=600)
                         if revision_result.returncode != 0 or revision_step_skipped(revision_result):
-                            step(f"Review revision for Ch {ch_num} did not produce a new draft; preserving current chapter")
+                            step(
+                                f"Review revision for Ch {ch_num} did not produce a new draft; preserving current chapter"
+                            )
                         else:
                             git_add_commit(f"review round {rnd}: revise ch{ch_num:02d} from reviewer feedback")
 

@@ -1,4 +1,3 @@
-import { useLocation } from "wouter";
 import { Bot } from "lucide-react";
 import { GlobalHeader } from "./GlobalHeader";
 import { AssetSidebar } from "./AssetSidebar";
@@ -15,7 +14,6 @@ interface StudioLayoutProps {
 }
 
 export function StudioLayout({ children }: StudioLayoutProps) {
-  const [, setLocation] = useLocation();
   const currentProjectName = useProjectsStore((s) => s.currentProjectName);
   const assistantPanelOpen = useAppStore((s) => s.assistantPanelOpen);
   const toggleAssistantPanel = useAppStore((s) => s.toggleAssistantPanel);
@@ -26,7 +24,7 @@ export function StudioLayout({ children }: StudioLayoutProps) {
   return (
     <div className="frametale-workspace-shell flex h-screen flex-col">
       <div className="px-4 pt-4">
-        <GlobalHeader onNavigateBack={() => setLocation("/app/projects")} />
+        <GlobalHeader />
       </div>
       <div className="frametale-shell-main flex flex-1 overflow-hidden px-4 pb-4 pt-3">
         <AssetSidebar className="frametale-workspace-rail min-w-[17rem] rounded-[1.9rem]" />

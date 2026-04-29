@@ -1,6 +1,6 @@
 import { render, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { Router } from "wouter";
+import { Route, Router } from "wouter";
 import { memoryLocation } from "wouter/memory-location";
 import { GlobalHeader } from "@/components/layout/GlobalHeader";
 import { API } from "@/api";
@@ -57,6 +57,18 @@ function renderHeader() {
   );
 }
 
+function renderNestedHeader() {
+  const location = memoryLocation({ path: "/app/projects/demo", record: true });
+  const view = render(
+    <Router hook={location.hook}>
+      <Route path="/app/projects/:projectName" nest>
+        <GlobalHeader />
+      </Route>
+    </Router>,
+  );
+  return { location, ...view };
+}
+
 describe("GlobalHeader", () => {
   beforeEach(() => {
     useProjectsStore.setState(useProjectsStore.getInitialState(), true);
@@ -98,6 +110,33 @@ describe("GlobalHeader", () => {
         projectName: "halou-92d19a04",
       });
     });
+  });
+
+  it("navigates back to the project library from a nested workspace route", async () => {
+    vi.spyOn(API, "getUsageStats").mockResolvedValue({
+      total_cost: 0,
+      image_count: 0,
+      video_count: 0,
+      failed_count: 0,
+      total_count: 0,
+    });
+
+    useProjectsStore.setState({
+      currentProjectName: "demo",
+      currentProjectData: {
+        title: "Demo",
+        content_mode: "narration",
+        style: "Anime",
+        episodes: [],
+        characters: {},
+        clues: {},
+      },
+    });
+
+    const { location } = renderNestedHeader();
+    screen.getAllByRole("button")[0].click();
+
+    expect(location.history?.at(-1)).toBe("/app/projects");
   });
 
   it("shows unread notification count and opens the drawer", async () => {

@@ -145,6 +145,18 @@ export function GlobalHeader({ onNavigateBack }: GlobalHeaderProps) {
       ? t("dashboard:global_model_config", { defaultValue: "Global Model Config" })
       : t("dashboard:account_settings", { defaultValue: "Account Settings" });
 
+  const navigateToRootRoute = (path: string) => {
+    setLocation(path.startsWith("/") ? `~${path}` : `~/${path}`);
+  };
+
+  const handleNavigateBack = () => {
+    if (onNavigateBack) {
+      onNavigateBack();
+      return;
+    }
+    navigateToRootRoute("/app/projects");
+  };
+
   // 加载费用统计数据（任务完成时自动刷新）
   const completedTaskCount = stats.succeeded + stats.failed;
   useEffect(() => {
@@ -248,7 +260,7 @@ export function GlobalHeader({ onNavigateBack }: GlobalHeaderProps) {
         {/* Back to projects */}
         <button
           type="button"
-          onClick={onNavigateBack}
+          onClick={handleNavigateBack}
           className="frametale-rail-button flex items-center gap-1 rounded-full px-3 py-2 text-sm font-medium transition hover:-translate-y-0.5"
           aria-label={t("dashboard:projects")}
         >
@@ -392,7 +404,7 @@ export function GlobalHeader({ onNavigateBack }: GlobalHeaderProps) {
         {isAdmin && (
           <button
             type="button"
-            onClick={() => setLocation("/app/admin")}
+            onClick={() => navigateToRootRoute("/app/admin")}
             className="frametale-rail-button relative inline-flex items-center gap-1 rounded-full px-3 py-2 text-xs font-medium transition hover:-translate-y-0.5"
             title={globalConfigLabel}
             aria-label={globalConfigLabel}
@@ -407,7 +419,7 @@ export function GlobalHeader({ onNavigateBack }: GlobalHeaderProps) {
 
         <button
           type="button"
-          onClick={() => setLocation("/app/account")}
+          onClick={() => navigateToRootRoute("/app/account")}
           className="frametale-rail-button rounded-full px-4 py-2 text-xs font-medium transition hover:-translate-y-0.5"
           title={user?.display_name || user?.username || t("auth:account_settings")}
         >
@@ -417,7 +429,7 @@ export function GlobalHeader({ onNavigateBack }: GlobalHeaderProps) {
         <button
           type="button"
           onClick={() =>
-            setLocation(
+            navigateToRootRoute(
               currentProjectName
                 ? buildProjectSettingsRoute(currentProjectName)
                 : isAdmin
@@ -439,7 +451,7 @@ export function GlobalHeader({ onNavigateBack }: GlobalHeaderProps) {
           type="button"
           onClick={() => {
             logout();
-            setLocation("/login");
+            navigateToRootRoute("/login");
           }}
           className="rounded-full border border-rose-300/55 bg-rose-100/72 px-4 py-2 text-xs font-medium text-rose-900 transition hover:-translate-y-0.5"
         >

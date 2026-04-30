@@ -1266,21 +1266,20 @@ export function NovelWorkbenchPage() {
   const copy = useWorkbenchCopy();
   const shareCopy = useWorkbenchShareCopy(locale);
   const isAdmin = user?.role === "admin";
-  const requestedSearch = typeof window !== "undefined" ? window.location.search : search;
-  const initialSearchParams = useMemo(() => new URLSearchParams(requestedSearch), [requestedSearch]);
-  const requestedJobId = initialSearchParams.get("job");
-  const requestedArtifactPath = initialSearchParams.get("artifact");
+  const searchParams = useMemo(() => new URLSearchParams(search), [search]);
+  const requestedJobId = searchParams.get("job");
+  const requestedArtifactPath = searchParams.get("artifact");
 
   const [status, setStatus] = useState<NovelWorkbenchStatus | null>(null);
   const [jobs, setJobs] = useState<NovelWorkbenchJob[]>([]);
-  const [selectedJobId, setSelectedJobId] = useState<string | null>(() => initialSearchParams.get("job"));
+  const [selectedJobId, setSelectedJobId] = useState<string | null>(() => searchParams.get("job"));
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [cancellingJobId, setCancellingJobId] = useState<string | null>(null);
   const [deletingJobId, setDeletingJobId] = useState<string | null>(null);
   const [activeStatusPanel, setActiveStatusPanel] = useState<NovelWorkbenchPanel | null>(() =>
-    initialSearchParams.has("job") || initialSearchParams.has("artifact") ? "history" : null,
+    searchParams.has("job") || searchParams.has("artifact") ? "history" : null,
   );
 
   const [title, setTitle] = useState("");
@@ -1289,7 +1288,7 @@ export function NovelWorkbenchPage() {
   const [seedText, setSeedText] = useState("");
   const [artifacts, setArtifacts] = useState<NovelWorkbenchArtifactListResponse | null>(null);
   const [artifactsLoading, setArtifactsLoading] = useState(false);
-  const [selectedArtifactPath, setSelectedArtifactPath] = useState<string | null>(() => initialSearchParams.get("artifact"));
+  const [selectedArtifactPath, setSelectedArtifactPath] = useState<string | null>(() => searchParams.get("artifact"));
   const [artifactPreview, setArtifactPreview] = useState<NovelWorkbenchArtifactContentResponse | null>(null);
   const [artifactPreviewLoading, setArtifactPreviewLoading] = useState(false);
   const [fullLog, setFullLog] = useState<NovelWorkbenchLogResponse | null>(null);
@@ -1456,9 +1455,15 @@ export function NovelWorkbenchPage() {
   }, [pushToast, selectedJobId]);
 
   useEffect(() => {
+    if (!artifacts) {
+      return;
+    }
+
     const previewablePath = artifacts?.artifacts.find((artifact) => artifact.previewable)?.path ?? null;
     if (!previewablePath) {
-      setSelectedArtifactPath(null);
+      if (selectedArtifactPath !== null) {
+        setSelectedArtifactPath(null);
+      }
       return;
     }
     const requestedPath =
@@ -1490,7 +1495,8 @@ export function NovelWorkbenchPage() {
 
     const nextSearch = params.toString();
     const nextTarget = nextSearch ? `${location}?${nextSearch}` : location;
-    const currentTarget = `${location}${search ? `?${search}` : ""}`;
+    const currentSearch = new URLSearchParams(search).toString();
+    const currentTarget = currentSearch ? `${location}?${currentSearch}` : location;
     if (nextTarget !== currentTarget) {
       navigate(nextTarget, { replace: true });
     }

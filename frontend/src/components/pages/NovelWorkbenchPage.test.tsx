@@ -269,6 +269,30 @@ describe("NovelWorkbenchPage sharing", () => {
     expect(await screen.findByText("Preview for job-2 / chapters/ch_99.md")).toBeInTheDocument();
   });
 
+  it("keeps the requested artifact in the URL while artifacts are still loading", async () => {
+    let resolveArtifacts: (value: NovelWorkbenchArtifactListResponse) => void = () => {};
+    vi.mocked(API.listNovelWorkbenchArtifacts).mockImplementation(
+      () =>
+        new Promise<NovelWorkbenchArtifactListResponse>((resolve) => {
+          resolveArtifacts = resolve;
+        }),
+    );
+
+    renderBrowserPage("/app/novel-workbench?job=job-2&artifact=chapters%2Fch_99.md");
+
+    await waitFor(() => {
+      expect(API.listNovelWorkbenchArtifacts).toHaveBeenCalledWith("job-2");
+    });
+    expect(window.location.search).toContain("artifact=chapters%2Fch_99.md");
+
+    resolveArtifacts(ARTIFACTS_FIXTURE["job-2"]);
+
+    await waitFor(() => {
+      expect(API.getNovelWorkbenchArtifactContent).toHaveBeenCalledWith("job-2", "chapters/ch_99.md");
+    });
+    expect(await screen.findByText("Preview for job-2 / chapters/ch_99.md")).toBeInTheDocument();
+  });
+
   it("keeps active run logs on the main page instead of listing the run in history", async () => {
     const user = userEvent.setup();
     vi.mocked(API.listNovelWorkbenchJobs).mockResolvedValue({

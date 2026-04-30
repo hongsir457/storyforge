@@ -1260,6 +1260,7 @@ function downloadBlob(blob: Blob, filename: string): void {
 export function NovelWorkbenchPage() {
   const [location, navigate] = useLocation();
   const search = useSearch();
+  const lastObservedSearchRef = useRef(search);
   const pushToast = useAppStore((state) => state.pushToast);
   const user = useAuthStore((state) => state.user);
   const locale = useWorkbenchLocale();
@@ -1324,20 +1325,35 @@ export function NovelWorkbenchPage() {
   }, [fetchAll]);
 
   useEffect(() => {
+    if (lastObservedSearchRef.current === search) {
+      return;
+    }
+    lastObservedSearchRef.current = search;
+    const nextSearchParams = new URLSearchParams(search);
+    const nextJobId = nextSearchParams.get("job");
+    const nextArtifactPath = nextSearchParams.get("artifact");
+    setSelectedJobId(nextJobId);
+    setSelectedArtifactPath(nextArtifactPath);
+    if (nextJobId || nextArtifactPath) {
+      setActiveStatusPanel("history");
+    }
+  }, [search]);
+
+  useEffect(() => {
     if (jobs.length === 0) {
-      if (!requestedJobId) {
+      if (!selectedJobId) {
         setSelectedJobId(null);
       }
       return;
     }
-    if (requestedJobId && jobs.some((job) => job.job_id === requestedJobId)) {
-      if (selectedJobId !== requestedJobId) {
-        setSelectedJobId(requestedJobId);
-      }
+    const selectedJobExists = selectedJobId ? jobs.some((job) => job.job_id === selectedJobId) : false;
+    if (selectedJobExists) {
       return;
     }
-    if (!selectedJobId || !jobs.some((job) => job.job_id === selectedJobId)) {
-      setSelectedJobId(jobs[0].job_id);
+    const requestedJob = requestedJobId ? jobs.find((job) => job.job_id === requestedJobId) : null;
+    const nextJobId = requestedJob?.job_id ?? jobs[0].job_id;
+    if (selectedJobId !== nextJobId) {
+      setSelectedJobId(nextJobId);
     }
   }, [jobs, requestedJobId, selectedJobId]);
 
@@ -1459,23 +1475,26 @@ export function NovelWorkbenchPage() {
       return;
     }
 
-    const previewablePath = artifacts?.artifacts.find((artifact) => artifact.previewable)?.path ?? null;
+    const previewablePath = artifacts.artifacts.find((artifact) => artifact.previewable)?.path ?? null;
     if (!previewablePath) {
       if (selectedArtifactPath !== null) {
         setSelectedArtifactPath(null);
       }
       return;
     }
+    const selectedPathIsPreviewable = selectedArtifactPath
+      ? artifacts.artifacts.some((artifact) => artifact.path === selectedArtifactPath && artifact.previewable)
+      : false;
+    if (selectedPathIsPreviewable) {
+      return;
+    }
     const requestedPath =
-      requestedArtifactPath && artifacts?.artifacts.some((artifact) => artifact.path === requestedArtifactPath)
+      requestedArtifactPath &&
+      artifacts.artifacts.some((artifact) => artifact.path === requestedArtifactPath && artifact.previewable)
         ? requestedArtifactPath
         : null;
     const nextPath = requestedPath ?? previewablePath;
-    if (requestedPath && selectedArtifactPath !== requestedPath) {
-      setSelectedArtifactPath(requestedPath);
-      return;
-    }
-    if (!selectedArtifactPath || !artifacts?.artifacts.some((artifact) => artifact.path === selectedArtifactPath)) {
+    if (selectedArtifactPath !== nextPath) {
       setSelectedArtifactPath(nextPath);
     }
   }, [artifacts, requestedArtifactPath, selectedArtifactPath]);
@@ -1494,13 +1513,17 @@ export function NovelWorkbenchPage() {
     }
 
     const nextSearch = params.toString();
-    const nextTarget = nextSearch ? `${location}?${nextSearch}` : location;
+    const pathname =
+      typeof window !== "undefined" && window.location.pathname ? window.location.pathname : location.split("?")[0];
+    const nextTarget = nextSearch ? `${pathname}?${nextSearch}` : pathname;
     const currentSearch = new URLSearchParams(search).toString();
-    const currentTarget = currentSearch ? `${location}?${currentSearch}` : location;
-    if (nextTarget !== currentTarget) {
-      navigate(nextTarget, { replace: true });
+    const routeTarget = currentSearch ? `${pathname}?${currentSearch}` : pathname;
+    const browserTarget =
+      typeof window !== "undefined" ? `${window.location.pathname}${window.location.search}` : routeTarget;
+    if (nextTarget !== routeTarget && nextTarget !== browserTarget && typeof window !== "undefined") {
+      window.history.replaceState(window.history.state, "", nextTarget);
     }
-  }, [location, navigate, search, selectedArtifactPath, selectedJobId]);
+  }, [location, search, selectedArtifactPath, selectedJobId]);
 
   useEffect(() => {
     if (!selectedJobId || !selectedArtifactPath) {

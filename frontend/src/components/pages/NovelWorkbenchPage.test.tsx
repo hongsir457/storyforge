@@ -112,7 +112,7 @@ const RUNNING_JOB_FIXTURE = {
 const ARTIFACTS_FIXTURE: Record<"job-1" | "job-2", NovelWorkbenchArtifactListResponse> = {
   "job-1": {
     summary: {
-      available_count: 2,
+      available_count: 3,
       chapter_count: 1,
       has_seed: true,
       has_outline: true,
@@ -132,6 +132,15 @@ const ARTIFACTS_FIXTURE: Record<"job-1" | "job-2", NovelWorkbenchArtifactListRes
         previewable: true,
         size_bytes: 8192,
         modified_at: "2026-04-23T10:04:00Z",
+      },
+      {
+        path: "seed.txt",
+        label: "Seed",
+        group: "inputs" as const,
+        kind: "text" as const,
+        previewable: true,
+        size_bytes: 512,
+        modified_at: "2026-04-23T10:00:00Z",
       },
       {
         path: "exports/book.pdf",
@@ -241,7 +250,7 @@ describe("NovelWorkbenchPage sharing", () => {
   });
 
   it("syncs the current job and artifact into the URL", async () => {
-    const { location } = renderPage();
+    renderPage();
 
     await waitFor(() => {
       expect(API.listNovelWorkbenchArtifacts).toHaveBeenCalledWith("job-1");
@@ -249,9 +258,8 @@ describe("NovelWorkbenchPage sharing", () => {
     });
 
     await waitFor(() => {
-      const current = location.history?.at(-1) ?? "";
-      expect(current).toContain("job=job-1");
-      expect(current).toContain("artifact=chapters%2Fch_24.md");
+      expect(window.location.search).toContain("job=job-1");
+      expect(window.location.search).toContain("artifact=chapters%2Fch_24.md");
     });
   });
 
@@ -267,6 +275,25 @@ describe("NovelWorkbenchPage sharing", () => {
       expect(window.location.search).toContain("job=job-2");
     });
     expect(await screen.findByText("Preview for job-2 / chapters/ch_99.md")).toBeInTheDocument();
+  });
+
+  it("lets the user choose a different artifact after opening a shared artifact URL", async () => {
+    const user = userEvent.setup();
+    renderBrowserPage("/app/novel-workbench?job=job-1&artifact=seed.txt");
+
+    await waitFor(() => {
+      expect(API.getNovelWorkbenchArtifactContent).toHaveBeenCalledWith("job-1", "seed.txt");
+    });
+
+    const chapterButton = screen.getAllByText("Chapter 24")[0].closest("button");
+    expect(chapterButton).not.toBeNull();
+    await user.click(chapterButton!);
+
+    await waitFor(() => {
+      expect(API.getNovelWorkbenchArtifactContent).toHaveBeenCalledWith("job-1", "chapters/ch_24.md");
+      expect(window.location.search).toContain("artifact=chapters%2Fch_24.md");
+    });
+    expect(await screen.findByText("Preview for job-1 / chapters/ch_24.md")).toBeInTheDocument();
   });
 
   it("keeps the requested artifact in the URL while artifacts are still loading", async () => {

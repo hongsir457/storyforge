@@ -162,11 +162,17 @@
 - `/app/projects` is the creator home, not a system control board.
 - The top section explains the next meaningful action.
 - Project cards foreground stage, asset coverage, and next step rather than acting as generic thumbnail tiles.
+- Treat the page as a command deck: one dominant launch panel, one compact studio pulse rail, then the project library.
+- Project cards should read like production dossiers. Keep the cover/media area subordinate to progress, asset coverage, episode output, and the next action.
+- Avoid three narrow project-card columns on desktop; wider two-column cards preserve story context and reduce dashboard fragmentation.
 
 ### Novel Workbench
 - The first screen must answer what this page does, what the user needs to fill in, and where they go after success.
 - Diagnostics belong in a lower-priority disclosure area.
 - Job history should read like a production record, not a backend dump.
+- Treat the page as a production desk: status strip first, launch form and writing partner side-by-side, then active run or history records below.
+- The seed form and writing assistant should feel connected. Use shared surfaces and lighting rather than two unrelated cards.
+- Running jobs stay in the active work area. Completed or terminal jobs move into the production record/history layer.
 
 ### Workspace
 - The header must clearly hold brand, project, phase, and high-value actions.
@@ -226,3 +232,4 @@
 | 2026-04-21 | Rebuilt Frametale design-system baseline | Replaced the older concept-only document with implementation-ready typography, color, layout, and motion guidance |
 | 2026-04-21 | Kept the dark-first studio direction | The product has to hold media, long text, logs, timelines, and creator state at the same time |
 | 2026-04-21 | Strengthened the creator/admin split | Creation and system configuration are different mental models and should diverge in IA and visual density |
+| 2026-04-29 | Redesigned creator home and novel workbench as connected studio surfaces | The screenshots showed fragmented equal-weight cards; the new rule is command deck first, production records second |

@@ -898,7 +898,7 @@ function NovelWritingAssistantPanel({
   }, [localInput, sendAssistantMessage]);
 
   return (
-    <aside className="flex max-h-[calc(100vh-3rem)] min-h-[40rem] flex-col overflow-hidden rounded-[2rem] border border-[rgba(117,132,159,0.18)] bg-white/92 shadow-[0_24px_70px_rgba(23,38,69,0.12)] xl:sticky xl:top-6">
+    <aside className="novel-assistant-panel flex max-h-[calc(100vh-3rem)] min-h-[40rem] flex-col overflow-hidden rounded-[2rem] border border-[rgba(117,132,159,0.18)] bg-white/92 shadow-[0_24px_70px_rgba(23,38,69,0.12)] xl:sticky xl:top-6">
       <div className="border-b border-[rgba(117,132,159,0.14)] bg-[rgba(248,250,253,0.92)] px-5 py-4">
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
@@ -1649,8 +1649,8 @@ export function NovelWorkbenchPage() {
   );
 
   return (
-    <div className="sf-editorial-page flex min-h-screen flex-col text-[var(--sf-text)]">
-      <header className="px-6 pt-6">
+    <div className="novel-workbench-page sf-editorial-page flex min-h-screen flex-col text-[var(--sf-text)]">
+      <header className="novel-workbench-header px-6 pt-6">
         <div className="frametale-page-header mx-auto flex max-w-7xl flex-col gap-4 rounded-[2rem] px-5 py-4 lg:flex-row lg:items-center lg:justify-between">
           <div className="flex min-w-0 items-center gap-3">
             <button
@@ -1698,7 +1698,7 @@ export function NovelWorkbenchPage() {
         </div>
       </header>
 
-      <main className="mx-auto max-w-7xl px-6 py-6">
+      <main className="novel-workbench-main mx-auto max-w-7xl px-6 py-6">
         {loading ? (
           <div className="flex items-center justify-center py-24 text-[var(--sf-text-muted)]">
             <Loader2 className="mr-2 h-5 w-5 animate-spin text-[var(--sf-blue)]" />
@@ -1706,7 +1706,7 @@ export function NovelWorkbenchPage() {
           </div>
         ) : (
           <div className="space-y-5">
-            <nav className="rounded-[1.5rem] border border-[rgba(117,132,159,0.18)] bg-white/86 p-2 shadow-[0_18px_40px_rgba(23,38,69,0.06)]">
+            <nav className="novel-status-strip rounded-[1.5rem] border border-[rgba(117,132,159,0.18)] bg-white/86 p-2 shadow-[0_18px_40px_rgba(23,38,69,0.06)]">
               <div className="flex flex-wrap items-center gap-2">
                 <button
                   type="button"
@@ -1744,7 +1744,7 @@ export function NovelWorkbenchPage() {
             </nav>
 
             {activeStatusPanel && activeStatusPanel !== "history" && (
-              <section className="rounded-[1.5rem] border border-[rgba(117,132,159,0.18)] bg-white/88 p-5 shadow-[0_18px_40px_rgba(23,38,69,0.06)]">
+              <section className="novel-status-panel rounded-[1.5rem] border border-[rgba(117,132,159,0.18)] bg-white/88 p-5 shadow-[0_18px_40px_rgba(23,38,69,0.06)]">
                 {activeStatusPanel === "readiness" && (
                   <div className="flex items-start gap-3">
                     {status?.requirements.all_ready ? (
@@ -1842,10 +1842,10 @@ export function NovelWorkbenchPage() {
               </section>
             )}
 
-            <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_400px]">
+            <div className="novel-production-desk grid gap-6 xl:grid-cols-[minmax(0,1fr)_400px]">
             <div className="min-w-0 space-y-6">
             <section className="grid gap-6">
-              <div className="relative overflow-hidden rounded-[2rem] border border-[rgba(117,132,159,0.18)] bg-[linear-gradient(180deg,rgba(255,255,255,0.92),rgba(244,248,252,0.98))] p-6 shadow-[0_24px_60px_rgba(23,38,69,0.08)]">
+              <div className="novel-launch-panel relative overflow-hidden rounded-[2rem] border border-[rgba(117,132,159,0.18)] bg-[linear-gradient(180deg,rgba(255,255,255,0.92),rgba(244,248,252,0.98))] p-6 shadow-[0_24px_60px_rgba(23,38,69,0.08)]">
                 <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(24,151,214,0.14),transparent_28%),radial-gradient(circle_at_bottom_right,rgba(216,165,90,0.14),transparent_32%)]" />
                 <div className="relative space-y-6">
                   <div className="inline-flex items-center gap-2 rounded-full border border-sky-300/60 bg-sky-100 px-3 py-1 text-xs font-medium text-sky-900">
@@ -1861,7 +1861,7 @@ export function NovelWorkbenchPage() {
                   </div>
 
                   <div className="grid gap-5">
-                    <form onSubmit={(event) => void handleCreateJob(event)} className="space-y-4 rounded-[1.7rem] border border-[rgba(117,132,159,0.18)] bg-[rgba(248,250,253,0.92)] p-5">
+                    <form onSubmit={(event) => void handleCreateJob(event)} className="novel-seed-form space-y-4 rounded-[1.7rem] border border-[rgba(117,132,159,0.18)] bg-[rgba(248,250,253,0.92)] p-5">
                       <label className="block">
                         <span className="mb-2 block text-[11px] uppercase tracking-[0.22em] text-[var(--sf-text-soft)]">{copy.formTitle}</span>
                         <input
@@ -1929,7 +1929,7 @@ export function NovelWorkbenchPage() {
             </section>
             {activeStatusPanel !== "history" && activeSelectedJob && (
               <section
-                className="rounded-[32px] border border-[rgba(117,132,159,0.18)] bg-white/86 p-5 shadow-[0_18px_40px_rgba(23,38,69,0.06)]"
+                className="novel-active-run-card rounded-[32px] border border-[rgba(117,132,159,0.18)] bg-white/86 p-5 shadow-[0_18px_40px_rgba(23,38,69,0.06)]"
                 data-testid="novel-workbench-selected-job-panel"
               >
                 <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
@@ -1972,7 +1972,7 @@ export function NovelWorkbenchPage() {
               </section>
             )}
             {activeStatusPanel === "history" && (
-            <section className="grid gap-6 xl:grid-cols-[340px,1fr]">
+            <section className="novel-history-section grid gap-6 xl:grid-cols-[340px,1fr]">
               <div
                 className="rounded-[32px] border border-[rgba(117,132,159,0.18)] bg-white/86 p-5 shadow-[0_18px_40px_rgba(23,38,69,0.06)]"
                 data-testid="novel-workbench-history-list"

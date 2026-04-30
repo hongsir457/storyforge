@@ -90,6 +90,34 @@ describe("ProjectsPage", () => {
     expect(screen.getAllByText("50%").length).toBeGreaterThan(0);
   });
 
+  it("enters the latest project workspace from the video workshop action", async () => {
+    vi.spyOn(API, "listProjects").mockResolvedValue({
+      projects: [
+        {
+          name: "demo",
+          title: "Demo Project",
+          style: "Anime",
+          thumbnail: null,
+          status: {
+            current_phase: "production",
+            phase_progress: 0.5,
+            characters: { total: 2, completed: 2 },
+            clues: { total: 2, completed: 1 },
+            episodes_summary: { total: 1, scripted: 1, in_production: 1, completed: 0 },
+          },
+        },
+      ],
+    });
+
+    const { location } = renderPage();
+    const videoWorkshopButton = await screen.findByRole("button", { name: /进入视频工坊|Enter Video Workshop/ });
+    fireEvent.click(videoWorkshopButton);
+
+    await waitFor(() => {
+      expect(location.history?.at(-1)).toBe("/app/projects/demo");
+    });
+  });
+
   it("opens create project modal after clicking new project button", async () => {
     vi.spyOn(API, "listProjects").mockResolvedValue({ projects: [] });
 

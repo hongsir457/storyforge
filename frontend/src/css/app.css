@@ -408,3 +408,294 @@
     background: rgba(240, 245, 250, 0.92);
     color: var(--sf-text);
 }
+
+/* Creator surfaces: make the project hub and novel workbench read as one studio desk. */
+.creator-home-page,
+.novel-workbench-page {
+    min-height: 100vh;
+    background:
+        radial-gradient(circle at 12% 4%, rgba(24, 151, 214, 0.18), transparent 30%),
+        radial-gradient(circle at 88% 2%, rgba(216, 165, 90, 0.18), transparent 24%),
+        linear-gradient(180deg, #f9fbff 0%, #f1f6fb 48%, #e8eff7 100%);
+}
+
+.creator-home-page::before,
+.novel-workbench-page::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    background-image:
+        linear-gradient(to right, rgba(15, 27, 55, 0.035) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(15, 27, 55, 0.035) 1px, transparent 1px);
+    background-size: 56px 56px;
+    mask-image: linear-gradient(180deg, rgba(0, 0, 0, 0.85), transparent 74%);
+}
+
+.creator-home-header,
+.novel-workbench-header {
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    padding-bottom: 0.75rem;
+    background: linear-gradient(180deg, rgba(249, 251, 255, 0.9), rgba(249, 251, 255, 0.68) 70%, transparent);
+    backdrop-filter: blur(18px);
+}
+
+.creator-home-header .frametale-page-header,
+.novel-workbench-header .frametale-page-header {
+    border-radius: 28px;
+    box-shadow:
+        0 18px 50px rgba(23, 38, 69, 0.08),
+        inset 0 1px 0 rgba(255, 255, 255, 0.75);
+}
+
+.creator-home-main,
+.novel-workbench-main {
+    width: min(100%, 1440px);
+}
+
+.creator-command-grid {
+    align-items: start;
+}
+
+.creator-command-deck,
+.creator-empty-state,
+.novel-launch-panel {
+    isolation: isolate;
+    border-color: rgba(24, 151, 214, 0.14) !important;
+    background:
+        linear-gradient(135deg, rgba(255, 255, 255, 0.95), rgba(246, 250, 253, 0.9) 54%, rgba(238, 246, 252, 0.96)) !important;
+    box-shadow:
+        0 28px 76px rgba(23, 38, 69, 0.1),
+        inset 0 1px 0 rgba(255, 255, 255, 0.82) !important;
+}
+
+.creator-command-deck::after,
+.creator-empty-state::after,
+.novel-launch-panel::after {
+    content: "";
+    position: absolute;
+    right: -8%;
+    bottom: -26%;
+    width: 44%;
+    height: 66%;
+    pointer-events: none;
+    border-radius: 36px;
+    border: 1px solid rgba(24, 151, 214, 0.12);
+    background:
+        repeating-linear-gradient(
+            180deg,
+            rgba(15, 27, 55, 0.055) 0 1px,
+            transparent 1px 18px
+        ),
+        linear-gradient(180deg, rgba(255, 255, 255, 0.52), rgba(255, 255, 255, 0));
+    transform: rotate(-7deg);
+    opacity: 0.55;
+    z-index: -1;
+}
+
+.creator-action-row > button,
+.novel-status-strip button,
+.novel-seed-form button[type="submit"] {
+    min-height: 46px;
+}
+
+.creator-context-row > *,
+.creator-home-aside > section,
+.creator-library-panel,
+.novel-status-panel,
+.novel-active-run-card,
+.novel-history-section > div {
+    border-color: rgba(24, 151, 214, 0.12) !important;
+    box-shadow:
+        0 18px 48px rgba(23, 38, 69, 0.07),
+        inset 0 1px 0 rgba(255, 255, 255, 0.72) !important;
+}
+
+.creator-home-aside .rounded-\[1\.5rem\],
+.creator-home-aside .rounded-\[2rem\] {
+    background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.92), rgba(247, 250, 253, 0.9)) !important;
+}
+
+.creator-library-panel {
+    background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.88), rgba(246, 250, 253, 0.92)) !important;
+}
+
+.creator-project-grid {
+    align-items: stretch;
+}
+
+.creator-project-card {
+    min-height: 100%;
+    border-radius: 30px !important;
+    background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.95), rgba(246, 250, 253, 0.96)) !important;
+}
+
+.creator-project-card::before {
+    content: "";
+    position: absolute;
+    inset: 0 auto 0 0;
+    width: 5px;
+    background: linear-gradient(180deg, rgba(24, 151, 214, 0.8), rgba(216, 165, 90, 0.68));
+    opacity: 0.85;
+}
+
+.creator-project-cover {
+    min-height: 180px;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.68);
+}
+
+.creator-project-signals {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.75rem;
+}
+
+.creator-project-signal {
+    min-width: 0;
+    border: 1px solid rgba(117, 132, 159, 0.16);
+    border-radius: 22px;
+    background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.86), rgba(248, 250, 253, 0.94));
+    padding: 0.9rem;
+}
+
+.creator-project-signal__label {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: var(--sf-text-soft);
+    font-size: 0.65rem;
+    font-weight: 700;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+}
+
+.creator-project-signal__value {
+    margin-top: 0.65rem;
+    color: var(--sf-text);
+    font-size: clamp(1.25rem, 2.2vw, 1.75rem);
+    font-weight: 700;
+    letter-spacing: -0.04em;
+    font-variant-numeric: tabular-nums;
+}
+
+.creator-project-signal__detail {
+    margin-top: 0.2rem;
+    color: var(--sf-text-muted);
+    font-size: 0.76rem;
+    line-height: 1.45;
+}
+
+.novel-status-strip {
+    position: relative;
+    overflow: hidden;
+    background:
+        linear-gradient(90deg, rgba(255, 255, 255, 0.92), rgba(245, 250, 253, 0.92)) !important;
+}
+
+.novel-status-strip::before {
+    content: "";
+    position: absolute;
+    inset: auto 1rem 0.4rem 1rem;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(24, 151, 214, 0.28), transparent);
+}
+
+.novel-production-desk {
+    position: relative;
+    align-items: start;
+}
+
+.novel-production-desk::before {
+    content: "";
+    position: absolute;
+    inset: -1.25rem;
+    z-index: -1;
+    border-radius: 36px;
+    border: 1px solid rgba(24, 151, 214, 0.08);
+    background:
+        radial-gradient(circle at 22% 8%, rgba(24, 151, 214, 0.1), transparent 34%),
+        linear-gradient(180deg, rgba(255, 255, 255, 0.34), rgba(255, 255, 255, 0.08));
+}
+
+.novel-seed-form {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1rem;
+    background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.76), rgba(247, 250, 253, 0.94)) !important;
+}
+
+.novel-seed-form label:has(#seed-text),
+.novel-seed-form p,
+.novel-seed-form button[type="submit"] {
+    grid-column: 1 / -1;
+}
+
+.novel-seed-form textarea {
+    min-height: clamp(18rem, 38vh, 31rem);
+}
+
+.novel-assistant-panel {
+    border-color: rgba(24, 151, 214, 0.14) !important;
+    background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.94), rgba(246, 250, 253, 0.96)) !important;
+    box-shadow:
+        0 30px 80px rgba(23, 38, 69, 0.11),
+        inset 0 1px 0 rgba(255, 255, 255, 0.78) !important;
+}
+
+.novel-assistant-panel > div:first-child {
+    background:
+        linear-gradient(135deg, rgba(232, 246, 253, 0.82), rgba(255, 255, 255, 0.76)) !important;
+}
+
+.novel-active-run-card,
+.novel-history-section > div {
+    background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.9), rgba(247, 250, 253, 0.94)) !important;
+}
+
+@media (max-width: 1180px) {
+    .creator-project-signals {
+        grid-template-columns: 1fr;
+    }
+
+    .novel-seed-form {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 820px) {
+    .creator-home-header,
+    .novel-workbench-header {
+        position: static;
+        padding-inline: 1rem;
+    }
+
+    .creator-home-main,
+    .novel-workbench-main {
+        padding-inline: 1rem;
+    }
+
+    .creator-command-deck,
+    .creator-empty-state,
+    .novel-launch-panel {
+        padding: 1.25rem !important;
+        border-radius: 24px !important;
+    }
+
+    .creator-project-card {
+        padding: 1rem !important;
+    }
+
+    .novel-assistant-panel {
+        max-height: none;
+        min-height: 32rem;
+    }
+}

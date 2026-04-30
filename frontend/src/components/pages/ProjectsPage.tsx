@@ -4,6 +4,7 @@ import {
   AlertTriangle,
   BookOpen,
   EllipsisVertical,
+  Film,
   FolderOpen,
   Loader2,
   Plus,
@@ -40,11 +41,8 @@ const PROJECTS_COPY = {
     heroTitle: "Start with the story, then come back here to turn it into production.",
     heroBody:
       "Use the novel workbench when you need to expand a seed into a full narrative. Return to the project library when you are ready to shape character kits, clue systems, storyboards, and video output.",
-    heroNoteTitle: "Two clear entry points",
-    heroNoteBody:
-      "If the story skeleton is still moving, go to the novel workbench first. If the IP is already stable, create or import a project and keep shipping visuals.",
     primaryAction: "Open Novel Workbench",
-    secondaryAction: "Create Project",
+    secondaryAction: "Enter Video Workshop",
     tertiaryAction: "Import ZIP",
     statsEyebrow: "Studio pulse",
     totalProjects: "Projects",
@@ -54,7 +52,7 @@ const PROJECTS_COPY = {
     focusEyebrow: "Recommended next move",
     focusTitle: "Keep momentum instead of reorganizing tools.",
     focusBody: "The fastest path is still story to storyboard to video. These shortcuts keep that sequence visible.",
-    focusContinue: "Resume library",
+    focusContinue: "Continue video creation",
     focusImport: "Bring in archived work",
     focusImportBody: "Import a ZIP backup or a previous IP package without rebuilding it from scratch.",
     focusOpenClaw: "OpenClaw guide",
@@ -93,11 +91,8 @@ const PROJECTS_COPY = {
     heroTitle: "先把故事推进下去，再回到这里完成资产制作。",
     heroBody:
       "当你需要把 seed 扩写成长篇叙事时，先进入小说工坊；当故事骨架稳定下来，再回到项目库继续做角色、线索、分镜和视频。",
-    heroNoteTitle: "两个清晰入口",
-    heroNoteBody:
-      "如果故事结构还在变化，先去小说工坊；如果 IP 已经成型，就直接创建或导入项目，继续推进视觉制作。",
     primaryAction: "进入小说工坊",
-    secondaryAction: "创建项目",
+    secondaryAction: "进入视频工坊",
     tertiaryAction: "导入 ZIP",
     statsEyebrow: "Studio pulse",
     totalProjects: "项目数",
@@ -107,7 +102,7 @@ const PROJECTS_COPY = {
     focusEyebrow: "建议下一步",
     focusTitle: "别在工具之间打转，继续推进主路径。",
     focusBody: "最快的路径仍然是“小说 → 分镜 → 视频”。这些快捷入口只保留最该先做的动作。",
-    focusContinue: "继续项目库",
+    focusContinue: "继续视频创作",
     focusImport: "导入旧项目",
     focusImportBody: "把 ZIP 备份或既有 IP 包直接导入，不必重复搭建。",
     focusOpenClaw: "OpenClaw 指南",
@@ -217,6 +212,26 @@ function SurfaceMetric({
   );
 }
 
+function ProjectSignal({
+  label,
+  value,
+  detail,
+  toneClass,
+}: {
+  label: string;
+  value: string;
+  detail: string;
+  toneClass?: string;
+}) {
+  return (
+    <div className="creator-project-signal">
+      <div className="creator-project-signal__label">{label}</div>
+      <div className={`creator-project-signal__value ${toneClass ?? ""}`}>{value}</div>
+      <div className="creator-project-signal__detail">{detail}</div>
+    </div>
+  );
+}
+
 function ProjectCard({ project, onDelete }: { project: ProjectSummary; onDelete: () => void }) {
   const { t } = useTranslation(["dashboard"]);
   const [, navigate] = useLocation();
@@ -251,7 +266,7 @@ function ProjectCard({ project, onDelete }: { project: ProjectSummary; onDelete:
           navigate(`/app/projects/${project.name}`);
         }
       }}
-      className="group relative overflow-hidden rounded-[2rem] border border-[rgba(117,132,159,0.18)] bg-[linear-gradient(180deg,rgba(255,255,255,0.92),rgba(244,248,252,0.98))] p-5 text-left shadow-[0_18px_48px_rgba(23,38,69,0.08)] transition-all duration-300 hover:-translate-y-0.5 hover:border-[rgba(24,151,214,0.24)] hover:shadow-[0_28px_70px_rgba(23,38,69,0.12)]"
+      className="creator-project-card group relative overflow-hidden rounded-[2rem] border border-[rgba(117,132,159,0.18)] bg-[linear-gradient(180deg,rgba(255,255,255,0.92),rgba(244,248,252,0.98))] p-5 text-left shadow-[0_18px_48px_rgba(23,38,69,0.08)] transition-all duration-300 hover:-translate-y-0.5 hover:border-[rgba(24,151,214,0.24)] hover:shadow-[0_28px_70px_rgba(23,38,69,0.12)]"
     >
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(24,151,214,0.12),transparent_32%),radial-gradient(circle_at_bottom_right,rgba(216,165,90,0.12),transparent_30%)] opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
 
@@ -288,16 +303,16 @@ function ProjectCard({ project, onDelete }: { project: ProjectSummary; onDelete:
           </button>
         </div>
 
-        <div className="mt-5 grid gap-4 xl:grid-cols-[minmax(0,1.15fr)_260px]">
-          <div className="overflow-hidden rounded-[1.7rem] border border-[rgba(117,132,159,0.18)] bg-[rgba(242,246,251,0.92)]">
+        <div className="mt-5 grid gap-4 lg:grid-cols-[172px_minmax(0,1fr)]">
+          <div className="creator-project-cover overflow-hidden rounded-[1.7rem] border border-[rgba(117,132,159,0.18)] bg-[rgba(242,246,251,0.92)]">
             {project.thumbnail ? (
               <img
                 src={project.thumbnail}
                 alt={project.title}
-                className="h-full min-h-[220px] w-full object-cover transition-transform duration-300 group-hover:scale-[1.015]"
+                className="h-full min-h-[180px] w-full object-cover transition-transform duration-300 group-hover:scale-[1.015]"
               />
             ) : (
-              <div className="flex min-h-[220px] items-center justify-center bg-[radial-gradient(circle_at_top,rgba(24,151,214,0.16),transparent_45%),linear-gradient(180deg,rgba(251,252,255,0.98),rgba(238,243,249,1))]">
+              <div className="flex min-h-[180px] items-center justify-center bg-[radial-gradient(circle_at_top,rgba(24,151,214,0.16),transparent_45%),linear-gradient(180deg,rgba(251,252,255,0.98),rgba(238,243,249,1))]">
                 <div className="flex flex-col items-center gap-3 text-[var(--sf-text-soft)]">
                   <FolderOpen className="h-10 w-10" />
                   <span className="text-sm">{copy.waitCover}</span>
@@ -306,19 +321,19 @@ function ProjectCard({ project, onDelete }: { project: ProjectSummary; onDelete:
             )}
           </div>
 
-          <div className="grid gap-3">
-            <SurfaceMetric
+          <div className="creator-project-signals">
+            <ProjectSignal
               label={copy.storyPhase}
               value={`${progress}%`}
               detail={phaseLabel}
               toneClass="text-[var(--sf-blue-strong)]"
             />
-            <SurfaceMetric
+            <ProjectSignal
               label={copy.assetCoverage}
               value={formatStat(assetCompleted, assetTotal)}
               detail={`${t("dashboard:characters")} ${formatStat(characters?.completed, characters?.total)} · ${t("dashboard:clues")} ${formatStat(clues?.completed, clues?.total)}`}
             />
-            <SurfaceMetric
+            <ProjectSignal
               label={copy.episodeOutput}
               value={formatStat(summary?.completed, summary?.total)}
               detail={`${t("dashboard:episodes_scripted")} ${formatStat(summary?.scripted, summary?.total)} · ${t("dashboard:episodes_in_production")} ${summary?.in_production ?? 0}`}
@@ -382,7 +397,7 @@ function EmptyProjectsState({
   const copy = useProjectsPageCopy();
 
   return (
-    <section className="space-y-6 rounded-[2rem] border border-[rgba(117,132,159,0.18)] bg-[linear-gradient(180deg,rgba(255,255,255,0.92),rgba(244,248,252,0.98))] p-8 shadow-[0_24px_60px_rgba(23,38,69,0.08)]">
+    <section className="creator-empty-state space-y-6 rounded-[2rem] border border-[rgba(117,132,159,0.18)] bg-[linear-gradient(180deg,rgba(255,255,255,0.92),rgba(244,248,252,0.98))] p-8 shadow-[0_24px_60px_rgba(23,38,69,0.08)]">
       <div className="max-w-3xl space-y-3">
         <div className="inline-flex items-center gap-2 rounded-full border border-sky-300/60 bg-sky-100 px-3 py-1 text-xs font-medium text-sky-900">
           <Sparkles className="h-3.5 w-3.5" />
@@ -560,10 +575,18 @@ export function ProjectsPage() {
     return sum + ((status as ProjectStatus).episodes_summary?.in_production ?? 0);
   }, 0);
   const featuredProject = projects[0] ?? null;
+  const openVideoWorkshop = useCallback(() => {
+    if (featuredProject) {
+      navigate(`/app/projects/${featuredProject.name}`);
+      return;
+    }
+
+    setShowCreateModal(true);
+  }, [featuredProject, navigate, setShowCreateModal]);
 
   return (
-    <div className="sf-editorial-page flex min-h-screen flex-col text-[var(--sf-text)]">
-      <header className="px-6 pt-6">
+    <div className="creator-home-page sf-editorial-page flex min-h-screen flex-col text-[var(--sf-text)]">
+      <header className="creator-home-header px-6 pt-6">
         <div className="frametale-page-header mx-auto flex max-w-7xl flex-col gap-4 rounded-[2rem] px-5 py-4 xl:flex-row xl:items-center xl:justify-between">
           <div className="flex items-center gap-4">
             <BrandLogo
@@ -642,7 +665,7 @@ export function ProjectsPage() {
         />
       </header>
 
-      <main className="mx-auto max-w-7xl px-6 py-6">
+      <main className="creator-home-main mx-auto max-w-7xl px-6 py-6">
         {projectsLoading ? (
           <div className="flex items-center justify-center py-24 text-[var(--sf-text-muted)]">
             <Loader2 className="mr-2 h-5 w-5 animate-spin text-[var(--sf-blue)]" />
@@ -656,8 +679,8 @@ export function ProjectsPage() {
           />
         ) : (
           <div className="space-y-6">
-            <section className="grid gap-6 xl:grid-cols-[minmax(0,1.18fr)_360px]">
-              <div className="relative overflow-hidden rounded-[2rem] border border-[rgba(117,132,159,0.18)] bg-[linear-gradient(180deg,rgba(255,255,255,0.92),rgba(244,248,252,0.98))] p-8 shadow-[0_24px_60px_rgba(23,38,69,0.08)]">
+            <section className="creator-command-grid grid gap-6 xl:grid-cols-[minmax(0,1.18fr)_360px]">
+              <div className="creator-command-deck relative overflow-hidden rounded-[2rem] border border-[rgba(117,132,159,0.18)] bg-[linear-gradient(180deg,rgba(255,255,255,0.92),rgba(244,248,252,0.98))] p-8 shadow-[0_24px_60px_rgba(23,38,69,0.08)]">
                 <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(24,151,214,0.14),transparent_30%),radial-gradient(circle_at_bottom_right,rgba(216,165,90,0.14),transparent_28%)]" />
                 <div className="relative space-y-6">
                   <div className="inline-flex items-center gap-2 rounded-full border border-sky-300/60 bg-sky-100 px-3 py-1 text-xs font-medium text-sky-900">
@@ -672,7 +695,7 @@ export function ProjectsPage() {
                     <p className="max-w-2xl text-base leading-8 text-[var(--sf-text-muted)]">{copy.heroBody}</p>
                   </div>
 
-                  <div className="grid gap-3 sm:grid-cols-3">
+                  <div className="creator-action-row grid gap-3 sm:grid-cols-3">
                     <button
                       type="button"
                       onClick={() => navigate("/app/novel-workbench")}
@@ -683,10 +706,10 @@ export function ProjectsPage() {
                     </button>
                     <button
                       type="button"
-                      onClick={() => setShowCreateModal(true)}
+                      onClick={openVideoWorkshop}
                       className="frametale-secondary-button inline-flex items-center justify-center gap-2 rounded-2xl px-4 py-3 text-sm font-medium transition hover:-translate-y-0.5"
                     >
-                      <Plus className="h-4 w-4" />
+                      <Film className="h-4 w-4" />
                       {copy.secondaryAction}
                     </button>
                     <button
@@ -700,24 +723,19 @@ export function ProjectsPage() {
                     </button>
                   </div>
 
-                  <div className="grid gap-4 md:grid-cols-[minmax(0,1fr)_280px]">
-                    <div className="rounded-[1.7rem] border border-[rgba(117,132,159,0.18)] bg-[rgba(248,250,253,0.92)] p-5">
-                      <div className="text-[11px] uppercase tracking-[0.24em] text-[var(--sf-text-soft)]">{copy.heroNoteTitle}</div>
-                      <p className="mt-3 max-w-2xl text-sm leading-7 text-[var(--sf-text-muted)]">{copy.heroNoteBody}</p>
-                    </div>
-
+                  <div className="creator-context-row grid gap-4">
                     <button
                       type="button"
-                      onClick={() => featuredProject && navigate(`/app/projects/${featuredProject.name}`)}
+                      onClick={openVideoWorkshop}
                       disabled={!featuredProject}
-                      className="rounded-[1.7rem] border border-[rgba(117,132,159,0.18)] bg-white/88 p-5 text-left transition hover:border-[rgba(24,151,214,0.24)] hover:bg-white disabled:cursor-default"
+                      className="w-full rounded-[1.7rem] border border-[rgba(117,132,159,0.18)] bg-white/88 p-5 text-left transition hover:border-[rgba(24,151,214,0.24)] hover:bg-white disabled:cursor-default"
                     >
                       <div className="text-[11px] uppercase tracking-[0.24em] text-[var(--sf-text-soft)]">{copy.focusContinue}</div>
                       <div className="mt-3 text-lg font-semibold tracking-[-0.02em] text-[var(--sf-text)]">
                         {featuredProject
                           ? locale === "zh"
-                            ? `继续 ${featuredProject.title}`
-                            : `Resume ${featuredProject.title}`
+                            ? `进入 ${featuredProject.title} 视频工坊`
+                            : `Enter ${featuredProject.title} video workshop`
                           : t("dashboard:no_projects")}
                       </div>
                       <div className="mt-2 text-sm leading-6 text-[var(--sf-text-muted)]">
@@ -730,7 +748,7 @@ export function ProjectsPage() {
                 </div>
               </div>
 
-              <div className="space-y-4">
+              <div className="creator-home-aside space-y-4">
                 <section className="rounded-[2rem] border border-[rgba(117,132,159,0.18)] bg-white/82 p-6 shadow-[0_18px_40px_rgba(23,38,69,0.06)]">
                   <div className="text-[11px] uppercase tracking-[0.24em] text-[var(--sf-text-soft)]">{copy.statsEyebrow}</div>
                   <div className="mt-4 grid gap-3">
@@ -775,7 +793,7 @@ export function ProjectsPage() {
               </div>
             </section>
 
-            <section className="rounded-[2rem] border border-[rgba(117,132,159,0.18)] bg-white/82 p-6 shadow-[0_18px_40px_rgba(23,38,69,0.06)]">
+            <section className="creator-library-panel rounded-[2rem] border border-[rgba(117,132,159,0.18)] bg-white/82 p-6 shadow-[0_18px_40px_rgba(23,38,69,0.06)]">
               <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
                 <div>
                   <div className="text-[11px] uppercase tracking-[0.28em] text-[var(--sf-text-soft)]">{copy.libraryEyebrow}</div>
@@ -789,7 +807,7 @@ export function ProjectsPage() {
                 </div>
               </div>
 
-              <div className="mt-6 grid grid-cols-1 gap-6 xl:grid-cols-2 2xl:grid-cols-3">
+              <div className="creator-project-grid mt-6 grid grid-cols-1 gap-6 xl:grid-cols-2">
                 {projects.map((project) => (
                   <ProjectCard key={project.name} project={project} onDelete={() => setDeletingProject(project)} />
                 ))}

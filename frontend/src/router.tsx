@@ -7,7 +7,6 @@ import { decodeProjectRouteParam } from "@/utils/project-routes";
 
 const HomePage = lazy(() => import("@/pages/HomePage").then((module) => ({ default: module.HomePage })));
 const LoginPage = lazy(() => import("@/pages/LoginPage").then((module) => ({ default: module.LoginPage })));
-const RegisterPage = lazy(() => import("@/pages/RegisterPage").then((module) => ({ default: module.RegisterPage })));
 const VerifyEmailPage = lazy(() => import("@/pages/VerifyEmailPage").then((module) => ({ default: module.VerifyEmailPage })));
 const ForgotPasswordPage = lazy(() => import("@/pages/ForgotPasswordPage").then((module) => ({ default: module.ForgotPasswordPage })));
 const AccountPage = lazy(() => import("@/pages/AccountPage").then((module) => ({ default: module.AccountPage })));
@@ -138,11 +137,7 @@ export function AppRoutes() {
         </Route>
 
         <Route path="/register">
-          <GuestGuard>
-            <LazyRouteBoundary>
-              <RegisterPage />
-            </LazyRouteBoundary>
-          </GuestGuard>
+          <Redirect to="/login" />
         </Route>
 
         <Route path="/verify-email">

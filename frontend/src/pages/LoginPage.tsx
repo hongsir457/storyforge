@@ -84,13 +84,7 @@ export function LoginPage() {
         </button>
       </form>
 
-      <div className="mt-6 flex items-center justify-between text-sm text-[var(--sf-text-muted)]">
-        <span>{t("auth:no_account")}</span>
-        <Link href="/register" className="font-semibold text-[var(--sf-blue)] transition hover:text-[var(--sf-blue-strong)]">
-          {t("auth:go_to_register")}
-        </Link>
-      </div>
-      <div className="mt-3 text-right text-sm">
+      <div className="mt-6 text-right text-sm">
         <Link href="/forgot-password" className="text-[var(--sf-text-muted)] transition hover:text-[var(--sf-text)]">
           {t("auth:forgot_password")}
         </Link>
